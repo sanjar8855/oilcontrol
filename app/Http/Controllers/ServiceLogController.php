@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceLog;
 use App\Models\Vehicle;
+use App\Services\ReminderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -64,7 +65,7 @@ class ServiceLogController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ReminderService $reminderService): RedirectResponse
     {
         $validated = $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
@@ -85,8 +86,8 @@ class ServiceLogController extends Controller
 
         $serviceLog = ServiceLog::create($validated);
 
-        // Avtomatik eslatma yaratish (keyinchalik)
-        // $this->createReminder($serviceLog);
+        // Avtomatik eslatmalarni yaratish
+        $reminderService->createRemindersForServiceLog($serviceLog);
 
         return redirect()->route('vehicles.show', $vehicle->id)
             ->with('success', 'Servis yozuvi muvaffaqiyatli qo\'shildi!');

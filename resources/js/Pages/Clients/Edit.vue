@@ -13,6 +13,7 @@ const props = defineProps({
 const form = useForm({
     name: props.client.name,
     phone: props.client.phone,
+    telegram_id: props.client.telegram_id || '',
     email: props.client.email || '',
     notes: props.client.notes || '',
 });
@@ -70,6 +71,22 @@ const submit = () => {
                                     required
                                 />
                                 <InputError class="mt-2" :message="form.errors.phone" />
+                            </div>
+
+                            <!-- Telegram ID -->
+                            <div>
+                                <InputLabel for="telegram_id" value="Telegram ID (ixtiyoriy)" />
+                                <TextInput
+                                    id="telegram_id"
+                                    v-model="form.telegram_id"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Masalan: 123456789"
+                                />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Telegram orqali eslatma yuborish uchun mijozning Telegram ID raqami
+                                </p>
+                                <InputError class="mt-2" :message="form.errors.telegram_id" />
                             </div>
 
                             <!-- Email -->

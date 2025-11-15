@@ -9,6 +9,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 const form = useForm({
     name: '',
     phone: '',
+    telegram_id: '',
     email: '',
     notes: '',
 });
@@ -68,6 +69,22 @@ const submit = () => {
                                     placeholder="Masalan: +998 90 123 45 67"
                                 />
                                 <InputError class="mt-2" :message="form.errors.phone" />
+                            </div>
+
+                            <!-- Telegram ID -->
+                            <div>
+                                <InputLabel for="telegram_id" value="Telegram ID (ixtiyoriy)" />
+                                <TextInput
+                                    id="telegram_id"
+                                    v-model="form.telegram_id"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Masalan: 123456789"
+                                />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Telegram orqali eslatma yuborish uchun mijozning Telegram ID raqami
+                                </p>
+                                <InputError class="mt-2" :message="form.errors.telegram_id" />
                             </div>
 
                             <!-- Email -->

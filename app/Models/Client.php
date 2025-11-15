@@ -12,6 +12,7 @@ class Client extends Model
         'workshop_id',
         'name',
         'phone',
+        'telegram_id',
         'email',
         'notes',
     ];
