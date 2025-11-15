@@ -75,9 +75,12 @@ defineProps({
                                     <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                                         Avtomobillar
                                     </h3>
-                                    <button class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                                    <Link
+                                        :href="route('vehicles.create', { client_id: client.id })"
+                                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                                    >
                                         + Avtomobil Qo'shish
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                             <div class="p-6">
@@ -99,9 +102,12 @@ defineProps({
                                                     Oxirgi servis: {{ vehicle.service_logs[0].service_date }}
                                                 </p>
                                             </div>
-                                            <button class="rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200">
+                                            <Link
+                                                :href="route('vehicles.show', vehicle.id)"
+                                                class="rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
+                                            >
                                                 Ko'rish
-                                            </button>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>
