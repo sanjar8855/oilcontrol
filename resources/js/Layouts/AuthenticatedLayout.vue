@@ -37,7 +37,25 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    Boshqaruv
+                                </NavLink>
+                                <NavLink
+                                    :href="route('clients.index')"
+                                    :active="route().current('clients.*')"
+                                >
+                                    Mijozlar
+                                </NavLink>
+                                <NavLink
+                                    :href="route('vehicles.index')"
+                                    :active="route().current('vehicles.*')"
+                                >
+                                    Avtomobillar
+                                </NavLink>
+                                <NavLink
+                                    :href="route('service-logs.index')"
+                                    :active="route().current('service-logs.*')"
+                                >
+                                    Servis Yozuvlari
                                 </NavLink>
                             </div>
                         </div>
@@ -144,7 +162,25 @@ const showingNavigationDropdown = ref(false);
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
-                            Dashboard
+                            Boshqaruv
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('clients.index')"
+                            :active="route().current('clients.*')"
+                        >
+                            Mijozlar
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('vehicles.index')"
+                            :active="route().current('vehicles.*')"
+                        >
+                            Avtomobillar
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('service-logs.index')"
+                            :active="route().current('service-logs.*')"
+                        >
+                            Servis Yozuvlari
                         </ResponsiveNavLink>
                     </div>
 
