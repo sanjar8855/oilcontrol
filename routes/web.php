@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceLogController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,17 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Telegram Bot Webhook (Auth siz - Telegram serveri chaqiradi)
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])->name('telegram.webhook');
+
+// Telegram Bot boshqaruvi (Admin uchun)
+Route::middleware('auth')->prefix('telegram')->group(function () {
+    Route::get('/set-webhook', [TelegramWebhookController::class, 'setWebhook'])->name('telegram.set-webhook');
+    Route::get('/webhook-info', [TelegramWebhookController::class, 'getWebhookInfo'])->name('telegram.webhook-info');
+    Route::get('/delete-webhook', [TelegramWebhookController::class, 'deleteWebhook'])->name('telegram.delete-webhook');
+    Route::get('/bot-info', [TelegramWebhookController::class, 'getBotInfo'])->name('telegram.bot-info');
+});
 
 Route::middleware('auth')->group(function () {
     // Mijozlar (Clients) CRUD
