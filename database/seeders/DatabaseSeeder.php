@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Test foydalanuvchi yaratish
+        // 1. Test foydalanuvchi yaratish - Admin
         $user = User::create([
             'name' => 'Admin Adminov',
             'email' => 'admin@oilcontrol.uz',
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // 2. Workshop yaratish
+        // 2. Workshop yaratish - Admin uchun
         $workshop = Workshop::create([
             'user_id' => $user->id,
             'name' => 'Avtomashina Servis Markazi',
@@ -36,6 +36,27 @@ class DatabaseSeeder extends Seeder
             'address' => 'Toshkent shahar, Chilonzor tumani, Bunyodkor ko\'chasi 1-uy',
             'subscription_plan' => 'pro',
             'subscription_expires_at' => now()->addDays(365), // 1 yillik obuna
+            'is_active' => true,
+        ]);
+
+        // Tadbirkor foydalanuvchi yaratish
+        $entrepreneur = User::create([
+            'name' => 'Sardor Toshmatov',
+            'email' => 'tadbirkor@oilcontrol.uz',
+            'password' => Hash::make('password'), // Parol: password
+            'email_verified_at' => now(),
+        ]);
+
+        // Workshop yaratish - Tadbirkor uchun
+        $entrepreneurWorkshop = Workshop::create([
+            'user_id' => $entrepreneur->id,
+            'name' => 'Universal Avto Servis',
+            'owner_name' => 'Sardor Toshmatov',
+            'phone' => '+998905555555',
+            'email' => 'info@universal-avto.uz',
+            'address' => 'Toshkent shahar, Yunusobod tumani, Amir Temur ko\'chasi 15-uy',
+            'subscription_plan' => 'basic',
+            'subscription_expires_at' => now()->addDays(180), // 6 oylik obuna
             'is_active' => true,
         ]);
 
@@ -225,14 +246,18 @@ class DatabaseSeeder extends Seeder
 
         echo "\n✅ Test ma'lumotlar muvaffaqiyatli yaratildi!\n\n";
         echo "📊 Yaratilgan ma'lumotlar:\n";
-        echo "   - Foydalanuvchi: 1 ta (admin@oilcontrol.uz)\n";
-        echo "   - Workshop: 1 ta (Avtomashina Servis Markazi)\n";
+        echo "   - Foydalanuvchilar: 2 ta\n";
+        echo "   - Workshop: 2 ta\n";
         echo "   - Mijozlar: 4 ta\n";
         echo "   - Avtomobillar: 5 ta\n";
         echo "   - Servis yozuvlari: 5 ta\n";
         echo "   - Eslatmalar: 4 ta\n\n";
         echo "🔐 Login ma'lumotlari:\n";
-        echo "   Email: admin@oilcontrol.uz\n";
-        echo "   Parol: password\n\n";
+        echo "   Admin:\n";
+        echo "     Email: admin@oilcontrol.uz\n";
+        echo "     Parol: password\n\n";
+        echo "   Tadbirkor:\n";
+        echo "     Email: tadbirkor@oilcontrol.uz\n";
+        echo "     Parol: password\n\n";
     }
 }

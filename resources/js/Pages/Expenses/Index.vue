@@ -6,6 +6,7 @@ const props = defineProps({
     expenses: Object,
     filters: Object,
     statistics: Object,
+    categories: Array,
 });
 
 const deleteExpense = (expense) => {
@@ -77,11 +78,9 @@ const formatDate = (date) => {
                                     class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                                 >
                                     <option :value="null">Barcha kategoriyalar</option>
-                                    <option value="Elektr">Elektr</option>
-                                    <option value="Ish haqi">Ish haqi</option>
-                                    <option value="Ijara">Ijara</option>
-                                    <option value="Transport">Transport</option>
-                                    <option value="Boshqa">Boshqa</option>
+                                    <option v-for="category in categories" :key="category.id" :value="category.name">
+                                        {{ category.name }}
+                                    </option>
                                 </select>
                             </div>
                             <div>

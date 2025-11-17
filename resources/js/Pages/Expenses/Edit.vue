@@ -8,6 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     expense: Object,
+    categories: Array,
 });
 
 const form = useForm({
@@ -50,11 +51,9 @@ const submit = () => {
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                                         required
                                     >
-                                        <option value="Elektr">Elektr</option>
-                                        <option value="Ish haqi">Ish haqi</option>
-                                        <option value="Ijara">Ijara</option>
-                                        <option value="Transport">Transport</option>
-                                        <option value="Boshqa">Boshqa</option>
+                                        <option v-for="category in categories" :key="category.id" :value="category.name">
+                                            {{ category.name }}
+                                        </option>
                                     </select>
                                     <InputError :message="form.errors.category" class="mt-2" />
                                 </div>
