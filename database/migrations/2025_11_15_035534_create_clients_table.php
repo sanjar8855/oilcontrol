@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('workshop_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('phone');
+            $table->string('telegram_id')->nullable();
             $table->string('email')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
