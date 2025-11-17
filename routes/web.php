@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
@@ -43,6 +46,17 @@ Route::middleware('auth')->group(function () {
 
     // Servis Yozuvlari (Service Logs) CRUD
     Route::resource('service-logs', ServiceLogController::class);
+
+    // Kategoriyalar (Categories) CRUD
+    Route::resource('categories', CategoryController::class)->except(['show']);
+
+    // Mahsulotlar (Products) CRUD
+    Route::resource('products', ProductController::class);
+    Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
+    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');
+
+    // Xarajatlar (Expenses) CRUD
+    Route::resource('expenses', ExpenseController::class)->except(['show']);
 
     // Profil boshqaruvi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
