@@ -7,6 +7,10 @@ defineProps({
     stats: Object,
     recent_clients: Array,
 });
+
+const formatMoney = (amount) => {
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
+};
 </script>
 
 <template>
@@ -118,6 +122,130 @@ defineProps({
                                             {{ workshop.name }}
                                         </dd>
                                     </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moliyaviy Statistika -->
+                <div class="mb-6">
+                    <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Moliyaviy Hisobotlar (Joriy oy)</h3>
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        <!-- Mahsulotlar -->
+                        <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                Mahsulotlar
+                                            </dt>
+                                            <dd class="flex items-baseline text-lg font-semibold text-gray-900 dark:text-white">
+                                                {{ stats.total_products }}
+                                                <span v-if="stats.low_stock_products > 0" class="ml-2 text-xs font-medium text-red-600 dark:text-red-400">
+                                                    ({{ stats.low_stock_products }} kam qolgan)
+                                                </span>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ombor qiymati -->
+                        <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                Ombor qiymati
+                                            </dt>
+                                            <dd class="text-lg font-semibold text-gray-900 dark:text-white">
+                                                {{ formatMoney(stats.inventory_value) }}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Oylik daromad -->
+                        <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                Oylik daromad
+                                            </dt>
+                                            <dd class="text-lg font-semibold text-green-600 dark:text-green-400">
+                                                {{ formatMoney(stats.monthly_revenue) }}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Oylik xarajatlar -->
+                        <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                Oylik xarajatlar
+                                            </dt>
+                                            <dd class="text-lg font-semibold text-red-600 dark:text-red-400">
+                                                {{ formatMoney(stats.monthly_expenses) }}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Foyda/Zarar -->
+                        <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 sm:col-span-2">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6" :class="stats.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                {{ stats.profit_loss >= 0 ? 'Foyda' : 'Zarar' }}
+                                            </dt>
+                                            <dd class="text-lg font-semibold" :class="stats.profit_loss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                {{ formatMoney(Math.abs(stats.profit_loss)) }}
+                                            </dd>
+                                        </dl>
+                                    </div>
                                 </div>
                             </div>
                         </div>

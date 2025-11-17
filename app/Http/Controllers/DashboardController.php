@@ -40,20 +40,24 @@ class DashboardController extends Controller
             ->whereColumn('stock_quantity', '<=', 'min_stock_level')
             ->count();
 
+        // Ombor qiymati
         $inventoryValue = $workshop->products()
             ->selectRaw('SUM(stock_quantity * purchase_price) as total')
             ->value('total') ?? 0;
 
+        // Joriy oydagi xarajatlar
         $monthlyExpenses = $workshop->expenses()
             ->where('expense_date', '>=', $currentMonth)
             ->sum('amount');
 
+        // Joriy oydagi daromad (service logs)
         $monthlyRevenue = $workshop->clients()
             ->join('vehicles', 'clients.id', '=', 'vehicles.client_id')
             ->join('service_logs', 'vehicles.id', '=', 'service_logs.vehicle_id')
             ->where('service_logs.service_date', '>=', $currentMonth)
             ->sum('service_logs.cost');
 
+        // Foyda/Zarar
         $profitLoss = $monthlyRevenue - $monthlyExpenses;
 
         return Inertia::render('Dashboard', [
@@ -65,6 +69,7 @@ class DashboardController extends Controller
                 'days_remaining' => $workshop->subscription_expires_at
                     ? now()->diffInDays($workshop->subscription_expires_at, false)
                     : 0,
+                // Moliyaviy
                 'total_products' => $totalProducts,
                 'low_stock_products' => $lowStockProducts,
                 'inventory_value' => (float) $inventoryValue,

@@ -57,6 +57,18 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Servis Yozuvlari
                                 </NavLink>
+                                <NavLink
+                                    :href="route('products.index')"
+                                    :active="route().current('products.*') || route().current('categories.*')"
+                                >
+                                    Mahsulotlar
+                                </NavLink>
+                                <NavLink
+                                    :href="route('expenses.index')"
+                                    :active="route().current('expenses.*')"
+                                >
+                                    Xarajatlar
+                                </NavLink>
                             </div>
                         </div>
 
@@ -181,6 +193,18 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('service-logs.*')"
                         >
                             Servis Yozuvlari
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('products.index')"
+                            :active="route().current('products.*') || route().current('categories.*')"
+                        >
+                            Mahsulotlar
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('expenses.index')"
+                            :active="route().current('expenses.*')"
+                        >
+                            Xarajatlar
                         </ResponsiveNavLink>
                     </div>
 
