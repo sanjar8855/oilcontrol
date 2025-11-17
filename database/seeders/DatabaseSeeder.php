@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
             'phone' => '+998905555555',
             'email' => 'info@universal-avto.uz',
             'address' => 'Toshkent shahar, Yunusobod tumani, Amir Temur ko\'chasi 15-uy',
-            'subscription_plan' => 'basic',
+            'subscription_plan' => 'start',
             'subscription_expires_at' => now()->addDays(180), // 6 oylik obuna
             'is_active' => true,
         ]);
