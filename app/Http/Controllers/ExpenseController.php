@@ -41,6 +41,9 @@ class ExpenseController extends Controller
             ->groupBy('category')
             ->get();
 
+        // Get active categories for the workshop
+        $categories = $workshop->categories()->where('is_active', true)->get();
+
         return Inertia::render('Expenses/Index', [
             'expenses' => $expenses,
             'filters' => $request->only(['category', 'from_date', 'to_date']),
@@ -48,18 +51,32 @@ class ExpenseController extends Controller
                 'total' => $totalExpenses,
                 'by_category' => $expensesByCategory,
             ],
+            'categories' => $categories,
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Expenses/Create');
+        $workshop = $request->user()->workshop;
+        $categories = $workshop->categories()->where('is_active', true)->get();
+
+        return Inertia::render('Expenses/Create', [
+            'categories' => $categories,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $workshop = $request->user()->workshop;
+
+        // Get active category names for validation
+        $categoryNames = $workshop->categories()
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
         $validated = $request->validate([
-            'category' => 'required|string|in:Elektr,Ish haqi,Ijara,Transport,Boshqa',
+            'category' => 'required|string|in:' . implode(',', $categoryNames),
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
@@ -68,7 +85,6 @@ class ExpenseController extends Controller
             'receipt_number' => 'nullable|string|max:255',
         ]);
 
-        $workshop = $request->user()->workshop;
         $workshop->expenses()->create($validated);
 
         return redirect()->route('expenses.index')
@@ -81,8 +97,12 @@ class ExpenseController extends Controller
             abort(403);
         }
 
+        $workshop = $request->user()->workshop;
+        $categories = $workshop->categories()->where('is_active', true)->get();
+
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense,
+            'categories' => $categories,
         ]);
     }
 
@@ -92,8 +112,16 @@ class ExpenseController extends Controller
             abort(403);
         }
 
+        $workshop = $request->user()->workshop;
+
+        // Get active category names for validation
+        $categoryNames = $workshop->categories()
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
         $validated = $request->validate([
-            'category' => 'required|string|in:Elektr,Ish haqi,Ijara,Transport,Boshqa',
+            'category' => 'required|string|in:' . implode(',', $categoryNames),
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',

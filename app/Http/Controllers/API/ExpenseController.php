@@ -48,8 +48,16 @@ class ExpenseController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $workshop = $request->user()->workshop;
+
+        // Get active category names for validation
+        $categoryNames = $workshop->categories()
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
         $validated = $request->validate([
-            'category' => 'required|string|in:Elektr,Ish haqi,Ijara,Transport,Boshqa',
+            'category' => 'required|string|in:' . implode(',', $categoryNames),
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
@@ -58,8 +66,6 @@ class ExpenseController extends Controller
             'receipt_number' => 'nullable|string|max:255',
             'attachment' => 'nullable|string',
         ]);
-
-        $workshop = $request->user()->workshop;
 
         $expense = $workshop->expenses()->create($validated);
 
@@ -94,8 +100,16 @@ class ExpenseController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $workshop = $request->user()->workshop;
+
+        // Get active category names for validation
+        $categoryNames = $workshop->categories()
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
         $validated = $request->validate([
-            'category' => 'required|string|in:Elektr,Ish haqi,Ijara,Transport,Boshqa',
+            'category' => 'required|string|in:' . implode(',', $categoryNames),
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
