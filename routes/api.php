@@ -22,11 +22,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Clients API
-    Route::apiResource('clients', ClientController::class);
+    Route::group(['as' => 'api.'], function () {
 
-    // Vehicles API
-    Route::apiResource('vehicles', VehicleController::class);
+        // Clients API
+        Route::apiResource('clients', ClientController::class);
 
-    // Service Logs API
-    Route::apiResource('service-logs', ServiceLogController::class);
+        // Vehicles API
+        Route::apiResource('vehicles', VehicleController::class);
+
+        // Service Logs API
+        Route::apiResource('service-logs', ServiceLogController::class);
+
+    }); // <-- Guruh shu yerda yopiladi
 });

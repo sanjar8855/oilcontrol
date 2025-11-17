@@ -58,8 +58,14 @@ const showingNavigationDropdown = ref(false);
                                     Servis Yozuvlari
                                 </NavLink>
                                 <NavLink
+                                    :href="route('categories.index')"
+                                    :active="route().current('categories.*')"
+                                >
+                                    Kategoriyalar
+                                </NavLink>
+                                <NavLink
                                     :href="route('products.index')"
-                                    :active="route().current('products.*') || route().current('categories.*')"
+                                    :active="route().current('products.*')"
                                 >
                                     Mahsulotlar
                                 </NavLink>
