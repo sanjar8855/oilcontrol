@@ -30,8 +30,9 @@ return new class extends Migration
         });
 
         // Inventory transactions jadvaliga branch_id qo'shish
+        // workshop_id keyinroq migration'da qo'shiladi, shuning uchun after() ishlatmaymiz
         Schema::table('inventory_transactions', function (Blueprint $table) {
-            $table->foreignId('branch_id')->nullable()->after('workshop_id')->constrained()->nullOnDelete();
+            $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
             $table->index('branch_id');
         });
 
