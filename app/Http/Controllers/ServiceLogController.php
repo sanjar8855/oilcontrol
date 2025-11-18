@@ -17,12 +17,20 @@ class ServiceLogController extends Controller
      */
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
-        $serviceLogs = ServiceLog::whereHas('vehicle.client', function ($query) use ($workshop) {
-            $query->where('workshop_id', $workshop->id);
-        })
-            ->with(['vehicle.client'])
+        $query = ServiceLog::whereHas('vehicle.client', function ($q) use ($workshop) {
+            $q->where('workshop_id', $workshop->id);
+        });
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            // Manager/Employee can only see their branch's service logs
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        $serviceLogs = $query->with(['vehicle.client'])
             ->latest('service_date')
             ->paginate(20);
 
@@ -36,12 +44,20 @@ class ServiceLogController extends Controller
      */
     public function create(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
-        // Avtomobillar ro'yxati (mijoz nomi bilan)
-        $vehicles = Vehicle::whereHas('client', function ($query) use ($workshop) {
+        // Avtomobillar ro'yxati (mijoz nomi bilan) - branch filtered
+        $vehiclesQuery = Vehicle::whereHas('client', function ($query) use ($workshop, $user) {
             $query->where('workshop_id', $workshop->id);
-        })
+
+            // Branch filtering
+            if (!$user->canAccessAllBranches()) {
+                $query->where('branch_id', $user->branch_id);
+            }
+        });
+
+        $vehicles = $vehiclesQuery
             ->with('client')
             ->get()
             ->map(function ($vehicle) {
@@ -53,10 +69,17 @@ class ServiceLogController extends Controller
                 ];
             });
 
-        // Mahsulotlar ro'yxati (faqat aktiv va omborda bor)
-        $products = $workshop->products()
+        // Mahsulotlar ro'yxati (faqat aktiv va omborda bor) - branch filtered
+        $productsQuery = $workshop->products()
             ->where('is_active', true)
-            ->where('stock_quantity', '>', 0)
+            ->where('stock_quantity', '>', 0);
+
+        // Branch filtering for products
+        if (!$user->canAccessAllBranches()) {
+            $productsQuery->where('branch_id', $user->branch_id);
+        }
+
+        $products = $productsQuery
             ->select('id', 'name', 'selling_price', 'stock_quantity', 'unit')
             ->orderBy('name')
             ->get();
@@ -92,11 +115,21 @@ class ServiceLogController extends Controller
             'products.*.unit_price' => 'required|numeric|min:0',
         ]);
 
+        $user = $request->user();
+
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
             abort(403);
         }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        // Set branch_id from the vehicle's client branch
+        $validated['branch_id'] = $vehicle->client->branch_id;
 
         $serviceLog = ServiceLog::create($validated);
 
@@ -106,7 +139,12 @@ class ServiceLogController extends Controller
                 $product = \App\Models\Product::findOrFail($productData['id']);
 
                 // Tekshirish: Mahsulot bu workshop'ga tegishli ekanligini
-                if ($product->workshop_id !== $request->user()->workshop->id) {
+                if ($product->workshop_id !== $user->workshop->id) {
+                    abort(403);
+                }
+
+                // Check branch access for products
+                if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
                     abort(403);
                 }
 
@@ -137,8 +175,15 @@ class ServiceLogController extends Controller
      */
     public function show(Request $request, ServiceLog $serviceLog): Response
     {
-        // Avtorizatsiya
-        if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $serviceLog->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -154,16 +199,30 @@ class ServiceLogController extends Controller
      */
     public function edit(Request $request, ServiceLog $serviceLog): Response
     {
-        // Avtorizatsiya
-        if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
             abort(403);
         }
 
-        $workshop = $request->user()->workshop;
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $serviceLog->branch_id !== $user->branch_id) {
+            abort(403);
+        }
 
-        $vehicles = Vehicle::whereHas('client', function ($query) use ($workshop) {
+        $workshop = $user->workshop;
+
+        $vehiclesQuery = Vehicle::whereHas('client', function ($query) use ($workshop, $user) {
             $query->where('workshop_id', $workshop->id);
-        })
+
+            // Branch filtering
+            if (!$user->canAccessAllBranches()) {
+                $query->where('branch_id', $user->branch_id);
+            }
+        });
+
+        $vehicles = $vehiclesQuery
             ->with('client')
             ->get()
             ->map(function ($vehicle) {
@@ -184,8 +243,15 @@ class ServiceLogController extends Controller
      */
     public function update(Request $request, ServiceLog $serviceLog): RedirectResponse
     {
-        // Avtorizatsiya
-        if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $serviceLog->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -202,7 +268,12 @@ class ServiceLogController extends Controller
 
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for the new vehicle
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -217,8 +288,15 @@ class ServiceLogController extends Controller
      */
     public function destroy(Request $request, ServiceLog $serviceLog): RedirectResponse
     {
-        // Avtorizatsiya
-        if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $serviceLog->branch_id !== $user->branch_id) {
             abort(403);
         }
 
