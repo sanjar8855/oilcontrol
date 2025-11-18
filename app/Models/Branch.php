@@ -6,39 +6,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Workshop extends Model
+class Branch extends Model
 {
     protected $fillable = [
-        'user_id',
+        'workshop_id',
         'name',
-        'owner_name',
+        'code',
+        'address',
         'phone',
         'email',
-        'address',
-        'subscription_plan',
-        'subscription_expires_at',
         'is_active',
     ];
 
     protected $casts = [
-        'subscription_expires_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 
     // Relationships
-    public function user(): BelongsTo
+    public function workshop(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Workshop::class);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 
     public function clients(): HasMany
     {
         return $this->hasMany(Client::class);
-    }
-
-    public function categories(): HasMany
-    {
-        return $this->hasMany(Category::class);
     }
 
     public function products(): HasMany
@@ -51,8 +48,13 @@ class Workshop extends Model
         return $this->hasMany(Expense::class);
     }
 
-    public function branches(): HasMany
+    public function inventoryTransactions(): HasMany
     {
-        return $this->hasMany(Branch::class);
+        return $this->hasMany(InventoryTransaction::class);
+    }
+
+    public function serviceLogs(): HasMany
+    {
+        return $this->hasMany(ServiceLog::class);
     }
 }

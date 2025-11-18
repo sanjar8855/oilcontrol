@@ -11,6 +11,7 @@ class Product extends Model
 {
     protected $fillable = [
         'workshop_id',
+        'branch_id',
         'category_id',
         'name',
         'sku',
@@ -58,6 +59,11 @@ class Product extends Model
     public function workshop(): BelongsTo
     {
         return $this->belongsTo(Workshop::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function category(): BelongsTo

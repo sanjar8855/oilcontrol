@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InventoryTransaction extends Model
 {
     protected $fillable = [
+        'workshop_id',
+        'branch_id',
         'product_id',
         'service_log_id',
         'type',
@@ -31,6 +33,16 @@ class InventoryTransaction extends Model
     ];
 
     // Relationships
+    public function workshop(): BelongsTo
+    {
+        return $this->belongsTo(Workshop::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -11,6 +11,7 @@ class ServiceLog extends Model
 {
     protected $fillable = [
         'vehicle_id',
+        'branch_id',
         'service_date',
         'odometer_reading',
         'next_service_km',
@@ -34,6 +35,11 @@ class ServiceLog extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function reminders(): HasMany
