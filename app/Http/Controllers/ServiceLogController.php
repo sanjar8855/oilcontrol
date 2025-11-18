@@ -53,11 +53,20 @@ class ServiceLogController extends Controller
                 ];
             });
 
+        // Mahsulotlar ro'yxati (faqat aktiv va omborda bor)
+        $products = $workshop->products()
+            ->where('is_active', true)
+            ->where('stock_quantity', '>', 0)
+            ->select('id', 'name', 'selling_price', 'stock_quantity', 'unit')
+            ->orderBy('name')
+            ->get();
+
         // Agar query parametrda vehicle_id berilgan bo'lsa
         $selectedVehicleId = $request->query('vehicle_id');
 
         return Inertia::render('ServiceLogs/Create', [
             'vehicles' => $vehicles,
+            'products' => $products,
             'selectedVehicleId' => $selectedVehicleId,
         ]);
     }
@@ -75,7 +84,12 @@ class ServiceLogController extends Controller
             'avg_monthly_km' => 'nullable|integer|min:0',
             'service_type' => 'required|string|max:255',
             'cost' => 'nullable|numeric|min:0',
+            'labor_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
+            'products' => 'nullable|array',
+            'products.*.id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|numeric|min:0.01',
+            'products.*.unit_price' => 'required|numeric|min:0',
         ]);
 
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
@@ -85,6 +99,31 @@ class ServiceLogController extends Controller
         }
 
         $serviceLog = ServiceLog::create($validated);
+
+        // Mahsulotlarni saqlash va omborda miqdorni kamaytirish
+        if (!empty($validated['products'])) {
+            foreach ($validated['products'] as $productData) {
+                $product = \App\Models\Product::findOrFail($productData['id']);
+
+                // Tekshirish: Mahsulot bu workshop'ga tegishli ekanligini
+                if ($product->workshop_id !== $request->user()->workshop->id) {
+                    abort(403);
+                }
+
+                // Mahsulotni service log'ga biriktirish
+                $totalPrice = $productData['quantity'] * $productData['unit_price'];
+                $serviceLog->products()->attach($product->id, [
+                    'quantity' => $productData['quantity'],
+                    'unit_price' => $productData['unit_price'],
+                    'total_price' => $totalPrice,
+                ]);
+
+                // Omborda miqdorni kamaytirish (faqat track_inventory=true bo'lsa)
+                if ($product->track_inventory) {
+                    $product->decrement('stock_quantity', $productData['quantity']);
+                }
+            }
+        }
 
         // Avtomatik eslatmalarni yaratish
         $reminderService->createRemindersForServiceLog($serviceLog);
@@ -103,7 +142,7 @@ class ServiceLogController extends Controller
             abort(403);
         }
 
-        $serviceLog->load(['vehicle.client', 'reminders']);
+        $serviceLog->load(['vehicle.client', 'reminders', 'products']);
 
         return Inertia::render('ServiceLogs/Show', [
             'serviceLog' => $serviceLog,

@@ -17,6 +17,7 @@ class ServiceLog extends Model
         'avg_monthly_km',
         'service_type',
         'cost',
+        'labor_cost',
         'notes',
     ];
 
@@ -26,6 +27,7 @@ class ServiceLog extends Model
         'next_service_km' => 'integer',
         'avg_monthly_km' => 'integer',
         'cost' => 'decimal:2',
+        'labor_cost' => 'decimal:2',
     ];
 
     // Relationships
