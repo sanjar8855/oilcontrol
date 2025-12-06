@@ -14,9 +14,16 @@ class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
         $query = $workshop->products()->with('category');
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            // Manager/Employee can only see their branch's products
+            $query->where('branch_id', $user->branch_id);
+        }
 
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -72,7 +79,8 @@ class ProductController extends Controller
             'track_inventory' => 'boolean',
         ]);
 
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
         if (isset($validated['category_id'])) {
             $category = $workshop->categories()->find($validated['category_id']);
@@ -81,12 +89,19 @@ class ProductController extends Controller
             }
         }
 
+        // Set branch_id: Directors can choose, but managers/employees use their own branch
+        $validated['branch_id'] = $user->canAccessAllBranches()
+            ? ($request->input('branch_id') ?? $user->branch_id)
+            : $user->branch_id;
+
         DB::beginTransaction();
         try {
             $product = $workshop->products()->create($validated);
 
             if ($product->stock_quantity > 0 && $product->track_inventory) {
                 InventoryTransaction::create([
+                    'workshop_id' => $workshop->id,
+                    'branch_id' => $product->branch_id,
                     'product_id' => $product->id,
                     'type' => 'in',
                     'quantity' => $product->stock_quantity,
@@ -99,6 +114,7 @@ class ProductController extends Controller
                 ]);
 
                 $workshop->expenses()->create([
+                    'branch_id' => $product->branch_id,
                     'category' => 'Boshqa',
                     'title' => "Mahsulot sotib olish: {$product->name}",
                     'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
@@ -120,7 +136,15 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): Response
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -138,11 +162,19 @@ class ProductController extends Controller
 
     public function edit(Request $request, Product $product): Response
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
             abort(403);
         }
 
-        $workshop = $request->user()->workshop;
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        $workshop = $user->workshop;
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Products/Edit', [
@@ -153,7 +185,15 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -179,7 +219,15 @@ class ProductController extends Controller
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -191,7 +239,15 @@ class ProductController extends Controller
 
     public function adjustStock(Request $request, Product $product): Response
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -202,7 +258,15 @@ class ProductController extends Controller
 
     public function processStockAdjustment(Request $request, Product $product): RedirectResponse
     {
-        if ($product->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($product->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -235,6 +299,8 @@ class ProductController extends Controller
 
             $unitPrice = $validated['unit_price'] ?? $product->purchase_price;
             InventoryTransaction::create([
+                'workshop_id' => $user->workshop->id,
+                'branch_id' => $product->branch_id,
                 'product_id' => $product->id,
                 'type' => $validated['type'],
                 'quantity' => $quantityChange,
@@ -248,7 +314,8 @@ class ProductController extends Controller
             ]);
 
             if ($validated['type'] === 'in') {
-                $request->user()->workshop->expenses()->create([
+                $user->workshop->expenses()->create([
+                    'branch_id' => $product->branch_id,
                     'category' => 'Boshqa',
                     'title' => "Mahsulot sotib olish: {$product->name}",
                     'description' => $validated['notes'] ?? "Ombor kirim: {$quantityChange} {$product->unit}",

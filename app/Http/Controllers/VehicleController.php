@@ -16,12 +16,19 @@ class VehicleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
-        $vehicles = Vehicle::whereHas('client', function ($query) use ($workshop) {
-            $query->where('workshop_id', $workshop->id);
-        })
-            ->with(['client', 'latestService'])
+        $query = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
+            $q->where('workshop_id', $workshop->id);
+
+            // Branch filtering based on user role
+            if (!$user->canAccessAllBranches()) {
+                $q->where('branch_id', $user->branch_id);
+            }
+        });
+
+        $vehicles = $query->with(['client', 'latestService'])
             ->latest()
             ->paginate(15);
 
@@ -35,10 +42,18 @@ class VehicleController extends Controller
      */
     public function create(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
-        // Mijozlar ro'yxati
-        $clients = $workshop->clients()->orderBy('name')->get(['id', 'name']);
+        // Mijozlar ro'yxati - branch filtered
+        $clientsQuery = $workshop->clients();
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            $clientsQuery->where('branch_id', $user->branch_id);
+        }
+
+        $clients = $clientsQuery->orderBy('name')->get(['id', 'name']);
 
         // Agar query parametrda client_id berilgan bo'lsa
         $selectedClientId = $request->query('client_id');
@@ -63,9 +78,16 @@ class VehicleController extends Controller
             'vin' => 'nullable|string|max:50',
         ]);
 
+        $user = $request->user();
+
         // Tekshirish: Client shu ustaxonaga tegishli ekanligini
         $client = Client::findOrFail($validated['client_id']);
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -80,8 +102,15 @@ class VehicleController extends Controller
      */
     public function show(Request $request, Vehicle $vehicle): Response
     {
-        // Avtorizatsiya
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -99,13 +128,29 @@ class VehicleController extends Controller
      */
     public function edit(Request $request, Vehicle $vehicle): Response
     {
-        // Avtorizatsiya
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
             abort(403);
         }
 
-        $workshop = $request->user()->workshop;
-        $clients = $workshop->clients()->orderBy('name')->get(['id', 'name']);
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        $workshop = $user->workshop;
+
+        // Mijozlar ro'yxati - branch filtered
+        $clientsQuery = $workshop->clients();
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            $clientsQuery->where('branch_id', $user->branch_id);
+        }
+
+        $clients = $clientsQuery->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Vehicles/Edit', [
             'vehicle' => $vehicle,
@@ -118,8 +163,15 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle): RedirectResponse
     {
-        // Avtorizatsiya
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -134,7 +186,12 @@ class VehicleController extends Controller
 
         // Tekshirish: Client shu ustaxonaga tegishli ekanligini
         $client = Client::findOrFail($validated['client_id']);
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for the new client
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -149,8 +206,15 @@ class VehicleController extends Controller
      */
     public function destroy(Request $request, Vehicle $vehicle): RedirectResponse
     {
-        // Avtorizatsiya
-        if ($vehicle->client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
             abort(403);
         }
 

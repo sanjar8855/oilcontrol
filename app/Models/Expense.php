@@ -9,6 +9,7 @@ class Expense extends Model
 {
     protected $fillable = [
         'workshop_id',
+        'branch_id',
         'category',
         'title',
         'description',
@@ -28,5 +29,10 @@ class Expense extends Model
     public function workshop(): BelongsTo
     {
         return $this->belongsTo(Workshop::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 }
