@@ -15,10 +15,18 @@ class ClientController extends Controller
      */
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
-        $clients = $workshop->clients()
-            ->with('vehicles')
+        $query = $workshop->clients();
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            // Manager/Employee can only see their branch's clients
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        $clients = $query->with('vehicles')
             ->latest()
             ->paginate(10);
 
@@ -48,7 +56,13 @@ class ClientController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
+
+        // Set branch_id: Directors can choose, but managers/employees use their own branch
+        $validated['branch_id'] = $user->canAccessAllBranches()
+            ? ($request->input('branch_id') ?? $user->branch_id)
+            : $user->branch_id;
 
         $workshop->clients()->create($validated);
 
@@ -61,8 +75,15 @@ class ClientController extends Controller
      */
     public function show(Request $request, Client $client): Response
     {
-        // Faqat o'z ustaxonasining mijozlarini ko'rish mumkin
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -78,8 +99,15 @@ class ClientController extends Controller
      */
     public function edit(Request $request, Client $client): Response
     {
-        // Faqat o'z ustaxonasining mijozlarini tahrirlash mumkin
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -93,8 +121,15 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client): RedirectResponse
     {
-        // Faqat o'z ustaxonasining mijozlarini yangilash mumkin
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 
@@ -117,8 +152,15 @@ class ClientController extends Controller
      */
     public function destroy(Request $request, Client $client): RedirectResponse
     {
-        // Faqat o'z ustaxonasining mijozlarini o'chirish mumkin
-        if ($client->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($client->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
 

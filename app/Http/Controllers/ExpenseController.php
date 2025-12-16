@@ -12,9 +12,16 @@ class ExpenseController extends Controller
 {
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
         $query = $workshop->expenses();
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            // Manager/Employee can only see their branch's expenses
+            $query->where('branch_id', $user->branch_id);
+        }
 
         if ($request->has('category')) {
             $query->where('category', $request->category);
@@ -29,14 +36,25 @@ class ExpenseController extends Controller
 
         $expenses = $query->latest('expense_date')->paginate(10);
 
-        $totalExpenses = $workshop->expenses()
+        $totalExpensesQuery = $workshop->expenses()
             ->when($request->has('from_date'), fn($q) => $q->where('expense_date', '>=', $request->from_date))
-            ->when($request->has('to_date'), fn($q) => $q->where('expense_date', '<=', $request->to_date))
-            ->sum('amount');
+            ->when($request->has('to_date'), fn($q) => $q->where('expense_date', '<=', $request->to_date));
 
-        $expensesByCategory = $workshop->expenses()
+        if (!$user->canAccessAllBranches()) {
+            $totalExpensesQuery->where('branch_id', $user->branch_id);
+        }
+
+        $totalExpenses = $totalExpensesQuery->sum('amount');
+
+        $expensesByCategoryQuery = $workshop->expenses()
             ->when($request->has('from_date'), fn($q) => $q->where('expense_date', '>=', $request->from_date))
-            ->when($request->has('to_date'), fn($q) => $q->where('expense_date', '<=', $request->to_date))
+            ->when($request->has('to_date'), fn($q) => $q->where('expense_date', '<=', $request->to_date));
+
+        if (!$user->canAccessAllBranches()) {
+            $expensesByCategoryQuery->where('branch_id', $user->branch_id);
+        }
+
+        $expensesByCategory = $expensesByCategoryQuery
             ->selectRaw('category, SUM(amount) as total')
             ->groupBy('category')
             ->get();
@@ -67,7 +85,8 @@ class ExpenseController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $workshop = $request->user()->workshop;
+        $user = $request->user();
+        $workshop = $user->workshop;
 
         // Get active category names for validation
         $categoryNames = $workshop->categories()
@@ -85,6 +104,11 @@ class ExpenseController extends Controller
             'receipt_number' => 'nullable|string|max:255',
         ]);
 
+        // Set branch_id: Directors can choose, but managers/employees use their own branch
+        $validated['branch_id'] = $user->canAccessAllBranches()
+            ? ($request->input('branch_id') ?? $user->branch_id)
+            : $user->branch_id;
+
         $workshop->expenses()->create($validated);
 
         return redirect()->route('expenses.index')
@@ -93,11 +117,19 @@ class ExpenseController extends Controller
 
     public function edit(Request $request, Expense $expense): Response
     {
-        if ($expense->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($expense->workshop_id !== $user->workshop->id) {
             abort(403);
         }
 
-        $workshop = $request->user()->workshop;
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $expense->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        $workshop = $user->workshop;
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Expenses/Edit', [
@@ -108,11 +140,19 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Expense $expense): RedirectResponse
     {
-        if ($expense->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($expense->workshop_id !== $user->workshop->id) {
             abort(403);
         }
 
-        $workshop = $request->user()->workshop;
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $expense->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        $workshop = $user->workshop;
 
         // Get active category names for validation
         $categoryNames = $workshop->categories()
@@ -138,7 +178,15 @@ class ExpenseController extends Controller
 
     public function destroy(Request $request, Expense $expense): RedirectResponse
     {
-        if ($expense->workshop_id !== $request->user()->workshop->id) {
+        $user = $request->user();
+
+        // Check workshop access
+        if ($expense->workshop_id !== $user->workshop->id) {
+            abort(403);
+        }
+
+        // Check branch access for managers/employees
+        if (!$user->canAccessAllBranches() && $expense->branch_id !== $user->branch_id) {
             abort(403);
         }
 

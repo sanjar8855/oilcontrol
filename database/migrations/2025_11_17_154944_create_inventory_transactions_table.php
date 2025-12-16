@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('total_price', 12, 2)->nullable();
             $table->string('reason')->nullable();
             $table->text('notes')->nullable();
-            $table->date('transaction_date')->default(DB::raw('CURRENT_DATE'));
+            $table->date('transaction_date')->useCurrent();
             $table->timestamps();
             
             $table->index('product_id');
