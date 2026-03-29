@@ -12,6 +12,36 @@ use Inertia\Response;
 class VehicleController extends Controller
 {
     /**
+     * Search for a vehicle by plate number.
+     */
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'plate_number' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $workshop = $user->workshop;
+
+        $vehicle = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
+            $q->where('workshop_id', $workshop->id);
+
+            // Branch filtering based on user role
+            if (!$user->canAccessAllBranches()) {
+                $q->where('branch_id', $user->branch_id);
+            }
+        })
+        ->where('plate_number', $validated['plate_number'])
+        ->with(['client', 'latestService'])
+        ->first();
+
+        return response()->json([
+            'found' => $vehicle ? true : false,
+            'vehicle' => $vehicle,
+        ]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
@@ -103,6 +133,7 @@ class VehicleController extends Controller
     public function show(Request $request, Vehicle $vehicle): Response
     {
         $user = $request->user();
+        $workshop = $user->workshop;
 
         // Check workshop access
         if ($vehicle->client->workshop_id !== $user->workshop->id) {
@@ -118,8 +149,24 @@ class VehicleController extends Controller
             $query->latest('service_date');
         }]);
 
+        // Mahsulotlar ro'yxati (faqat aktiv va omborda bor) - branch filtered
+        $productsQuery = $workshop->products()
+            ->where('is_active', true)
+            ->where('stock_quantity', '>', 0);
+
+        // Branch filtering for products
+        if (!$user->canAccessAllBranches()) {
+            $productsQuery->where('branch_id', $user->branch_id);
+        }
+
+        $products = $productsQuery
+            ->with('category')
+            ->orderBy('name')
+            ->get(['id', 'name', 'unit', 'selling_price', 'stock_quantity', 'category_id']);
+
         return Inertia::render('Vehicles/Show', [
             'vehicle' => $vehicle,
+            'products' => $products,
         ]);
     }
 

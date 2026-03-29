@@ -1,10 +1,138 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
 
 const props = defineProps({
     vehicle: Object,
+    products: Array,
 });
+
+// Savdo qilish formasi
+const showSaleForm = ref(false);
+const cart = ref([]);
+const selectedProductId = ref(null);
+const selectedQuantity = ref(1);
+
+// Service log formasi
+const serviceForm = useForm({
+    vehicle_id: props.vehicle.id,
+    service_date: new Date().toISOString().split('T')[0],
+    odometer_reading: '',
+    next_service_km: 10000,
+    avg_monthly_km: props.vehicle.client.default_avg_monthly_km || 1000,
+    service_type: 'Moy almashtirish',
+    cost: 0,
+    labor_cost: 0,
+    notes: '',
+    products: [],
+});
+
+// Mahsulotlar ro'yxati select uchun
+const productOptions = computed(() => {
+    return props.products.map(p => ({
+        value: p.id,
+        label: `${p.name} - ${p.selling_price.toLocaleString()} so'm (${p.stock_quantity} ${p.unit})`,
+        product: p,
+    }));
+});
+
+// Savatchaga qo'shish
+const addToCart = () => {
+    if (!selectedProductId.value) {
+        alert('Mahsulotni tanlang');
+        return;
+    }
+
+    const product = props.products.find(p => p.id === selectedProductId.value);
+    if (!product) return;
+
+    if (selectedQuantity.value <= 0) {
+        alert('Miqdorni kiriting');
+        return;
+    }
+
+    if (selectedQuantity.value > product.stock_quantity) {
+        alert(`Omborda faqat ${product.stock_quantity} ${product.unit} mavjud`);
+        return;
+    }
+
+    // Savatchada bor-yo'qligini tekshirish
+    const existingIndex = cart.value.findIndex(item => item.id === product.id);
+
+    if (existingIndex !== -1) {
+        // Mavjud bo'lsa, miqdorni oshirish
+        cart.value[existingIndex].quantity += selectedQuantity.value;
+        cart.value[existingIndex].total_price = cart.value[existingIndex].quantity * product.selling_price;
+    } else {
+        // Yangi qo'shish
+        cart.value.push({
+            id: product.id,
+            name: product.name,
+            unit: product.unit,
+            quantity: selectedQuantity.value,
+            unit_price: product.selling_price,
+            total_price: selectedQuantity.value * product.selling_price,
+        });
+    }
+
+    // Reset
+    selectedProductId.value = null;
+    selectedQuantity.value = 1;
+
+    // Jami narxni yangilash
+    updateTotalCost();
+};
+
+// Savatchadan o'chirish
+const removeFromCart = (index) => {
+    cart.value.splice(index, 1);
+    updateTotalCost();
+};
+
+// Jami narxni hisoblash
+const updateTotalCost = () => {
+    const productsTotal = cart.value.reduce((sum, item) => sum + item.total_price, 0);
+    serviceForm.cost = productsTotal + (serviceForm.labor_cost || 0);
+};
+
+// Serverni saqlash
+const submitService = () => {
+    if (!serviceForm.odometer_reading) {
+        alert('Probegni kiriting');
+        return;
+    }
+
+    if (cart.value.length === 0) {
+        alert('Kamida bitta mahsulot qo\'shing');
+        return;
+    }
+
+    // Savatchadagi mahsulotlarni formaga ko'chirish
+    serviceForm.products = cart.value.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+    }));
+
+    serviceForm.post(route('service-logs.store'), {
+        onSuccess: () => {
+            // Reset
+            cart.value = [];
+            showSaleForm.value = false;
+            serviceForm.reset();
+        },
+        onError: (errors) => {
+            console.error('Xatolik:', errors);
+        },
+    });
+};
+
+const toggleSaleForm = () => {
+    showSaleForm.value = !showSaleForm.value;
+};
 </script>
 
 <template>
@@ -35,6 +163,239 @@ const props = defineProps({
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Savdo qilish tugmasi -->
+                <div class="mb-6">
+                    <button
+                        @click="toggleSaleForm"
+                        class="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-green-500"
+                    >
+                        {{ showSaleForm ? '✕ Yopish' : '🛒 Savdo qilish' }}
+                    </button>
+                </div>
+
+                <!-- Savdo qilish formasi -->
+                <div v-if="showSaleForm" class="mb-6 overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
+                    <div class="border-b border-gray-200 bg-white px-4 py-5 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                            Yangi servis va mahsulot sotish
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <form @submit.prevent="submitService">
+                            <!-- Servis ma'lumotlari -->
+                            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Servis sanasi <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.service_date"
+                                        type="date"
+                                        required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Probeg (km) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.odometer_reading"
+                                        type="number"
+                                        required
+                                        min="0"
+                                        placeholder="125000"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Keyingi servis (km) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.next_service_km"
+                                        type="number"
+                                        required
+                                        min="1000"
+                                        placeholder="10000"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Servis turi <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.service_type"
+                                        type="text"
+                                        required
+                                        placeholder="Moy almashtirish"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Ish haqi (so'm)
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.labor_cost"
+                                        type="number"
+                                        min="0"
+                                        placeholder="50000"
+                                        @input="updateTotalCost"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Jami narx (so'm)
+                                    </label>
+                                    <input
+                                        v-model="serviceForm.cost"
+                                        type="number"
+                                        readonly
+                                        class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm dark:border-gray-600 dark:bg-gray-600 dark:text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Mahsulot qo'shish -->
+                            <div class="mb-6">
+                                <h4 class="mb-3 text-md font-semibold text-gray-900 dark:text-white">
+                                    Mahsulotlar qo'shish
+                                </h4>
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Mahsulot tanlang
+                                        </label>
+                                        <Multiselect
+                                            v-model="selectedProductId"
+                                            :options="productOptions"
+                                            :searchable="true"
+                                            placeholder="Mahsulot qidirish..."
+                                            noOptionsText="Mahsulot topilmadi"
+                                            noResultsText="Natija topilmadi"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Miqdor
+                                        </label>
+                                        <div class="mt-1 flex gap-2">
+                                            <input
+                                                v-model="selectedQuantity"
+                                                type="number"
+                                                min="1"
+                                                step="0.1"
+                                                placeholder="1"
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                            />
+                                            <button
+                                                type="button"
+                                                @click="addToCart"
+                                                class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                                            >
+                                                + Qo'shish
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Savatcha -->
+                            <div v-if="cart.length > 0" class="mb-6">
+                                <h4 class="mb-3 text-md font-semibold text-gray-900 dark:text-white">
+                                    Savatcha ({{ cart.length }} ta mahsulot)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                                                    Mahsulot
+                                                </th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                                                    Miqdor
+                                                </th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                                                    Narx
+                                                </th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                                                    Jami
+                                                </th>
+                                                <th class="px-4 py-3"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                                            <tr v-for="(item, index) in cart" :key="item.id">
+                                                <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.name }}
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.quantity }} {{ item.unit }}
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.unit_price.toLocaleString() }} so'm
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-4 text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {{ item.total_price.toLocaleString() }} so'm
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-4 text-sm">
+                                                    <button
+                                                        type="button"
+                                                        @click="removeFromCart(index)"
+                                                        class="text-red-600 hover:text-red-800 dark:text-red-400"
+                                                    >
+                                                        O'chirish
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Izoh -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Izoh
+                                </label>
+                                <textarea
+                                    v-model="serviceForm.notes"
+                                    rows="3"
+                                    placeholder="Qo'shimcha ma'lumot..."
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                ></textarea>
+                            </div>
+
+                            <!-- Saqlash tugmasi -->
+                            <div class="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    @click="toggleSaleForm"
+                                    class="rounded-md bg-gray-200 px-6 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
+                                >
+                                    Bekor qilish
+                                </button>
+                                <button
+                                    type="submit"
+                                    :disabled="serviceForm.processing || cart.length === 0"
+                                    class="rounded-md bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                                >
+                                    {{ serviceForm.processing ? 'Saqlanmoqda...' : 'Savdoni saqlash' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="grid gap-6 lg:grid-cols-3">
                     <!-- Avtomobil ma'lumotlari -->
                     <div class="lg:col-span-1">

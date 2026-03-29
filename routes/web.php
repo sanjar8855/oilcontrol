@@ -39,9 +39,11 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 
 Route::middleware('auth')->group(function () {
     // Mijozlar (Clients) CRUD
+    Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');
     Route::resource('clients', ClientController::class);
 
     // Avtomobillar (Vehicles) CRUD
+    Route::get('/vehicles/search', [VehicleController::class, 'search'])->name('vehicles.search');
     Route::resource('vehicles', VehicleController::class);
 
     // Servis Yozuvlari (Service Logs) CRUD

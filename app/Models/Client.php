@@ -13,6 +13,7 @@ class Client extends Model
         'branch_id',
         'name',
         'phone',
+        'default_avg_monthly_km',
         'telegram_id',
         'email',
         'notes',

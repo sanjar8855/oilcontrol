@@ -1,6 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import Modal from '@/Components/Modal.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import axios from 'axios';
 
 defineProps({
     workshop: Object,
@@ -10,6 +13,67 @@ defineProps({
 
 const formatMoney = (amount) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
+};
+
+// Qidiruv uchun
+const searchPlateNumber = ref('');
+const searching = ref(false);
+const showAddClientModal = ref(false);
+
+// Mijoz qo'shish form
+const clientForm = useForm({
+    name: '',
+    phone: '',
+    avg_daily_km: '',
+    plate_number: '',
+    make: '',
+});
+
+const searchVehicle = async () => {
+    if (!searchPlateNumber.value.trim()) {
+        alert('Iltimos, avto raqamni kiriting');
+        return;
+    }
+
+    searching.value = true;
+
+    try {
+        const response = await axios.get(route('vehicles.search'), {
+            params: {
+                plate_number: searchPlateNumber.value.trim(),
+            },
+        });
+
+        if (response.data.found) {
+            // Topildi - vehicles.show sahifasiga o'tish
+            router.visit(route('vehicles.show', response.data.vehicle.id));
+        } else {
+            // Topilmadi - mijoz qo'shish modal ochish
+            clientForm.plate_number = searchPlateNumber.value.trim();
+            showAddClientModal.value = true;
+        }
+    } catch (error) {
+        console.error('Qidiruv xatosi:', error);
+        alert('Qidiruv vaqtida xatolik yuz berdi');
+    } finally {
+        searching.value = false;
+    }
+};
+
+const closeModal = () => {
+    showAddClientModal.value = false;
+    clientForm.reset();
+};
+
+const submitClient = () => {
+    clientForm.post(route('clients.store-with-vehicle'), {
+        onSuccess: () => {
+            closeModal();
+        },
+        onError: (errors) => {
+            console.error('Xatolik:', errors);
+        },
+    });
 };
 </script>
 
@@ -33,6 +97,31 @@ const formatMoney = (amount) => {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Avto raqam qidiruv -->
+                <div class="mb-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                    <div class="p-6">
+                        <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                            Avtomobil qidirish
+                        </h3>
+                        <div class="flex gap-4">
+                            <input
+                                v-model="searchPlateNumber"
+                                type="text"
+                                placeholder="Avto raqamni kiriting (masalan: 01A123AA)"
+                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                @keyup.enter="searchVehicle"
+                            />
+                            <button
+                                @click="searchVehicle"
+                                :disabled="searching"
+                                class="rounded-md bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                            >
+                                {{ searching ? 'Qidirilmoqda...' : 'Qidirish' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Statistika Kartochkalari -->
                 <div class="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     <!-- Jami mijozlar -->
@@ -313,5 +402,122 @@ const formatMoney = (amount) => {
                 </div>
             </div>
         </div>
+
+        <!-- Mijoz qo'shish Modal -->
+        <Modal :show="showAddClientModal" @close="closeModal" max-width="2xl">
+            <div class="p-6">
+                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    Yangi mijoz qo'shish
+                </h2>
+                <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
+                    Avto raqam <span class="font-semibold text-indigo-600">{{ clientForm.plate_number }}</span> topilmadi. Yangi mijoz qo'shishingiz mumkin.
+                </p>
+
+                <form @submit.prevent="submitClient">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <!-- Mijoz ismi -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Mijoz ismi <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="name"
+                                v-model="clientForm.name"
+                                type="text"
+                                required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                            <div v-if="clientForm.errors.name" class="mt-1 text-sm text-red-600">
+                                {{ clientForm.errors.name }}
+                            </div>
+                        </div>
+
+                        <!-- Telefon raqami -->
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Telefon raqami <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="phone"
+                                v-model="clientForm.phone"
+                                type="text"
+                                required
+                                placeholder="+998901234567"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                            <div v-if="clientForm.errors.phone" class="mt-1 text-sm text-red-600">
+                                {{ clientForm.errors.phone }}
+                            </div>
+                        </div>
+
+                        <!-- Kunlik km -->
+                        <div>
+                            <label for="avg_daily_km" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Kuniga taxminan necha km yuradi
+                            </label>
+                            <input
+                                id="avg_daily_km"
+                                v-model="clientForm.avg_daily_km"
+                                type="number"
+                                min="0"
+                                placeholder="30"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                            <div v-if="clientForm.errors.avg_daily_km" class="mt-1 text-sm text-red-600">
+                                {{ clientForm.errors.avg_daily_km }}
+                            </div>
+                        </div>
+
+                        <!-- Mashina markasi -->
+                        <div>
+                            <label for="make" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Mashina markasi
+                            </label>
+                            <input
+                                id="make"
+                                v-model="clientForm.make"
+                                type="text"
+                                placeholder="Chevrolet Cobalt"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                            <div v-if="clientForm.errors.make" class="mt-1 text-sm text-red-600">
+                                {{ clientForm.errors.make }}
+                            </div>
+                        </div>
+
+                        <!-- Avto raqam (readonly) -->
+                        <div class="sm:col-span-2">
+                            <label for="plate_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Avto raqam <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="plate_number"
+                                v-model="clientForm.plate_number"
+                                type="text"
+                                readonly
+                                class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm dark:border-gray-600 dark:bg-gray-600 dark:text-white"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="closeModal"
+                            class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                        >
+                            Bekor qilish
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="clientForm.processing"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                            {{ clientForm.processing ? 'Saqlanmoqda...' : 'Saqlash' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>

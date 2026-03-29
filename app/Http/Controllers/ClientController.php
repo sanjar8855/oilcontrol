@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Vehicle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,6 +42,52 @@ class ClientController extends Controller
     public function create(): Response
     {
         return Inertia::render('Clients/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage (Client + Vehicle).
+     */
+    public function storeWithVehicle(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'avg_daily_km' => 'nullable|integer|min:0',
+            'plate_number' => 'required|string|max:20|unique:vehicles,plate_number',
+            'make' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $workshop = $user->workshop;
+
+        // Set branch_id: Directors can choose, but managers/employees use their own branch
+        $branchId = $user->canAccessAllBranches()
+            ? ($request->input('branch_id') ?? $user->branch_id)
+            : $user->branch_id;
+
+        // Convert avg_daily_km to avg_monthly_km
+        $avgMonthlyKm = null;
+        if (isset($validated['avg_daily_km']) && $validated['avg_daily_km'] > 0) {
+            $avgMonthlyKm = $validated['avg_daily_km'] * 30;
+        }
+
+        // Create client
+        $client = $workshop->clients()->create([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'default_avg_monthly_km' => $avgMonthlyKm,
+            'branch_id' => $branchId,
+        ]);
+
+        // Create vehicle
+        $vehicle = Vehicle::create([
+            'client_id' => $client->id,
+            'plate_number' => $validated['plate_number'],
+            'make' => $validated['make'] ?? 'Noma\'lum',
+        ]);
+
+        return redirect()->route('vehicles.show', $vehicle)
+            ->with('success', 'Mijoz va avtomobil muvaffaqiyatli qo\'shildi!');
     }
 
     /**
