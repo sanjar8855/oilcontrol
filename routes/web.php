@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,9 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
+    Route::resource('users', UserController::class)->except(['show']);
+
     // Mijozlar (Clients) CRUD
     Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');
     Route::resource('clients', ClientController::class);

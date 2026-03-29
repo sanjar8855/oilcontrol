@@ -75,6 +75,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Xarajatlar
                                 </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
+                                    :href="route('users.index')"
+                                    :active="route().current('users.*')"
+                                >
+                                    Foydalanuvchilar
+                                </NavLink>
                             </div>
                         </div>
 
@@ -211,6 +218,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('expenses.*')"
                         >
                             Xarajatlar
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
+                            :href="route('users.index')"
+                            :active="route().current('users.*')"
+                        >
+                            Foydalanuvchilar
                         </ResponsiveNavLink>
                     </div>
 
