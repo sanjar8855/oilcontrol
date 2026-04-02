@@ -20,16 +20,17 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
+            'phone' => 'required|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'workshop_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
         ]);
 
         // User yaratish
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'email_verified_at' => now(),
         ]);
@@ -54,6 +55,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
             ],
             'workshop' => new WorkshopResource($workshop),
             'token' => $token,
@@ -66,15 +68,18 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
+            'login' => 'required|string',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $login = $request->login;
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        $user = User::where($fieldType, $login)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'login' => ['The provided credentials are incorrect.'],
             ]);
         }
 
@@ -90,6 +95,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
             ],
             'workshop' => new WorkshopResource($workshop),
             'token' => $token,
@@ -122,6 +128,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
             ],
             'workshop' => new WorkshopResource($workshop),
         ]);
