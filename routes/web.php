@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceLogController;
@@ -63,6 +64,9 @@ Route::middleware('auth')->group(function () {
 
     // Xarajatlar (Expenses) CRUD
     Route::resource('expenses', ExpenseController::class)->except(['show']);
+
+    // To'lovlar (Payments) CRUD
+    Route::resource('payments', PaymentController::class);
 
     // Profil boshqaruvi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

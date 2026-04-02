@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ServiceLog;
 use App\Models\Vehicle;
 use App\Services\ReminderService;
+use App\Services\StockMovementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,6 +115,16 @@ class ServiceLogController extends Controller
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_price' => 'required|numeric|min:0',
+            // Yangi to'lov maydonlari
+            'payment_type' => 'required|in:cash,credit,installment',
+            'payment_status' => 'nullable|in:paid,partial,unpaid',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'due_date' => 'nullable|date|after_or_equal:service_date',
+            'currency' => 'nullable|in:USD,UZS',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_percentage' => 'nullable|numeric|min:0|max:100',
+            'is_consignment' => 'nullable|boolean',
+            'consignment_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $user = $request->user();
@@ -131,43 +143,87 @@ class ServiceLogController extends Controller
         // Set branch_id from the vehicle's client branch
         $validated['branch_id'] = $vehicle->client->branch_id;
 
-        $serviceLog = ServiceLog::create($validated);
+        // Default qiymatlar
+        $validated['currency'] = $validated['currency'] ?? 'UZS';
+        $validated['payment_status'] = $validated['payment_status'] ?? 'unpaid';
+        $validated['paid_amount'] = $validated['paid_amount'] ?? 0;
+        $validated['discount_amount'] = $validated['discount_amount'] ?? 0;
+        $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
+        $validated['is_consignment'] = $validated['is_consignment'] ?? false;
 
-        // Mahsulotlarni saqlash va omborda miqdorni kamaytirish
-        if (!empty($validated['products'])) {
-            foreach ($validated['products'] as $productData) {
-                $product = \App\Models\Product::findOrFail($productData['id']);
+        DB::beginTransaction();
+        try {
+            $serviceLog = ServiceLog::create($validated);
 
-                // Tekshirish: Mahsulot bu workshop'ga tegishli ekanligini
-                if ($product->workshop_id !== $user->workshop->id) {
-                    abort(403);
-                }
+            $stockService = new StockMovementService();
+            $totalProductsCost = 0;
 
-                // Check branch access for products
-                if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
-                    abort(403);
-                }
+            // Mahsulotlarni saqlash va FIFO orqali chiqarish
+            if (!empty($validated['products'])) {
+                foreach ($validated['products'] as $productData) {
+                    $product = \App\Models\Product::findOrFail($productData['id']);
 
-                // Mahsulotni service log'ga biriktirish
-                $totalPrice = $productData['quantity'] * $productData['unit_price'];
-                $serviceLog->products()->attach($product->id, [
-                    'quantity' => $productData['quantity'],
-                    'unit_price' => $productData['unit_price'],
-                    'total_price' => $totalPrice,
-                ]);
+                    // Tekshirish: Mahsulot bu workshop'ga tegishli ekanligini
+                    if ($product->workshop_id !== $user->workshop->id) {
+                        abort(403);
+                    }
 
-                // Omborda miqdorni kamaytirish (faqat track_inventory=true bo'lsa)
-                if ($product->track_inventory) {
-                    $product->decrement('stock_quantity', $productData['quantity']);
+                    // Check branch access for products
+                    if (!$user->canAccessAllBranches() && $product->branch_id !== $user->branch_id) {
+                        abort(403);
+                    }
+
+                    // Mahsulotni service log'ga biriktirish
+                    $totalPrice = $productData['quantity'] * $productData['unit_price'];
+                    $serviceLog->products()->attach($product->id, [
+                        'quantity' => $productData['quantity'],
+                        'unit_price' => $productData['unit_price'],
+                        'total_price' => $totalPrice,
+                    ]);
+
+                    $totalProductsCost += $totalPrice;
+
+                    // FIFO orqali omborda miqdorni kamaytirish
+                    if ($product->track_inventory && $product->stock_quantity >= $productData['quantity']) {
+                        try {
+                            $stockService->recordOutgoing(
+                                productId: $product->id,
+                                quantity: $productData['quantity'],
+                                referenceType: 'ServiceLog',
+                                referenceId: $serviceLog->id,
+                                notes: "Servis: {$serviceLog->service_type} - {$vehicle->make} {$vehicle->model}"
+                            );
+                        } catch (\Exception $e) {
+                            // Agar FIFO xatolik bersa, oddiy decrement ishlatamiz
+                            $product->decrement('stock_quantity', $productData['quantity']);
+                        }
+                    }
                 }
             }
+
+            // Total amount ni hisoblash
+            $serviceLog->calculateTotal();
+
+            // Agar to'langan summa berilgan bo'lsa, to'lovni qayd qilish
+            if ($validated['payment_type'] === 'cash' && $validated['paid_amount'] > 0) {
+                $serviceLog->addPayment(
+                    amount: $validated['paid_amount'],
+                    method: 'cash',
+                    notes: 'Boshlang\'ich to\'lov'
+                );
+            }
+
+            // Avtomatik eslatmalarni yaratish
+            $reminderService->createRemindersForServiceLog($serviceLog);
+
+            DB::commit();
+
+            return redirect()->route('vehicles.show', $vehicle->id)
+                ->with('success', 'Servis yozuvi muvaffaqiyatli qo\'shildi!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
         }
-
-        // Avtomatik eslatmalarni yaratish
-        $reminderService->createRemindersForServiceLog($serviceLog);
-
-        return redirect()->route('vehicles.show', $vehicle->id)
-            ->with('success', 'Servis yozuvi muvaffaqiyatli qo\'shildi!');
     }
 
     /**

@@ -17,8 +17,17 @@ class Product extends Model
         'sku',
         'description',
         'unit',
+        'currency',
         'purchase_price',
         'selling_price',
+        'purchase_price_usd',
+        'purchase_price_uzs',
+        'selling_price_usd',
+        'selling_price_uzs',
+        'is_consignment',
+        'consignment_percentage',
+        'supplier',
+        'exchange_rate',
         'stock_quantity',
         'min_stock_level',
         'barcode',
@@ -30,10 +39,17 @@ class Product extends Model
     protected $casts = [
         'purchase_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'purchase_price_usd' => 'decimal:2',
+        'purchase_price_uzs' => 'decimal:2',
+        'selling_price_usd' => 'decimal:2',
+        'selling_price_uzs' => 'decimal:2',
+        'consignment_percentage' => 'decimal:2',
+        'exchange_rate' => 'decimal:2',
         'stock_quantity' => 'integer',
         'min_stock_level' => 'integer',
         'is_active' => 'boolean',
         'track_inventory' => 'boolean',
+        'is_consignment' => 'boolean',
     ];
 
     // Helper methods
@@ -81,5 +97,55 @@ class Product extends Model
         return $this->belongsToMany(ServiceLog::class, 'service_log_product')
             ->withPivot('quantity', 'unit_price', 'total_price')
             ->withTimestamps();
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    // Helper methods for multi-currency
+    public function getPurchasePrice(): float
+    {
+        if ($this->currency === 'USD') {
+            return (float) $this->purchase_price_usd;
+        }
+        return (float) $this->purchase_price_uzs;
+    }
+
+    public function getSellingPrice(): float
+    {
+        if ($this->currency === 'USD') {
+            return (float) $this->selling_price_usd;
+        }
+        return (float) $this->selling_price_uzs;
+    }
+
+    public function getAverageCost(): float
+    {
+        // FIFO average cost calculation
+        $movements = $this->stockMovements()
+            ->where('movement_type', 'in')
+            ->where('remaining_quantity', '>', 0)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($movements->isEmpty()) {
+            return $this->getPurchasePrice();
+        }
+
+        $totalCost = 0;
+        $totalQuantity = 0;
+
+        foreach ($movements as $movement) {
+            $cost = $movement->currency === 'USD'
+                ? $movement->unit_cost_usd
+                : $movement->unit_cost_uzs;
+
+            $totalCost += $cost * $movement->remaining_quantity;
+            $totalQuantity += $movement->remaining_quantity;
+        }
+
+        return $totalQuantity > 0 ? $totalCost / $totalQuantity : 0;
     }
 }

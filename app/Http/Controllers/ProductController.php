@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\InventoryTransaction;
+use App\Services\StockMovementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,13 +71,23 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'unit' => 'required|string|max:50',
-            'purchase_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'currency' => 'required|in:USD,UZS',
+            'purchase_price_usd' => 'nullable|numeric|min:0',
+            'purchase_price_uzs' => 'nullable|numeric|min:0',
+            'selling_price_usd' => 'nullable|numeric|min:0',
+            'selling_price_uzs' => 'nullable|numeric|min:0',
+            'exchange_rate' => 'nullable|numeric|min:0',
+            'is_consignment' => 'boolean',
+            'consignment_percentage' => 'nullable|numeric|min:0|max:100',
+            'supplier' => 'nullable|string|max:255',
             'stock_quantity' => 'integer|min:0',
             'min_stock_level' => 'integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'track_inventory' => 'boolean',
+            // Eski maydonlar (backward compatibility)
+            'purchase_price' => 'nullable|numeric|min:0',
+            'selling_price' => 'nullable|numeric|min:0',
         ]);
 
         $user = $request->user();
@@ -98,7 +109,22 @@ class ProductController extends Controller
         try {
             $product = $workshop->products()->create($validated);
 
+            // StockMovementService orqali boshlang'ich qoldiqni qo'shish
             if ($product->stock_quantity > 0 && $product->track_inventory) {
+                $stockService = new StockMovementService();
+
+                $stockService->recordIncoming(
+                    productId: $product->id,
+                    quantity: $product->stock_quantity,
+                    unitCostUsd: $product->purchase_price_usd,
+                    unitCostUzs: $product->purchase_price_uzs,
+                    currency: $product->currency,
+                    referenceType: 'InitialStock',
+                    referenceId: null,
+                    notes: "Boshlang'ich qoldiq"
+                );
+
+                // Eski InventoryTransaction (backward compatibility)
                 InventoryTransaction::create([
                     'workshop_id' => $workshop->id,
                     'branch_id' => $product->branch_id,
@@ -107,18 +133,19 @@ class ProductController extends Controller
                     'quantity' => $product->stock_quantity,
                     'quantity_before' => 0,
                     'quantity_after' => $product->stock_quantity,
-                    'unit_price' => $product->purchase_price,
-                    'total_price' => $product->stock_quantity * $product->purchase_price,
+                    'unit_price' => $product->getPurchasePrice(),
+                    'total_price' => $product->stock_quantity * $product->getPurchasePrice(),
                     'reason' => 'Boshlang\'ich qoldiq',
                     'transaction_date' => now(),
                 ]);
 
+                // Xarajat yaratish
                 $workshop->expenses()->create([
                     'branch_id' => $product->branch_id,
                     'category' => 'Boshqa',
                     'title' => "Mahsulot sotib olish: {$product->name}",
                     'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
-                    'amount' => $product->stock_quantity * $product->purchase_price,
+                    'amount' => $product->stock_quantity * $product->getPurchasePrice(),
                     'expense_date' => now(),
                     'payment_method' => null,
                 ]);
@@ -130,7 +157,7 @@ class ProductController extends Controller
                 ->with('success', 'Mahsulot muvaffaqiyatli qo\'shildi!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Xatolik yuz berdi'])->withInput();
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -203,12 +230,22 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'unit' => 'required|string|max:50',
-            'purchase_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'currency' => 'required|in:USD,UZS',
+            'purchase_price_usd' => 'nullable|numeric|min:0',
+            'purchase_price_uzs' => 'nullable|numeric|min:0',
+            'selling_price_usd' => 'nullable|numeric|min:0',
+            'selling_price_uzs' => 'nullable|numeric|min:0',
+            'exchange_rate' => 'nullable|numeric|min:0',
+            'is_consignment' => 'boolean',
+            'consignment_percentage' => 'nullable|numeric|min:0|max:100',
+            'supplier' => 'nullable|string|max:255',
             'min_stock_level' => 'integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'track_inventory' => 'boolean',
+            // Eski maydonlar
+            'purchase_price' => 'nullable|numeric|min:0',
+            'selling_price' => 'nullable|numeric|min:0',
         ]);
 
         $product->update($validated);
@@ -273,57 +310,93 @@ class ProductController extends Controller
         $validated = $request->validate([
             'type' => 'required|in:in,out,adjustment',
             'quantity' => 'required|integer|min:1',
-            'unit_price' => 'nullable|numeric|min:0',
+            'unit_price_usd' => 'nullable|numeric|min:0',
+            'unit_price_uzs' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:USD,UZS',
+            'unit_price' => 'nullable|numeric|min:0', // Backward compatibility
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
+            $stockService = new StockMovementService();
             $quantityBefore = $product->stock_quantity;
-            $quantityChange = $validated['quantity'];
 
-            if ($validated['type'] === 'in') {
-                $quantityAfter = $quantityBefore + $quantityChange;
-            } elseif ($validated['type'] === 'out') {
-                $quantityAfter = $quantityBefore - $quantityChange;
-                if ($quantityAfter < 0) {
-                    return back()->withErrors(['quantity' => 'Omborda yetarli mahsulot yo\'q']);
+            $currency = $validated['currency'] ?? $product->currency;
+            $unitPriceUsd = $validated['unit_price_usd'] ?? $product->purchase_price_usd;
+            $unitPriceUzs = $validated['unit_price_uzs'] ?? $product->purchase_price_uzs;
+
+            // Backward compatibility
+            if (isset($validated['unit_price'])) {
+                if ($currency === 'USD') {
+                    $unitPriceUsd = $validated['unit_price'];
+                } else {
+                    $unitPriceUzs = $validated['unit_price'];
                 }
-            } else {
-                $quantityAfter = $quantityChange;
-                $quantityChange = $quantityAfter - $quantityBefore;
             }
 
-            $product->update(['stock_quantity' => $quantityAfter]);
+            if ($validated['type'] === 'in') {
+                // Kirim
+                $stockService->recordIncoming(
+                    productId: $product->id,
+                    quantity: $validated['quantity'],
+                    unitCostUsd: $unitPriceUsd,
+                    unitCostUzs: $unitPriceUzs,
+                    currency: $currency,
+                    referenceType: 'StockAdjustment',
+                    referenceId: null,
+                    notes: $validated['notes'] ?? $validated['reason']
+                );
 
-            $unitPrice = $validated['unit_price'] ?? $product->purchase_price;
+                $unitPrice = $currency === 'USD' ? $unitPriceUsd : $unitPriceUzs;
+
+                // Xarajat yaratish
+                $user->workshop->expenses()->create([
+                    'branch_id' => $product->branch_id,
+                    'category' => 'Boshqa',
+                    'title' => "Mahsulot sotib olish: {$product->name}",
+                    'description' => $validated['notes'] ?? "Ombor kirim: {$validated['quantity']} {$product->unit}",
+                    'amount' => $validated['quantity'] * $unitPrice,
+                    'expense_date' => now(),
+                    'payment_method' => null,
+                ]);
+            } elseif ($validated['type'] === 'out') {
+                // Chiqim
+                $stockService->recordOutgoing(
+                    productId: $product->id,
+                    quantity: $validated['quantity'],
+                    referenceType: 'StockAdjustment',
+                    referenceId: null,
+                    notes: $validated['notes'] ?? $validated['reason']
+                );
+            } else {
+                // Adjustment
+                $stockService->recordAdjustment(
+                    productId: $product->id,
+                    newQuantity: $validated['quantity'],
+                    notes: $validated['notes'] ?? $validated['reason']
+                );
+            }
+
+            // Eski InventoryTransaction (backward compatibility)
+            $quantityAfter = $product->fresh()->stock_quantity;
+            $unitPrice = $currency === 'USD' ? ($unitPriceUsd ?? 0) : ($unitPriceUzs ?? 0);
+
             InventoryTransaction::create([
                 'workshop_id' => $user->workshop->id,
                 'branch_id' => $product->branch_id,
                 'product_id' => $product->id,
                 'type' => $validated['type'],
-                'quantity' => $quantityChange,
+                'quantity' => $quantityAfter - $quantityBefore,
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $quantityAfter,
                 'unit_price' => $unitPrice,
-                'total_price' => abs($quantityChange) * $unitPrice,
+                'total_price' => abs($quantityAfter - $quantityBefore) * $unitPrice,
                 'reason' => $validated['reason'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'transaction_date' => now(),
             ]);
-
-            if ($validated['type'] === 'in') {
-                $user->workshop->expenses()->create([
-                    'branch_id' => $product->branch_id,
-                    'category' => 'Boshqa',
-                    'title' => "Mahsulot sotib olish: {$product->name}",
-                    'description' => $validated['notes'] ?? "Ombor kirim: {$quantityChange} {$product->unit}",
-                    'amount' => abs($quantityChange) * $unitPrice,
-                    'expense_date' => now(),
-                    'payment_method' => null,
-                ]);
-            }
 
             DB::commit();
 
@@ -331,7 +404,7 @@ class ProductController extends Controller
                 ->with('success', 'Qoldiq muvaffaqiyatli o\'zgartirildi!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Xatolik yuz berdi'])->withInput();
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
         }
     }
 }
