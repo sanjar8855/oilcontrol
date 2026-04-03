@@ -185,7 +185,7 @@ const submitClient = () => {
                                             Obuna qolgan kunlar
                                         </dt>
                                         <dd class="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {{ stats.days_remaining }} kun
+                                            {{ Math.floor(stats.days_remaining) }} kun
                                         </dd>
                                     </dl>
                                 </div>
