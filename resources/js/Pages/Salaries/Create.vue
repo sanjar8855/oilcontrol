@@ -71,7 +71,7 @@ const submit = () => {
 
         <div class="py-12">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <form @submit.prevent="submit">
                         <!-- Xodim tanlash -->
                         <div class="mb-4">
@@ -80,7 +80,7 @@ const submit = () => {
                             </label>
                             <select
                                 v-model="form.user_id"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">Xodimni tanlang</option>
@@ -100,7 +100,7 @@ const submit = () => {
                             </label>
                             <select
                                 v-model="form.workshop_id"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">Workshop tanlang</option>
@@ -122,7 +122,7 @@ const submit = () => {
                                 v-model="form.amount"
                                 type="number"
                                 step="0.01"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             />
                             <div v-if="form.errors.amount" class="text-red-500 text-sm mt-1">
@@ -138,7 +138,7 @@ const submit = () => {
                             <input
                                 v-model="form.month"
                                 type="month"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             />
                             <div v-if="form.errors.month" class="text-red-500 text-sm mt-1">
@@ -154,7 +154,7 @@ const submit = () => {
                             <input
                                 v-model="form.payment_date"
                                 type="date"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             />
                             <div v-if="form.errors.payment_date" class="text-red-500 text-sm mt-1">
@@ -169,7 +169,7 @@ const submit = () => {
                             </label>
                             <select
                                 v-model="form.payment_method"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 required
                             >
                                 <option value="cash">Naqd</option>
@@ -191,7 +191,7 @@ const submit = () => {
                                 v-model="form.bonus"
                                 type="number"
                                 step="0.01"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                             <div v-if="form.errors.bonus" class="text-red-500 text-sm mt-1">
                                 {{ form.errors.bonus }}
@@ -207,7 +207,7 @@ const submit = () => {
                                 v-model="form.deduction"
                                 type="number"
                                 step="0.01"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                             <div v-if="form.errors.deduction" class="text-red-500 text-sm mt-1">
                                 {{ form.errors.deduction }}
@@ -217,7 +217,7 @@ const submit = () => {
                         <!-- Jami summa ko'rsatkichi -->
                         <div class="mb-4 p-4 bg-blue-50 rounded-lg">
                             <div class="text-sm text-gray-700 mb-2">Hisoblash:</div>
-                            <div class="text-sm text-gray-600">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">
                                 Asosiy: {{ new Intl.NumberFormat('uz-UZ').format(form.amount || 0) }} so'm
                             </div>
                             <div v-if="form.bonus > 0" class="text-sm text-green-600">
@@ -239,7 +239,7 @@ const submit = () => {
                             <textarea
                                 v-model="form.notes"
                                 rows="3"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             ></textarea>
                             <div v-if="form.errors.notes" class="text-red-500 text-sm mt-1">
                                 {{ form.errors.notes }}

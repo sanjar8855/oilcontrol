@@ -170,7 +170,9 @@ class UserController extends Controller
             }
         }
 
-        $user->load(['workshop', 'branch']);
+        $user->load(['workshop', 'branch', 'salaries' => function ($query) {
+            $query->orderBy('payment_date', 'desc')->limit(10);
+        }]);
 
         return Inertia::render('Users/Show', [
             'user' => $user,

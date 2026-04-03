@@ -42,7 +42,7 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 
 Route::middleware('auth')->group(function () {
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
-    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('users', UserController::class);
 
     // Mijozlar (Clients) CRUD
     Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');

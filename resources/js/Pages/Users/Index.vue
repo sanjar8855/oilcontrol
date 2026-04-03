@@ -38,6 +38,33 @@ const getRoleLabel = (role) => {
     };
     return labels[role] || role;
 };
+
+const getEmploymentStatusBadge = (status) => {
+    switch (status) {
+        case 'active':
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        case 'on_leave':
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        case 'terminated':
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        default:
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
+};
+
+const getEmploymentStatusLabel = (status) => {
+    const labels = {
+        active: 'Faol',
+        on_leave: 'Ta\'tilda',
+        terminated: 'Ishdan bo\'shatilgan',
+    };
+    return labels[status] || status;
+};
+
+const formatCurrency = (amount) => {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
+};
 </script>
 
 <template>
@@ -47,13 +74,13 @@ const getRoleLabel = (role) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Foydalanuvchilar
+                    Xodimlar boshqaruvi
                 </h2>
                 <Link
                     :href="route('users.create')"
                     class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                 >
-                    + Yangi Foydalanuvchi
+                    + Yangi xodim
                 </Link>
             </div>
         </template>
@@ -67,16 +94,22 @@ const getRoleLabel = (role) => {
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                            Ism
+                                            Xodim
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                            Email
+                                            Telefon
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Lavozim
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Oylik maosh
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Role
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                            Filial
+                                            Holat
                                         </th>
                                         <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Amallar
@@ -85,14 +118,41 @@ const getRoleLabel = (role) => {
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                     <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <td class="whitespace-nowrap px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ user.name }}
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 flex-shrink-0">
+                                                    <div class="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                        <span class="text-indigo-700 dark:text-indigo-200 font-semibold text-lg">
+                                                            {{ user.name.charAt(0).toUpperCase() }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {{ user.name }}
+                                                    </div>
+                                                    <div v-if="user.branch" class="text-sm text-gray-500 dark:text-gray-400">
+                                                        {{ user.branch.name }}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4">
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ user.email }}
+                                            <div class="text-sm text-gray-900 dark:text-white">
+                                                {{ user.phone || '-' }}
+                                            </div>
+                                            <div v-if="user.phone_secondary" class="text-sm text-gray-500 dark:text-gray-400">
+                                                {{ user.phone_secondary }}
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-6 py-4">
+                                            <div class="text-sm text-gray-900 dark:text-white">
+                                                {{ user.position || '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                {{ formatCurrency(user.salary) }}
                                             </div>
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4">
@@ -104,17 +164,23 @@ const getRoleLabel = (role) => {
                                             </span>
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4">
-                                            <div v-if="user.branch" class="text-sm text-gray-900 dark:text-white">
-                                                {{ user.branch.name }}
-                                            </div>
-                                            <div v-else class="text-sm text-gray-400 dark:text-gray-500">
-                                                Filial yo'q
-                                            </div>
+                                            <span
+                                                class="inline-flex rounded-full px-2 text-xs font-semibold leading-5"
+                                                :class="getEmploymentStatusBadge(user.employment_status)"
+                                            >
+                                                {{ getEmploymentStatusLabel(user.employment_status) }}
+                                            </span>
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium space-x-3">
+                                            <Link
+                                                :href="route('users.show', user.id)"
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400"
+                                            >
+                                                Ko'rish
+                                            </Link>
                                             <Link
                                                 :href="route('users.edit', user.id)"
-                                                class="mr-3 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
+                                                class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
                                             >
                                                 Tahrirlash
                                             </Link>

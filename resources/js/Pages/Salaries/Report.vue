@@ -86,14 +86,14 @@ calculateGrandTotal();
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Filters -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 p-6">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6 p-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Boshlanish sanasi</label>
                             <input
                                 v-model="startDate"
                                 type="date"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                         </div>
                         <div>
@@ -101,7 +101,7 @@ calculateGrandTotal();
                             <input
                                 v-model="endDate"
                                 type="date"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             />
                         </div>
                         <div class="flex items-end gap-2">
@@ -123,15 +123,15 @@ calculateGrandTotal();
 
                 <!-- Summary Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600 mb-1">Jami xodimlar</div>
                         <div class="text-3xl font-bold text-blue-600">{{ totalEmployees }}</div>
                     </div>
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600 mb-1">Jami to'langan</div>
                         <div class="text-3xl font-bold text-green-600">{{ formatCurrency(grandTotal) }}</div>
                     </div>
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600 mb-1">O'rtacha maosh</div>
                         <div class="text-3xl font-bold text-purple-600">
                             {{ formatCurrency(totalEmployees > 0 ? grandTotal / totalEmployees : 0) }}
@@ -144,13 +144,13 @@ calculateGrandTotal();
                     <div
                         v-for="employee in employees"
                         :key="employee.id"
-                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg"
+                        class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg"
                     >
                         <!-- Employee Header -->
                         <div class="p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-b">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h3 class="text-xl font-bold text-gray-900">{{ employee.name }}</h3>
+                                    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ employee.name }}</h3>
                                     <p class="text-sm text-gray-600 mt-1">
                                         {{ employee.position || 'Lavozim ko\'rsatilmagan' }}
                                     </p>
@@ -159,7 +159,7 @@ calculateGrandTotal();
                                     </p>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm text-gray-600">Jami to'langan</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">Jami to'langan</div>
                                     <div class="text-2xl font-bold text-blue-600">
                                         {{ formatCurrency(getTotalSalaries(employee.salaries)) }}
                                     </div>
@@ -184,25 +184,25 @@ calculateGrandTotal();
                                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                                         <tr v-for="salary in employee.salaries" :key="salary.id" class="hover:bg-gray-50">
-                                            <td class="px-4 py-3 text-sm text-gray-900">{{ salary.month }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-900">{{ formatCurrency(salary.amount) }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ salary.month }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ formatCurrency(salary.amount) }}</td>
                                             <td class="px-4 py-3 text-sm text-green-600">
                                                 {{ salary.bonus > 0 ? '+' + formatCurrency(salary.bonus) : '-' }}
                                             </td>
                                             <td class="px-4 py-3 text-sm text-red-600">
                                                 {{ salary.deduction > 0 ? '-' + formatCurrency(salary.deduction) : '-' }}
                                             </td>
-                                            <td class="px-4 py-3 text-sm font-bold text-gray-900">
+                                            <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100">
                                                 {{ formatCurrency(parseFloat(salary.amount) + parseFloat(salary.bonus || 0) - parseFloat(salary.deduction || 0)) }}
                                             </td>
-                                            <td class="px-4 py-3 text-sm text-gray-900">{{ formatDate(salary.payment_date) }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(salary.payment_date) }}</td>
                                         </tr>
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                            <td colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                 Jami:
                                             </td>
                                             <td colspan="2" class="px-4 py-3 text-sm font-bold text-blue-600">
@@ -215,14 +215,14 @@ calculateGrandTotal();
                         </div>
 
                         <!-- No Salary History -->
-                        <div v-else class="p-6 text-center text-gray-500">
+                        <div v-else class="p-6 text-center text-gray-500 dark:text-gray-400">
                             Ushbu xodimga maosh to'lanmagan yoki filtr shartlariga mos to'lovlar topilmadi
                         </div>
                     </div>
                 </div>
 
                 <!-- Empty State -->
-                <div v-if="!employees || employees.length === 0" class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-12 text-center">
+                <div v-if="!employees || employees.length === 0" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-12 text-center">
                     <p class="text-gray-500 text-lg">Xodimlar topilmadi</p>
                 </div>
             </div>
