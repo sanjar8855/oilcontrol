@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         // ============================================
         $superadmin = User::create([
             'name' => 'SuperAdmin',
+            'phone' => '+998901111111',
             'email' => 'superadmin@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -37,6 +38,7 @@ class DatabaseSeeder extends Seeder
         // ============================================
         $director = User::create([
             'name' => 'Sardor Toshmatov',
+            'phone' => '+998901234567',
             'email' => 'director@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -86,6 +88,7 @@ class DatabaseSeeder extends Seeder
         // Yunusobod filiali
         $manager1 = User::create([
             'name' => 'Aziz Rahmonov',
+            'phone' => '+998905555001',
             'email' => 'manager1@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -95,6 +98,7 @@ class DatabaseSeeder extends Seeder
 
         $employee1 = User::create([
             'name' => 'Jamshid Karimov',
+            'phone' => '+998905555011',
             'email' => 'employee1@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -105,6 +109,7 @@ class DatabaseSeeder extends Seeder
         // Chilonzor filiali
         $manager2 = User::create([
             'name' => 'Bobur Aliyev',
+            'phone' => '+998905555002',
             'email' => 'manager2@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -114,6 +119,7 @@ class DatabaseSeeder extends Seeder
 
         $employee2 = User::create([
             'name' => 'Rustam Usmonov',
+            'phone' => '+998905555022',
             'email' => 'employee2@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -325,27 +331,27 @@ class DatabaseSeeder extends Seeder
         echo "🔐 Login ma'lumotlari:\n\n";
 
         echo "   SuperAdmin (barcha tizimni ko'radi):\n";
-        echo "     Email: superadmin@oilcontrol.uz\n";
+        echo "     Telefon: +998901111111\n";
         echo "     Parol: password\n\n";
 
         echo "   Director (barcha filiallarni ko'radi):\n";
-        echo "     Email: director@oilcontrol.uz\n";
+        echo "     Telefon: +998901234567\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Email: manager1@oilcontrol.uz\n";
+        echo "     Telefon: +998905555001\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Email: employee1@oilcontrol.uz\n";
+        echo "     Telefon: +998905555011\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Email: manager2@oilcontrol.uz\n";
+        echo "     Telefon: +998905555002\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Email: employee2@oilcontrol.uz\n";
+        echo "     Telefon: +998905555022\n";
         echo "     Parol: password\n\n";
     }
 }
