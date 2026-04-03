@@ -10,11 +10,18 @@ const props = defineProps({
 
 const form = useForm({
     name: props.user.name,
-    email: props.user.email,
+    phone: props.user.phone || '',
+    phone_secondary: props.user.phone_secondary || '',
+    email: props.user.email || '',
     password: '',
     password_confirmation: '',
     role: props.user.role,
     branch_id: props.user.branch_id || '',
+    salary: props.user.salary || '',
+    hire_date: props.user.hire_date || '',
+    position: props.user.position || '',
+    employment_status: props.user.employment_status || 'active',
+    address: props.user.address || '',
 });
 
 const submit = () => {
@@ -63,16 +70,50 @@ const submit = () => {
                                     </div>
                                 </div>
 
-                                <!-- Email -->
+                                <!-- Telefon raqam -->
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Telefon raqam <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        id="phone"
+                                        v-model="form.phone"
+                                        type="tel"
+                                        required
+                                        placeholder="+998 90 123 45 67"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.phone" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.phone }}
+                                    </div>
+                                </div>
+
+                                <!-- Qo'shimcha telefon -->
+                                <div>
+                                    <label for="phone_secondary" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Qo'shimcha telefon
+                                    </label>
+                                    <input
+                                        id="phone_secondary"
+                                        v-model="form.phone_secondary"
+                                        type="tel"
+                                        placeholder="+998 90 123 45 67"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.phone_secondary" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.phone_secondary }}
+                                    </div>
+                                </div>
+
+                                <!-- Email (ixtiyoriy) -->
                                 <div>
                                     <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Email <span class="text-red-500">*</span>
+                                        Email (ixtiyoriy)
                                     </label>
                                     <input
                                         id="email"
                                         v-model="form.email"
                                         type="email"
-                                        required
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                     />
                                     <div v-if="form.errors.email" class="mt-1 text-sm text-red-600">
@@ -146,6 +187,100 @@ const submit = () => {
                                     </select>
                                     <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.branch_id }}
+                                    </div>
+                                </div>
+
+                                <!-- Divider -->
+                                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                        Xodim ma'lumotlari
+                                    </h3>
+                                </div>
+
+                                <!-- Lavozim -->
+                                <div>
+                                    <label for="position" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Lavozim
+                                    </label>
+                                    <input
+                                        id="position"
+                                        v-model="form.position"
+                                        type="text"
+                                        placeholder="Mexanik, administrator, direktor..."
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.position" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.position }}
+                                    </div>
+                                </div>
+
+                                <!-- Oylik maosh -->
+                                <div>
+                                    <label for="salary" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Oylik maosh (so'm)
+                                    </label>
+                                    <input
+                                        id="salary"
+                                        v-model="form.salary"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="5000000"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.salary" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.salary }}
+                                    </div>
+                                </div>
+
+                                <!-- Ishga qabul qilingan sana -->
+                                <div>
+                                    <label for="hire_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Ishga qabul qilingan sana
+                                    </label>
+                                    <input
+                                        id="hire_date"
+                                        v-model="form.hire_date"
+                                        type="date"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.hire_date" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.hire_date }}
+                                    </div>
+                                </div>
+
+                                <!-- Ish holati -->
+                                <div>
+                                    <label for="employment_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Ish holati
+                                    </label>
+                                    <select
+                                        id="employment_status"
+                                        v-model="form.employment_status"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    >
+                                        <option value="active">Faol</option>
+                                        <option value="on_leave">Ta'tilda</option>
+                                        <option value="terminated">Ishdan bo'shatilgan</option>
+                                    </select>
+                                    <div v-if="form.errors.employment_status" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.employment_status }}
+                                    </div>
+                                </div>
+
+                                <!-- Manzil -->
+                                <div>
+                                    <label for="address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Uy manzili
+                                    </label>
+                                    <textarea
+                                        id="address"
+                                        v-model="form.address"
+                                        rows="2"
+                                        placeholder="To'liq manzil..."
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    ></textarea>
+                                    <div v-if="form.errors.address" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.address }}
                                     </div>
                                 </div>
                             </div>

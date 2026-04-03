@@ -106,10 +106,17 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'required|string|max:20|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
             'branch_id' => 'nullable|exists:branches,id',
+            'salary' => 'nullable|numeric|min:0',
+            'hire_date' => 'nullable|date',
+            'position' => 'nullable|string|max:255',
+            'employment_status' => 'nullable|in:active,on_leave,terminated',
+            'phone_secondary' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
         ]);
 
         // Superadmin emas bo'lsa, superadmin yarata olmaydi
@@ -127,10 +134,17 @@ class UserController extends Controller
 
         User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
+            'salary' => $validated['salary'] ?? null,
+            'hire_date' => $validated['hire_date'] ?? null,
+            'position' => $validated['position'] ?? null,
+            'employment_status' => $validated['employment_status'] ?? 'active',
+            'phone_secondary' => $validated['phone_secondary'] ?? null,
+            'address' => $validated['address'] ?? null,
         ]);
 
         return redirect()->route('users.index')
@@ -235,10 +249,17 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
             'branch_id' => 'nullable|exists:branches,id',
+            'salary' => 'nullable|numeric|min:0',
+            'hire_date' => 'nullable|date',
+            'position' => 'nullable|string|max:255',
+            'employment_status' => 'nullable|in:active,on_leave,terminated',
+            'phone_secondary' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
         ]);
 
         // Superadmin emas bo'lsa, role'ni superadmin qila olmaydi
@@ -256,9 +277,16 @@ class UserController extends Controller
 
         $updateData = [
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
+            'salary' => $validated['salary'] ?? null,
+            'hire_date' => $validated['hire_date'] ?? null,
+            'position' => $validated['position'] ?? null,
+            'employment_status' => $validated['employment_status'] ?? 'active',
+            'phone_secondary' => $validated['phone_secondary'] ?? null,
+            'address' => $validated['address'] ?? null,
         ];
 
         // Agar parol kiritilgan bo'lsa, uni yangilash

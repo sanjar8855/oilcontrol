@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -24,9 +25,15 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'phone_secondary',
         'password',
         'role',
         'branch_id',
+        'salary',
+        'hire_date',
+        'position',
+        'employment_status',
+        'address',
     ];
 
     /**
@@ -49,6 +56,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'salary' => 'decimal:2',
+            'hire_date' => 'date',
         ];
     }
 
@@ -61,6 +70,11 @@ class User extends Authenticatable
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function salaries(): HasMany
+    {
+        return $this->hasMany(Salary::class);
     }
 
     // Role helper methods

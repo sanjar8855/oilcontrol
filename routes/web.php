@@ -7,6 +7,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
@@ -67,6 +68,10 @@ Route::middleware('auth')->group(function () {
 
     // To'lovlar (Payments) CRUD
     Route::resource('payments', PaymentController::class);
+
+    // Oylik maoshlar (Salaries) CRUD
+    Route::get('/salaries/report', [SalaryController::class, 'report'])->name('salaries.report');
+    Route::resource('salaries', SalaryController::class)->except(['edit', 'update']);
 
     // Profil boshqaruvi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
