@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import axios from 'axios';
 
 defineProps({
@@ -29,9 +29,13 @@ const clientForm = useForm({
     make: '',
 });
 
-const searchVehicle = async () => {
-    if (!searchPlateNumber.value.trim()) {
-        alert('Iltimos, avto raqamni kiriting');
+const searchVehicle = async (plateNumber, { onNotFound = 'modal' } = {}) => {
+    const plate = plateNumber.trim();
+
+    if (!plate) {
+        if (onNotFound === 'alert') {
+            alert('Iltimos, avto raqamni kiriting');
+        }
         return;
     }
 
@@ -40,25 +44,41 @@ const searchVehicle = async () => {
     try {
         const response = await axios.get(route('vehicles.search'), {
             params: {
-                plate_number: searchPlateNumber.value.trim(),
+                plate_number: plate,
             },
         });
 
         if (response.data.found) {
             // Topildi - vehicles.show sahifasiga o'tish
             router.visit(route('vehicles.show', response.data.vehicle.id));
-        } else {
+        } else if (onNotFound === 'modal') {
             // Topilmadi - mijoz qo'shish modal ochish
-            clientForm.plate_number = searchPlateNumber.value.trim();
+            clientForm.plate_number = plate;
             showAddClientModal.value = true;
         }
     } catch (error) {
         console.error('Qidiruv xatosi:', error);
-        alert('Qidiruv vaqtida xatolik yuz berdi');
+        if (onNotFound === 'alert') {
+            alert('Qidiruv vaqtida xatolik yuz berdi');
+        }
     } finally {
         searching.value = false;
     }
 };
+
+let searchDebounceTimer = null;
+
+watch(searchPlateNumber, (value) => {
+    clearTimeout(searchDebounceTimer);
+
+    if (!value.trim()) {
+        return;
+    }
+
+    searchDebounceTimer = setTimeout(() => {
+        searchVehicle(value, { onNotFound: 'modal' });
+    }, 500);
+});
 
 const closeModal = () => {
     showAddClientModal.value = false;
@@ -109,15 +129,11 @@ const submitClient = () => {
                                 type="text"
                                 placeholder="Avto raqamni kiriting (masalan: 01A123AA)"
                                 class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                @keyup.enter="searchVehicle"
+                                @keyup.enter="clearTimeout(searchDebounceTimer); searchVehicle(searchPlateNumber, { onNotFound: 'modal' })"
                             />
-                            <button
-                                @click="searchVehicle"
-                                :disabled="searching"
-                                class="rounded-md bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
-                            >
-                                {{ searching ? 'Qidirilmoqda...' : 'Qidirish' }}
-                            </button>
+                            <span v-if="searching" class="self-center text-sm text-gray-500 dark:text-gray-400">
+                                Qidirilmoqda...
+                            </span>
                         </div>
                     </div>
                 </div>

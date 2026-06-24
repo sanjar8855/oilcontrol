@@ -119,6 +119,10 @@ const getTotalSalaryPaid = computed(() => {
                     <div class="p-6 border-b dark:border-gray-700">
                         <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Aloqa ma'lumotlari</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div v-if="user.login">
+                                <label class="text-sm text-gray-600 dark:text-gray-400">Login</label>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ user.login }}</p>
+                            </div>
                             <div>
                                 <label class="text-sm text-gray-600 dark:text-gray-400">Telefon raqam</label>
                                 <p class="font-medium text-gray-900 dark:text-gray-100">{{ user.phone || '-' }}</p>
@@ -126,10 +130,6 @@ const getTotalSalaryPaid = computed(() => {
                             <div v-if="user.phone_secondary">
                                 <label class="text-sm text-gray-600 dark:text-gray-400">Qo'shimcha telefon</label>
                                 <p class="font-medium text-gray-900 dark:text-gray-100">{{ user.phone_secondary }}</p>
-                            </div>
-                            <div v-if="user.email">
-                                <label class="text-sm text-gray-600 dark:text-gray-400">Email</label>
-                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ user.email }}</p>
                             </div>
                             <div v-if="user.address">
                                 <label class="text-sm text-gray-600 dark:text-gray-400">Manzil</label>

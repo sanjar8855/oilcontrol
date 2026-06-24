@@ -106,8 +106,8 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'login' => 'required|string|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
-            'email' => 'nullable|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
             'branch_id' => 'nullable|exists:branches,id',
@@ -134,8 +134,8 @@ class UserController extends Controller
 
         User::create([
             'name' => $validated['name'],
+            'login' => $validated['login'],
             'phone' => $validated['phone'],
-            'email' => $validated['email'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
@@ -251,8 +251,8 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'login' => 'required|string|max:255|unique:users,login,' . $user->id,
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
-            'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
             'branch_id' => 'nullable|exists:branches,id',
@@ -279,8 +279,8 @@ class UserController extends Controller
 
         $updateData = [
             'name' => $validated['name'],
+            'login' => $validated['login'],
             'phone' => $validated['phone'],
-            'email' => $validated['email'] ?? null,
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
             'salary' => $validated['salary'] ?? null,

@@ -10,9 +10,9 @@ const props = defineProps({
 
 const form = useForm({
     name: props.user.name,
+    login: props.user.login || '',
     phone: props.user.phone || '',
     phone_secondary: props.user.phone_secondary || '',
-    email: props.user.email || '',
     password: '',
     password_confirmation: '',
     role: props.user.role,
@@ -70,6 +70,25 @@ const submit = () => {
                                     </div>
                                 </div>
 
+                                <!-- Login -->
+                                <div>
+                                    <label for="login" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Login <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        id="login"
+                                        v-model="form.login"
+                                        type="text"
+                                        required
+                                        autocomplete="username"
+                                        placeholder="login"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <div v-if="form.errors.login" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.login }}
+                                    </div>
+                                </div>
+
                                 <!-- Telefon raqam -->
                                 <div>
                                     <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -102,22 +121,6 @@ const submit = () => {
                                     />
                                     <div v-if="form.errors.phone_secondary" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.phone_secondary }}
-                                    </div>
-                                </div>
-
-                                <!-- Email (ixtiyoriy) -->
-                                <div>
-                                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Email (ixtiyoriy)
-                                    </label>
-                                    <input
-                                        id="email"
-                                        v-model="form.email"
-                                        type="email"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    />
-                                    <div v-if="form.errors.email" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.email }}
                                     </div>
                                 </div>
 

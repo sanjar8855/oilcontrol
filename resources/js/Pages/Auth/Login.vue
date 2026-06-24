@@ -39,7 +39,7 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="login" value="Telefon raqam" />
+                <InputLabel for="login" value="Login" />
 
                 <TextInput
                     id="login"
@@ -48,8 +48,8 @@ const submit = () => {
                     v-model="form.login"
                     required
                     autofocus
-                    autocomplete="tel"
-                    placeholder="+998901234567"
+                    autocomplete="username"
+                    placeholder="login"
                 />
 
                 <InputError class="mt-2" :message="form.errors.login" />

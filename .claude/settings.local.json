@@ -5,7 +5,14 @@
       "Bash(php artisan:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(php -l app/Http/Controllers/Auth/RegisteredUserController.php)",
+      "Bash(php -l app/Http/Requests/Auth/LoginRequest.php)",
+      "Bash(php -l app/Http/Controllers/API/AuthController.php)",
+      "Bash(php -l app/Http/Controllers/UserController.php)",
+      "Bash(php -l app/Models/User.php)",
+      "Skill(run)",
+      "Bash(npm ls *)"
     ]
   }
 }

@@ -20,7 +20,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|string|email|max:255|unique:users',
+            'login' => 'required|string|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'workshop_name' => 'nullable|string|max:255',
@@ -29,10 +29,9 @@ class AuthController extends Controller
         // User yaratish
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'login' => $request->login,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'email_verified_at' => now(),
         ]);
 
         // Workshop yaratish
@@ -54,6 +53,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],
@@ -72,10 +72,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $login = $request->login;
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-
-        $user = User::where($fieldType, $login)->first();
+        $user = User::where('login', $request->login)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -94,6 +91,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],
@@ -127,6 +125,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],

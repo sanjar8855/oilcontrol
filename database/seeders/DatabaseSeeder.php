@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         // ============================================
         $superadmin = User::create([
             'name' => 'SuperAdmin',
+            'login' => 'superadmin',
             'phone' => '+998901111111',
             'email' => 'superadmin@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -38,6 +39,7 @@ class DatabaseSeeder extends Seeder
         // ============================================
         $director = User::create([
             'name' => 'Sardor Toshmatov',
+            'login' => 'director',
             'phone' => '+998901234567',
             'email' => 'director@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -88,6 +90,7 @@ class DatabaseSeeder extends Seeder
         // Yunusobod filiali
         $manager1 = User::create([
             'name' => 'Aziz Rahmonov',
+            'login' => 'manager1',
             'phone' => '+998905555001',
             'email' => 'manager1@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -98,6 +101,7 @@ class DatabaseSeeder extends Seeder
 
         $employee1 = User::create([
             'name' => 'Jamshid Karimov',
+            'login' => 'employee1',
             'phone' => '+998905555011',
             'email' => 'employee1@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -109,6 +113,7 @@ class DatabaseSeeder extends Seeder
         // Chilonzor filiali
         $manager2 = User::create([
             'name' => 'Bobur Aliyev',
+            'login' => 'manager2',
             'phone' => '+998905555002',
             'email' => 'manager2@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -119,6 +124,7 @@ class DatabaseSeeder extends Seeder
 
         $employee2 = User::create([
             'name' => 'Rustam Usmonov',
+            'login' => 'employee2',
             'phone' => '+998905555022',
             'email' => 'employee2@oilcontrol.uz',
             'password' => Hash::make('password'),
@@ -331,27 +337,27 @@ class DatabaseSeeder extends Seeder
         echo "🔐 Login ma'lumotlari:\n\n";
 
         echo "   SuperAdmin (barcha tizimni ko'radi):\n";
-        echo "     Telefon: +998901111111\n";
+        echo "     Login: superadmin\n";
         echo "     Parol: password\n\n";
 
         echo "   Director (barcha filiallarni ko'radi):\n";
-        echo "     Telefon: +998901234567\n";
+        echo "     Login: director\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Telefon: +998905555001\n";
+        echo "     Login: manager1\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Telefon: +998905555011\n";
+        echo "     Login: employee1\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Telefon: +998905555002\n";
+        echo "     Login: manager2\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Telefon: +998905555022\n";
+        echo "     Login: employee2\n";
         echo "     Parol: password\n\n";
     }
 }
