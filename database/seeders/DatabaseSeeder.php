@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         $superadmin = User::create([
             'name' => 'SuperAdmin',
             'login' => 'superadmin',
-            'phone' => '+998901111111',
+            'phone' => '+998937058855',
             'email' => 'superadmin@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),

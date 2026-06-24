@@ -501,7 +501,7 @@ const submitClient = () => {
                             </div>
                         </div>
 
-                        <!-- Avto raqam (readonly) -->
+                        <!-- Avto raqam -->
                         <div class="sm:col-span-2">
                             <label for="plate_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Avto raqam <span class="text-red-500">*</span>
@@ -510,9 +510,13 @@ const submitClient = () => {
                                 id="plate_number"
                                 v-model="clientForm.plate_number"
                                 type="text"
-                                readonly
-                                class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm dark:border-gray-600 dark:bg-gray-600 dark:text-white"
+                                required
+                                placeholder="01A123AA"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             />
+                            <div v-if="clientForm.errors.plate_number" class="mt-1 text-sm text-red-600">
+                                {{ clientForm.errors.plate_number }}
+                            </div>
                         </div>
                     </div>
 
