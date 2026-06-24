@@ -115,11 +115,11 @@ const submitClient = () => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="py-6 sm:py-12">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                 <!-- Avto raqam qidiruv -->
                 <div class="mb-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                             Avtomobil qidirish
                         </h3>
@@ -139,10 +139,10 @@ const submitClient = () => {
                 </div>
 
                 <!-- Statistika Kartochkalari -->
-                <div class="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
                     <!-- Jami mijozlar -->
                     <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                        <div class="p-5">
+                        <div class="p-4 sm:p-5">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
                                     <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ const submitClient = () => {
 
                     <!-- Obuna rejasi -->
                     <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                        <div class="p-5">
+                        <div class="p-4 sm:p-5">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
                                     <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@ const submitClient = () => {
 
                     <!-- Qolgan kunlar -->
                     <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                        <div class="p-5">
+                        <div class="p-4 sm:p-5">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
                                     <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +211,7 @@ const submitClient = () => {
 
                     <!-- Ustaxona nomi -->
                     <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                        <div class="p-5">
+                        <div class="p-4 sm:p-5">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">
                                     <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,10 +236,10 @@ const submitClient = () => {
                 <!-- Moliyaviy Statistika -->
                 <div class="mb-6">
                     <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Moliyaviy Hisobotlar (Joriy oy)</h3>
-                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                         <!-- Mahsulotlar -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                            <div class="p-5">
+                            <div class="p-4 sm:p-5">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
                                         <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,7 +265,7 @@ const submitClient = () => {
 
                         <!-- Ombor qiymati -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                            <div class="p-5">
+                            <div class="p-4 sm:p-5">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
                                         <svg class="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,7 +288,7 @@ const submitClient = () => {
 
                         <!-- Oylik daromad -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                            <div class="p-5">
+                            <div class="p-4 sm:p-5">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
                                         <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +311,7 @@ const submitClient = () => {
 
                         <!-- Oylik xarajatlar -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                            <div class="p-5">
+                            <div class="p-4 sm:p-5">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
                                         <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +334,7 @@ const submitClient = () => {
 
                         <!-- Foyda/Zarar -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 sm:col-span-2">
-                            <div class="p-5">
+                            <div class="p-4 sm:p-5">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
                                         <svg class="h-6 w-6" :class="stats.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +372,7 @@ const submitClient = () => {
                             </Link>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         <div v-if="recent_clients.length > 0" class="space-y-4">
                             <div
                                 v-for="client in recent_clients"
@@ -421,7 +421,7 @@ const submitClient = () => {
 
         <!-- Mijoz qo'shish Modal -->
         <Modal :show="showAddClientModal" @close="closeModal" max-width="2xl">
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                     Yangi mijoz qo'shish
                 </h2>

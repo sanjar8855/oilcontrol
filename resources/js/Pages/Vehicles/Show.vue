@@ -161,8 +161,8 @@ const toggleSaleForm = () => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="py-6 sm:py-12">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                 <!-- Savdo qilish tugmasi -->
                 <div class="mb-6">
                     <button

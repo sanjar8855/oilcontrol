@@ -32,8 +32,8 @@ const deleteClient = (client) => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="py-6 sm:py-12">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
                         <div v-if="clients.data.length > 0" class="overflow-x-auto">

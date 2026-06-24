@@ -27,8 +27,8 @@ const props = defineProps({
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
+        <div class="py-6 sm:py-12">
+            <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
                         <div class="flex items-center justify-between">
