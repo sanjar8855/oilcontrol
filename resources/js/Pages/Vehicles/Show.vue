@@ -486,6 +486,12 @@ const toggleSaleForm = () => {
                                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">VIN</dt>
                                         <dd class="mt-1 text-xs text-gray-900 dark:text-white">{{ vehicle.vin }}</dd>
                                     </div>
+                                    <div v-if="vehicle.client.default_avg_monthly_km">
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">O'rtacha (kuniga)</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                            ~{{ Math.round(vehicle.client.default_avg_monthly_km / 30).toLocaleString() }} km
+                                        </dd>
+                                    </div>
                                 </dl>
                             </div>
                         </div>

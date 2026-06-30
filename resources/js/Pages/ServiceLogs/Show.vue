@@ -131,14 +131,6 @@ const props = defineProps({
                                     </dd>
                                 </div>
 
-                                <div v-if="serviceLog.cost">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Xizmat narxi
-                                    </dt>
-                                    <dd class="mt-1 text-lg font-semibold text-green-600 dark:text-green-400">
-                                        {{ Number(serviceLog.cost).toLocaleString() }} so'm
-                                    </dd>
-                                </div>
                             </dl>
 
                             <div v-if="serviceLog.notes">
