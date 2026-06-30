@@ -534,10 +534,10 @@ const toggleSaleForm = () => {
                                                             {{ (log.odometer_reading + log.next_service_km).toLocaleString() }} km
                                                         </span>
                                                     </div>
-                                                    <div v-if="log.cost">
-                                                        <span class="text-gray-500 dark:text-gray-400">Narxi:</span>
+                                                    <div v-if="log.total_amount">
+                                                        <span class="text-gray-500 dark:text-gray-400">Savdo:</span>
                                                         <span class="ml-2 font-medium text-gray-900 dark:text-white">
-                                                            {{ Number(log.cost).toLocaleString() }} so'm
+                                                            {{ Number(log.total_amount).toLocaleString() }} so'm
                                                         </span>
                                                     </div>
                                                 </div>
