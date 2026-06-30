@@ -75,7 +75,6 @@ class ClientController extends Controller
         $client = $workshop->clients()->create([
             'name' => $validated['name'],
             'phone' => $validated['phone'],
-            'default_avg_monthly_km' => $avgMonthlyKm,
             'branch_id' => $branchId,
         ]);
 
@@ -84,6 +83,7 @@ class ClientController extends Controller
             'client_id' => $client->id,
             'plate_number' => $validated['plate_number'],
             'make' => $validated['make'] ?? 'Noma\'lum',
+            'avg_monthly_km' => $avgMonthlyKm,
         ]);
 
         return redirect()->route('vehicles.show', $vehicle)

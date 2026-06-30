@@ -15,6 +15,7 @@ class Vehicle extends Model
         'year',
         'plate_number',
         'vin',
+        'avg_monthly_km',
     ];
 
     protected $casts = [

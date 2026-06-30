@@ -18,6 +18,7 @@ const form = useForm({
     year: '',
     plate_number: '',
     vin: '',
+    avg_daily_km: '',
 });
 
 const submit = () => {
@@ -133,6 +134,23 @@ const submit = () => {
                                     maxlength="50"
                                 />
                                 <InputError class="mt-2" :message="form.errors.vin" />
+                            </div>
+
+                            <!-- Kuniga km -->
+                            <div>
+                                <InputLabel for="avg_daily_km" value="Kuniga taxminiy km (ixtiyoriy)" />
+                                <TextInput
+                                    id="avg_daily_km"
+                                    v-model="form.avg_daily_km"
+                                    type="number"
+                                    class="mt-1 block w-full"
+                                    :min="0"
+                                    placeholder="Masalan: 50"
+                                />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Servis eslatmalarini hisoblashda ishlatiladi
+                                </p>
+                                <InputError class="mt-2" :message="form.errors.avg_daily_km" />
                             </div>
 
                             <!-- Tugmalar -->

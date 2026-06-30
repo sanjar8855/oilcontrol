@@ -23,7 +23,7 @@ const serviceForm = useForm({
     service_date: new Date().toISOString().split('T')[0],
     odometer_reading: '',
     next_service_km: 5000,
-    avg_monthly_km: props.vehicle.client.default_avg_monthly_km || 1000,
+    avg_monthly_km: props.vehicle.avg_monthly_km || 1000,
     service_type: 'Servis',
     cost: 0,
     labor_cost: 0,
@@ -486,10 +486,10 @@ const toggleSaleForm = () => {
                                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">VIN</dt>
                                         <dd class="mt-1 text-xs text-gray-900 dark:text-white">{{ vehicle.vin }}</dd>
                                     </div>
-                                    <div v-if="vehicle.client.default_avg_monthly_km">
+                                    <div v-if="vehicle.avg_monthly_km">
                                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">O'rtacha (kuniga)</dt>
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                                            ~{{ Math.round(vehicle.client.default_avg_monthly_km / 30).toLocaleString() }} km
+                                            ~{{ Math.round(vehicle.avg_monthly_km / 30).toLocaleString() }} km
                                         </dd>
                                     </div>
                                 </dl>

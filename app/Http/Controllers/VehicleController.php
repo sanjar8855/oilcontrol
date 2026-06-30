@@ -106,6 +106,7 @@ class VehicleController extends Controller
             'year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'plate_number' => 'nullable|string|max:20',
             'vin' => 'nullable|string|max:50',
+            'avg_daily_km' => 'nullable|integer|min:0',
         ]);
 
         $user = $request->user();
@@ -120,6 +121,11 @@ class VehicleController extends Controller
         if (!$user->canAccessAllBranches() && $client->branch_id !== $user->branch_id) {
             abort(403);
         }
+
+        if (isset($validated['avg_daily_km']) && $validated['avg_daily_km'] > 0) {
+            $validated['avg_monthly_km'] = $validated['avg_daily_km'] * 30;
+        }
+        unset($validated['avg_daily_km']);
 
         $vehicle = Vehicle::create($validated);
 
@@ -229,7 +235,15 @@ class VehicleController extends Controller
             'year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'plate_number' => 'nullable|string|max:20',
             'vin' => 'nullable|string|max:50',
+            'avg_daily_km' => 'nullable|integer|min:0',
         ]);
+
+        if (isset($validated['avg_daily_km']) && $validated['avg_daily_km'] > 0) {
+            $validated['avg_monthly_km'] = $validated['avg_daily_km'] * 30;
+        } else {
+            $validated['avg_monthly_km'] = null;
+        }
+        unset($validated['avg_daily_km']);
 
         // Tekshirish: Client shu ustaxonaga tegishli ekanligini
         $client = Client::findOrFail($validated['client_id']);
