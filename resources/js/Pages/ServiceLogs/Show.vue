@@ -5,10 +5,15 @@ import { Head, Link } from '@inertiajs/vue3';
 const props = defineProps({
     serviceLog: Object,
 });
+
+const productsTotal = () => {
+    if (!props.serviceLog.products?.length) return 0;
+    return props.serviceLog.products.reduce((sum, p) => sum + Number(p.pivot.total_price), 0);
+};
 </script>
 
 <template>
-    <Head :title="`Servis - ${serviceLog.service_type}`" />
+    <Head title="Servis Tafsilotlari" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -34,157 +39,133 @@ const props = defineProps({
         </template>
 
         <div class="py-6 sm:py-12">
-            <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8 space-y-4">
+
+                <!-- Asosiy ma'lumotlar -->
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <div class="border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                                    {{ serviceLog.service_type }}
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ new Date(serviceLog.service_date).toLocaleDateString('uz-UZ', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    }) }}
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ new Date(serviceLog.service_date).toLocaleDateString('uz-UZ', { year: 'numeric', month: 'long', day: 'numeric' }) }}
                                 </p>
+                                <div class="mt-1 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                                    <Link :href="route('vehicles.show', serviceLog.vehicle.id)" class="text-indigo-600 hover:underline dark:text-indigo-400">
+                                        {{ serviceLog.vehicle.make }} {{ serviceLog.vehicle.model }}
+                                    </Link>
+                                    <span>·</span>
+                                    <Link :href="route('clients.show', serviceLog.vehicle.client.id)" class="hover:underline">
+                                        {{ serviceLog.vehicle.client.name }}
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-6">
-                        <!-- Avtomobil ma'lumotlari -->
-                        <div class="mb-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                            <h4 class="mb-3 font-semibold text-gray-900 dark:text-white">
-                                Avtomobil Ma'lumotlari
-                            </h4>
-                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <dt class="text-sm text-gray-500 dark:text-gray-400">Avtomobil:</dt>
-                                    <dd class="mt-1">
-                                        <Link
-                                            :href="route('vehicles.show', serviceLog.vehicle.id)"
-                                            class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                        >
-                                            {{ serviceLog.vehicle.make }} {{ serviceLog.vehicle.model }}
-                                        </Link>
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm text-gray-500 dark:text-gray-400">Egasi:</dt>
-                                    <dd class="mt-1">
-                                        <Link
-                                            :href="route('clients.show', serviceLog.vehicle.client.id)"
-                                            class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                        >
-                                            {{ serviceLog.vehicle.client.name }}
-                                        </Link>
-                                    </dd>
-                                </div>
-                            </dl>
+                    <div class="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-700">
+                        <div class="px-6 py-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Probeg</p>
+                            <p class="mt-0.5 text-base font-semibold text-gray-900 dark:text-white">
+                                {{ serviceLog.odometer_reading.toLocaleString() }} km
+                            </p>
                         </div>
-
-                        <!-- Servis ma'lumotlari -->
-                        <div class="space-y-6">
-                            <h4 class="font-semibold text-gray-900 dark:text-white">
-                                Servis Ma'lumotlari
-                            </h4>
-
-                            <dl class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Servis sanasi
-                                    </dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {{ new Date(serviceLog.service_date).toLocaleDateString('uz-UZ') }}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Servis turi
-                                    </dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {{ serviceLog.service_type }}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Probeg (km)
-                                    </dt>
-                                    <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {{ serviceLog.odometer_reading.toLocaleString() }} km
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Keyingi servis
-                                    </dt>
-                                    <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {{ (serviceLog.odometer_reading + serviceLog.next_service_km).toLocaleString() }} km
-                                    </dd>
-                                </div>
-
-                                <div v-if="serviceLog.avg_monthly_km">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        O'rtacha oylik km
-                                    </dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {{ serviceLog.avg_monthly_km.toLocaleString() }} km/oy
-                                    </dd>
-                                </div>
-
-                            </dl>
-
-                            <div v-if="serviceLog.notes">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                    Eslatmalar
-                                </dt>
-                                <dd class="mt-2 rounded-lg bg-gray-50 p-4 text-sm text-gray-900 dark:bg-gray-900 dark:text-white">
-                                    {{ serviceLog.notes }}
-                                </dd>
-                            </div>
+                        <div class="px-6 py-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Keyingi servis</p>
+                            <p class="mt-0.5 text-base font-semibold text-gray-900 dark:text-white">
+                                {{ (serviceLog.odometer_reading + serviceLog.next_service_km).toLocaleString() }} km
+                            </p>
                         </div>
-
-                        <!-- Eslatmalar -->
-                        <div v-if="serviceLog.reminders && serviceLog.reminders.length > 0" class="mt-8">
-                            <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">
-                                Eslatmalar
-                            </h4>
-                            <div class="space-y-3">
-                                <div
-                                    v-for="reminder in serviceLog.reminders"
-                                    :key="reminder.id"
-                                    class="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700"
-                                >
-                                    <div>
-                                        <p class="text-sm text-gray-900 dark:text-white">
-                                            {{ new Date(reminder.scheduled_date).toLocaleDateString('uz-UZ') }}
-                                        </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ reminder.notification_type }}
-                                        </p>
-                                    </div>
-                                    <span
-                                        :class="[
-                                            'rounded-full px-3 py-1 text-xs font-medium',
-                                            reminder.status === 'sent'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                : reminder.status === 'pending'
-                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                        ]"
-                                    >
-                                        {{ reminder.status }}
-                                    </span>
-                                </div>
-                            </div>
+                        <div class="px-6 py-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Jami savdo</p>
+                            <p class="mt-0.5 text-base font-semibold text-indigo-600 dark:text-indigo-400">
+                                {{ Number(serviceLog.total_amount || 0).toLocaleString() }} so'm
+                            </p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Sotilgan mahsulotlar -->
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Sotilgan mahsulotlar</h3>
+                    </div>
+
+                    <div v-if="serviceLog.products && serviceLog.products.length > 0">
+                        <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700/50">
+                                    <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Mahsulot</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Miqdor</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Narx</th>
+                                    <th class="px-6 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Jami</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <tr v-for="product in serviceLog.products" :key="product.id">
+                                    <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">{{ product.name }}</td>
+                                    <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
+                                        {{ product.pivot.quantity }} {{ product.unit }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
+                                        {{ Number(product.pivot.unit_price).toLocaleString() }} so'm
+                                    </td>
+                                    <td class="px-6 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ Number(product.pivot.total_price).toLocaleString() }} so'm
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot v-if="serviceLog.labor_cost > 0">
+                                <tr class="bg-gray-50 dark:bg-gray-700/50">
+                                    <td colspan="3" class="px-6 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Qo'shimcha xizmatlar</td>
+                                    <td class="px-6 py-2 text-right text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ Number(serviceLog.labor_cost).toLocaleString() }} so'm
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div v-else class="px-6 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+                        Mahsulot ma'lumoti yo'q
+                    </div>
+                </div>
+
+                <!-- Izoh -->
+                <div v-if="serviceLog.notes" class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="px-6 py-4">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Izoh</p>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ serviceLog.notes }}</p>
+                    </div>
+                </div>
+
+                <!-- Eslatmalar -->
+                <div v-if="serviceLog.reminders && serviceLog.reminders.length > 0" class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Eslatmalar</h3>
+                    </div>
+                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <div
+                            v-for="reminder in serviceLog.reminders"
+                            :key="reminder.id"
+                            class="flex items-center justify-between px-6 py-3"
+                        >
+                            <div>
+                                <p class="text-sm text-gray-900 dark:text-white">
+                                    {{ new Date(reminder.scheduled_date).toLocaleDateString('uz-UZ') }}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ reminder.notification_type }}</p>
+                            </div>
+                            <span :class="[
+                                'rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                reminder.status === 'sent'    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                                reminder.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                                                                'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                            ]">
+                                {{ reminder.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </AuthenticatedLayout>
