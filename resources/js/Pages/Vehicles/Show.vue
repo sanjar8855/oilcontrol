@@ -508,50 +508,57 @@ const toggleSaleForm = () => {
                                 </div>
                             </div>
                             <div class="p-6">
-                                <div v-if="vehicle.service_logs && vehicle.service_logs.length > 0" class="space-y-4">
+                                <div v-if="vehicle.service_logs && vehicle.service_logs.length > 0" class="divide-y divide-gray-100 dark:divide-gray-700">
                                     <div
                                         v-for="log in vehicle.service_logs"
                                         :key="log.id"
-                                        class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+                                        class="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
                                     >
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-3">
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                        {{ new Date(log.service_date).toLocaleDateString('uz-UZ') }}
-                                                    </span>
-                                                </div>
-                                                <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
-                                                    <div>
-                                                        <span class="text-gray-500 dark:text-gray-400">Probeg:</span>
-                                                        <span class="ml-2 font-medium text-gray-900 dark:text-white">
-                                                            {{ log.odometer_reading.toLocaleString() }} km
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <span class="text-gray-500 dark:text-gray-400">Keyingi servis:</span>
-                                                        <span class="ml-2 font-medium text-gray-900 dark:text-white">
-                                                            {{ (log.odometer_reading + log.next_service_km).toLocaleString() }} km
-                                                        </span>
-                                                    </div>
-                                                    <div v-if="log.total_amount">
-                                                        <span class="text-gray-500 dark:text-gray-400">Savdo:</span>
-                                                        <span class="ml-2 font-medium text-gray-900 dark:text-white">
-                                                            {{ Number(log.total_amount).toLocaleString() }} so'm
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <p v-if="log.notes" class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                                    {{ log.notes }}
-                                                </p>
+                                        <!-- Chap: asosiy ma'lumot -->
+                                        <div class="min-w-0 flex-1">
+                                            <!-- Sana + probeg + keyingi servis bir qatorda -->
+                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    {{ new Date(log.service_date).toLocaleDateString('uz-UZ') }}
+                                                </span>
+                                                <span class="text-gray-400">·</span>
+                                                <span class="text-gray-500 dark:text-gray-400">
+                                                    {{ log.odometer_reading.toLocaleString() }} km
+                                                </span>
+                                                <span class="text-gray-400">→</span>
+                                                <span class="text-gray-500 dark:text-gray-400">
+                                                    {{ (log.odometer_reading + log.next_service_km).toLocaleString() }} km
+                                                </span>
+                                                <span v-if="log.total_amount" class="font-semibold text-indigo-600 dark:text-indigo-400">
+                                                    {{ Number(log.total_amount).toLocaleString() }} so'm
+                                                </span>
                                             </div>
-                                            <Link
-                                                :href="route('service-logs.show', log.id)"
-                                                class="ml-4 rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
-                                            >
-                                                Batafsil
-                                            </Link>
+
+                                            <!-- Mahsulotlar kichik chip sifatida -->
+                                            <div v-if="log.products && log.products.length > 0" class="mt-1.5 flex flex-wrap gap-1">
+                                                <span
+                                                    v-for="product in log.products"
+                                                    :key="product.id"
+                                                    class="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                >
+                                                    {{ product.name }}
+                                                    <span class="ml-1 text-gray-400">×{{ product.pivot.quantity }}</span>
+                                                </span>
+                                            </div>
+
+                                            <!-- Izoh -->
+                                            <p v-if="log.notes" class="mt-1 truncate text-xs text-gray-400 dark:text-gray-500">
+                                                {{ log.notes }}
+                                            </p>
                                         </div>
+
+                                        <!-- O'ng: Batafsil tugma -->
+                                        <Link
+                                            :href="route('service-logs.show', log.id)"
+                                            class="shrink-0 rounded bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                        >
+                                            Batafsil
+                                        </Link>
                                     </div>
                                 </div>
                                 <div v-else class="py-8 text-center">

@@ -152,7 +152,7 @@ class VehicleController extends Controller
         }
 
         $vehicle->load(['client', 'serviceLogs' => function ($query) {
-            $query->latest('service_date');
+            $query->with('products')->latest('service_date');
         }]);
 
         // Mahsulotlar ro'yxati (faqat aktiv va omborda bor) - branch filtered
