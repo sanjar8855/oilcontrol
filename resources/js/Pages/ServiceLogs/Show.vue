@@ -18,6 +18,12 @@ const props = defineProps({
                 </h2>
                 <div class="flex gap-2">
                     <Link
+                        :href="route('service-logs.edit', serviceLog.id)"
+                        class="rounded-md bg-yellow-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-500"
+                    >
+                        Tahrirlash
+                    </Link>
+                    <Link
                         :href="route('vehicles.show', serviceLog.vehicle.id)"
                         class="rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500"
                     >
