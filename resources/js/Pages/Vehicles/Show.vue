@@ -336,7 +336,6 @@ const toggleSaleForm = () => {
                                         <input
                                             v-model="selectedQuantity"
                                             type="number"
-                                            min="0.01"
                                             step="0.1"
                                             placeholder="1"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
