@@ -99,7 +99,7 @@ defineProps({
                                                     {{ vehicle.year }} | {{ vehicle.plate_number || 'Nomer yo\'q' }}
                                                 </p>
                                                 <p v-if="vehicle.service_logs && vehicle.service_logs.length > 0" class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                                    Oxirgi servis: {{ vehicle.service_logs[0].service_date }}
+                                                    Oxirgi servis: {{ new Date(vehicle.service_logs[0].service_date).toLocaleDateString('uz-UZ') }}
                                                 </p>
                                             </div>
                                             <Link

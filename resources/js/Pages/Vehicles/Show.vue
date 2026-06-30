@@ -21,7 +21,7 @@ const manualProductPrice = ref('');
 const serviceForm = useForm({
     vehicle_id: props.vehicle.id,
     service_date: new Date().toISOString().split('T')[0],
-    odometer_reading: '',
+    odometer_reading: props.vehicle.service_logs?.[0]?.odometer_reading || '',
     next_service_km: 5000,
     avg_monthly_km: props.vehicle.avg_monthly_km || 1000,
     service_type: 'Servis',
