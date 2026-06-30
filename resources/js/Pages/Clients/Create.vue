@@ -5,17 +5,25 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+const addVehicle = ref(false);
 
 const form = useForm({
     name: '',
     phone: '',
-    telegram_id: '',
-    email: '',
     notes: '',
+    make: '',
+    plate_number: '',
+    avg_daily_km: '',
 });
 
 const submit = () => {
-    form.post(route('clients.store'));
+    if (addVehicle.value) {
+        form.post(route('clients.store-with-vehicle'));
+    } else {
+        form.post(route('clients.store'));
+    }
 };
 </script>
 
@@ -42,7 +50,8 @@ const submit = () => {
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
                         <form @submit.prevent="submit" class="space-y-6">
-                            <!-- Ismi -->
+
+                            <!-- Mijoz ismi -->
                             <div>
                                 <InputLabel for="name" value="Mijoz ismi *" />
                                 <TextInput
@@ -71,47 +80,79 @@ const submit = () => {
                                 <InputError class="mt-2" :message="form.errors.phone" />
                             </div>
 
-                            <!-- Telegram ID -->
-                            <div>
-                                <InputLabel for="telegram_id" value="Telegram ID (ixtiyoriy)" />
-                                <TextInput
-                                    id="telegram_id"
-                                    v-model="form.telegram_id"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    placeholder="Masalan: 123456789"
-                                />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Telegram orqali eslatma yuborish uchun mijozning Telegram ID raqami
-                                </p>
-                                <InputError class="mt-2" :message="form.errors.telegram_id" />
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <InputLabel for="email" value="Email (ixtiyoriy)" />
-                                <TextInput
-                                    id="email"
-                                    v-model="form.email"
-                                    type="email"
-                                    class="mt-1 block w-full"
-                                    placeholder="Masalan: abbos@example.com"
-                                />
-                                <InputError class="mt-2" :message="form.errors.email" />
-                            </div>
-
                             <!-- Eslatmalar -->
                             <div>
                                 <InputLabel for="notes" value="Eslatmalar (ixtiyoriy)" />
                                 <textarea
                                     id="notes"
                                     v-model="form.notes"
-                                    rows="4"
+                                    rows="3"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                     placeholder="Qo'shimcha ma'lumotlar..."
                                 ></textarea>
                                 <InputError class="mt-2" :message="form.errors.notes" />
                             </div>
+
+                            <!-- Moshina qo'shish toggle -->
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-5">
+                                <label class="flex cursor-pointer items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        v-model="addVehicle"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                                    />
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Moshina qo'shish
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Moshina maydonlari -->
+                            <template v-if="addVehicle">
+                                <!-- Moshina markasi -->
+                                <div>
+                                    <InputLabel for="make" value="Moshina markasi (ixtiyoriy)" />
+                                    <TextInput
+                                        id="make"
+                                        v-model="form.make"
+                                        type="text"
+                                        class="mt-1 block w-full"
+                                        placeholder="Masalan: Chevrolet Cobalt"
+                                    />
+                                    <InputError class="mt-2" :message="form.errors.make" />
+                                </div>
+
+                                <!-- Davlat raqami -->
+                                <div>
+                                    <InputLabel for="plate_number" value="Davlat raqami *" />
+                                    <TextInput
+                                        id="plate_number"
+                                        v-model="form.plate_number"
+                                        type="text"
+                                        class="mt-1 block w-full"
+                                        :required="addVehicle"
+                                        placeholder="Masalan: 01 A 123 BC"
+                                    />
+                                    <InputError class="mt-2" :message="form.errors.plate_number" />
+                                </div>
+
+                                <!-- Kuniga km -->
+                                <div>
+                                    <InputLabel for="avg_daily_km" value="Kuniga taxminiy km (ixtiyoriy)" />
+                                    <TextInput
+                                        id="avg_daily_km"
+                                        v-model="form.avg_daily_km"
+                                        type="number"
+                                        class="mt-1 block w-full"
+                                        :min="0"
+                                        placeholder="Masalan: 50"
+                                    />
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Servis eslatmalarini hisoblashda ishlatiladi
+                                    </p>
+                                    <InputError class="mt-2" :message="form.errors.avg_daily_km" />
+                                </div>
+                            </template>
 
                             <!-- Tugmalar -->
                             <div class="flex items-center justify-end gap-4">
