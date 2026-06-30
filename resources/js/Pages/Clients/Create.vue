@@ -5,21 +5,18 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-
-const addVehicle = ref(false);
 
 const form = useForm({
     name: '',
     phone: '',
     notes: '',
-    make: '',
     plate_number: '',
+    make: '',
     avg_daily_km: '',
 });
 
 const submit = () => {
-    if (addVehicle.value) {
+    if (form.plate_number.trim()) {
         form.post(route('clients.store-with-vehicle'));
     } else {
         form.post(route('clients.store'));
@@ -93,66 +90,57 @@ const submit = () => {
                                 <InputError class="mt-2" :message="form.errors.notes" />
                             </div>
 
-                            <!-- Moshina qo'shish toggle -->
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-5">
-                                <label class="flex cursor-pointer items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        v-model="addVehicle"
-                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
-                                    />
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                        Moshina qo'shish
-                                    </span>
-                                </label>
+                            <!-- Moshina bo'limi -->
+                            <div class="border-t border-gray-200 pt-5 dark:border-gray-700">
+                                <h3 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Moshina ma'lumotlari (ixtiyoriy)
+                                </h3>
+
+                                <div class="space-y-5">
+                                    <!-- Davlat raqami -->
+                                    <div>
+                                        <InputLabel for="plate_number" value="Davlat raqami" />
+                                        <TextInput
+                                            id="plate_number"
+                                            v-model="form.plate_number"
+                                            type="text"
+                                            class="mt-1 block w-full"
+                                            placeholder="Masalan: 01 A 123 BC"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.plate_number" />
+                                    </div>
+
+                                    <!-- Moshina markasi -->
+                                    <div>
+                                        <InputLabel for="make" value="Moshina markasi (ixtiyoriy)" />
+                                        <TextInput
+                                            id="make"
+                                            v-model="form.make"
+                                            type="text"
+                                            class="mt-1 block w-full"
+                                            placeholder="Masalan: Chevrolet Cobalt"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.make" />
+                                    </div>
+
+                                    <!-- Kuniga km -->
+                                    <div>
+                                        <InputLabel for="avg_daily_km" value="Kuniga taxminiy km (ixtiyoriy)" />
+                                        <TextInput
+                                            id="avg_daily_km"
+                                            v-model="form.avg_daily_km"
+                                            type="number"
+                                            class="mt-1 block w-full"
+                                            :min="0"
+                                            placeholder="Masalan: 50"
+                                        />
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Servis eslatmalarini hisoblashda ishlatiladi
+                                        </p>
+                                        <InputError class="mt-2" :message="form.errors.avg_daily_km" />
+                                    </div>
+                                </div>
                             </div>
-
-                            <!-- Moshina maydonlari -->
-                            <template v-if="addVehicle">
-                                <!-- Moshina markasi -->
-                                <div>
-                                    <InputLabel for="make" value="Moshina markasi (ixtiyoriy)" />
-                                    <TextInput
-                                        id="make"
-                                        v-model="form.make"
-                                        type="text"
-                                        class="mt-1 block w-full"
-                                        placeholder="Masalan: Chevrolet Cobalt"
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.make" />
-                                </div>
-
-                                <!-- Davlat raqami -->
-                                <div>
-                                    <InputLabel for="plate_number" value="Davlat raqami *" />
-                                    <TextInput
-                                        id="plate_number"
-                                        v-model="form.plate_number"
-                                        type="text"
-                                        class="mt-1 block w-full"
-                                        :required="addVehicle"
-                                        placeholder="Masalan: 01 A 123 BC"
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.plate_number" />
-                                </div>
-
-                                <!-- Kuniga km -->
-                                <div>
-                                    <InputLabel for="avg_daily_km" value="Kuniga taxminiy km (ixtiyoriy)" />
-                                    <TextInput
-                                        id="avg_daily_km"
-                                        v-model="form.avg_daily_km"
-                                        type="number"
-                                        class="mt-1 block w-full"
-                                        :min="0"
-                                        placeholder="Masalan: 50"
-                                    />
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Servis eslatmalarini hisoblashda ishlatiladi
-                                    </p>
-                                    <InputError class="mt-2" :message="form.errors.avg_daily_km" />
-                                </div>
-                            </template>
 
                             <!-- Tugmalar -->
                             <div class="flex items-center justify-end gap-4">
