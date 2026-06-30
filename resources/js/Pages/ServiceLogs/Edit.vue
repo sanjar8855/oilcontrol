@@ -13,7 +13,7 @@ const props = defineProps({
 
 const form = useForm({
     vehicle_id: props.serviceLog.vehicle_id,
-    service_date: props.serviceLog.service_date,
+    service_date: props.serviceLog.service_date?.substring(0, 10),
     odometer_reading: props.serviceLog.odometer_reading,
     next_service_km: props.serviceLog.next_service_km,
     service_type: props.serviceLog.service_type || 'Servis',
