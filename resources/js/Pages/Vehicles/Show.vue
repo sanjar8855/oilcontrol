@@ -499,12 +499,6 @@ const toggleSaleForm = () => {
                                     <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                                         Servis Tarixi
                                     </h3>
-                                    <Link
-                                        :href="route('service-logs.create', { vehicle_id: vehicle.id })"
-                                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                                    >
-                                        + Servis Qo'shish
-                                    </Link>
                                 </div>
                             </div>
                             <div class="p-6">
@@ -564,14 +558,6 @@ const toggleSaleForm = () => {
                                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                         Birinchi servis yozuvini qo'shing
                                     </p>
-                                    <div class="mt-6">
-                                        <Link
-                                            :href="route('service-logs.create', { vehicle_id: vehicle.id })"
-                                            class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                                        >
-                                            + Servis Qo'shish
-                                        </Link>
-                                    </div>
                                 </div>
                             </div>
                         </div>
