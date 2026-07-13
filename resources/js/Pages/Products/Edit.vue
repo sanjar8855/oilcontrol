@@ -26,7 +26,12 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(route('products.update', props.product.id));
+    form.transform((data) => ({
+        ...data,
+        currency: props.product.currency ?? 'UZS',
+        purchase_price_uzs: data.purchase_price,
+        selling_price_uzs: data.selling_price,
+    })).put(route('products.update', props.product.id));
 };
 </script>
 

@@ -31,6 +31,7 @@ class ServiceLog extends Model
         'total_amount',
         'currency',
         'notes',
+        'manual_items',
     ];
 
     protected $casts = [
@@ -48,6 +49,7 @@ class ServiceLog extends Model
         'discount_amount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'manual_items' => 'array',
     ];
 
     // Relationships

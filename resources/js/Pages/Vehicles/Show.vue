@@ -21,7 +21,9 @@ const manualProductPrice = ref('');
 const serviceForm = useForm({
     vehicle_id: props.vehicle.id,
     service_date: new Date().toISOString().split('T')[0],
-    odometer_reading: props.vehicle.service_logs?.[0]?.odometer_reading || '',
+    odometer_reading: props.vehicle.service_logs?.[0]
+        ? props.vehicle.service_logs[0].odometer_reading + props.vehicle.service_logs[0].next_service_km
+        : '',
     next_service_km: 5000,
     avg_monthly_km: props.vehicle.avg_monthly_km || 1000,
     service_type: 'Servis',
@@ -29,6 +31,7 @@ const serviceForm = useForm({
     labor_cost: 0,
     notes: '',
     products: [],
+    manual_items: [],
     payment_type: 'cash',
     payment_status: 'paid',
     paid_amount: 0,
@@ -140,6 +143,12 @@ const submitService = () => {
     }));
 
     serviceForm.labor_cost = manualItems.reduce((sum, item) => sum + item.total_price, 0);
+    serviceForm.manual_items = manualItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+    }));
     serviceForm.cost = cartTotal.value;
     serviceForm.paid_amount = cartTotal.value;
 

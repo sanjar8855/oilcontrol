@@ -90,7 +90,7 @@ const productsTotal = () => {
                         <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Sotilgan mahsulotlar</h3>
                     </div>
 
-                    <div v-if="serviceLog.products && serviceLog.products.length > 0">
+                    <div v-if="(serviceLog.products && serviceLog.products.length > 0) || (serviceLog.manual_items && serviceLog.manual_items.length > 0)">
                         <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700/50">
@@ -101,6 +101,7 @@ const productsTotal = () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <!-- Katalogdan tanlangan mahsulotlar -->
                                 <tr v-for="product in serviceLog.products" :key="product.id">
                                     <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">{{ product.name }}</td>
                                     <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
@@ -113,15 +114,23 @@ const productsTotal = () => {
                                         {{ Number(product.pivot.total_price).toLocaleString() }} so'm
                                     </td>
                                 </tr>
-                            </tbody>
-                            <tfoot v-if="serviceLog.labor_cost > 0">
-                                <tr class="bg-gray-50 dark:bg-gray-700/50">
-                                    <td colspan="3" class="px-6 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Qo'shimcha xizmatlar</td>
-                                    <td class="px-6 py-2 text-right text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ Number(serviceLog.labor_cost).toLocaleString() }} so'm
+                                <!-- Qo'lda kiritilgan mahsulotlar -->
+                                <tr v-for="(item, i) in serviceLog.manual_items" :key="'m' + i">
+                                    <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">
+                                        {{ item.name }}
+                                        <span class="ml-1 rounded bg-yellow-100 px-1 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">qo'lda</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
+                                        {{ item.quantity }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
+                                        {{ Number(item.unit_price).toLocaleString() }} so'm
+                                    </td>
+                                    <td class="px-6 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ Number(item.total_price).toLocaleString() }} so'm
                                     </td>
                                 </tr>
-                            </tfoot>
+                            </tbody>
                         </table>
                     </div>
                     <div v-else class="px-6 py-6 text-center text-sm text-gray-400 dark:text-gray-500">

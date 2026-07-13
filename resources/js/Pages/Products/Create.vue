@@ -26,7 +26,12 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('products.store'));
+    form.transform((data) => ({
+        ...data,
+        currency: 'UZS',
+        purchase_price_uzs: data.purchase_price,
+        selling_price_uzs: data.selling_price,
+    })).post(route('products.store'));
 };
 </script>
 
