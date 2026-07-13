@@ -155,6 +155,14 @@ class ServiceLogController extends Controller
         $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
         $validated['is_consignment'] = $validated['is_consignment'] ?? false;
 
+        // Qo'lda kiritilgan mahsulotlar uchun jami narxni serverda hisoblaymiz
+        if (!empty($validated['manual_items'])) {
+            $validated['manual_items'] = collect($validated['manual_items'])->map(function ($item) {
+                $item['total_price'] = $item['quantity'] * $item['unit_price'];
+                return $item;
+            })->all();
+        }
+
         DB::beginTransaction();
         try {
             $serviceLog = ServiceLog::create($validated);

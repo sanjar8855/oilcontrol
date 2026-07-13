@@ -142,7 +142,6 @@ const submitService = () => {
         unit_price: item.unit_price,
     }));
 
-    serviceForm.labor_cost = manualItems.reduce((sum, item) => sum + item.total_price, 0);
     serviceForm.manual_items = manualItems.map(item => ({
         name: item.name,
         quantity: item.quantity,

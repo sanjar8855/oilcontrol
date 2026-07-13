@@ -80,10 +80,10 @@ const deleteLog = (log) => {
                                                     {{ (log.odometer_reading + log.next_service_km).toLocaleString() }} km
                                                 </p>
                                             </div>
-                                            <div v-if="log.cost">
+                                            <div v-if="log.total_amount">
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">Narxi:</span>
                                                 <p class="font-medium text-gray-900 dark:text-white">
-                                                    {{ Number(log.cost).toLocaleString() }} so'm
+                                                    {{ Number(log.total_amount).toLocaleString() }} so'm
                                                 </p>
                                             </div>
                                         </div>

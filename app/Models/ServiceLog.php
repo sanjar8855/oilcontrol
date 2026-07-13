@@ -151,13 +151,15 @@ class ServiceLog extends Model
             return $product->pivot->total_price;
         });
 
-        $subtotal = $productsCost + $this->labor_cost;
+        $manualItemsCost = collect($this->manual_items ?? [])->sum('total_price');
+
+        $subtotal = $productsCost + $manualItemsCost + $this->labor_cost;
         $discountAmount = $this->discount_percentage > 0
             ? ($subtotal * $this->discount_percentage / 100)
             : $this->discount_amount;
 
         $this->total_amount = $subtotal - $discountAmount;
-        $this->cost = $productsCost;
+        $this->cost = $productsCost + $manualItemsCost;
         $this->remaining_amount = $this->total_amount - $this->paid_amount;
 
         $this->save();
