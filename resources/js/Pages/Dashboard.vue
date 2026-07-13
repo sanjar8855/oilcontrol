@@ -139,7 +139,7 @@ const submitClient = () => {
                 </div>
 
                 <!-- Statistika Kartochkalari -->
-                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                     <!-- Jami mijozlar -->
                     <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
                         <div class="p-4 sm:p-5">
@@ -202,29 +202,6 @@ const submitClient = () => {
                                         </dt>
                                         <dd class="text-lg font-semibold text-gray-900 dark:text-white">
                                             {{ Math.floor(stats.days_remaining) }} kun
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ustaxona nomi -->
-                    <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                        <div class="p-4 sm:p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            Ustaxona
-                                        </dt>
-                                        <dd class="truncate text-lg font-semibold text-gray-900 dark:text-white">
-                                            {{ workshop.name }}
                                         </dd>
                                     </dl>
                                 </div>
