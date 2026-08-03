@@ -8,20 +8,23 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carMakeOptions } from '@/constants/carMakes';
+import { carModelGroups, carModelOptions } from '@/constants/carModels';
 
 const props = defineProps({
     vehicle: Object,
     clients: Array,
 });
 
-// Avvaldan saqlangan marka ro'yxatda bo'lmasa ham ko'rsatish uchun
-const makeOptions = computed(() => {
+// Avvaldan saqlangan qiymat ro'yxatda bo'lmasa ham ko'rsatish uchun
+const makeOptionGroups = computed(() => {
     const currentMake = props.vehicle.make;
-    if (currentMake && !carMakeOptions.some((option) => option.value === currentMake)) {
-        return [{ value: currentMake, label: currentMake }, ...carMakeOptions];
+    if (currentMake && !carModelOptions.some((option) => option.value === currentMake)) {
+        return [
+            { label: 'Boshqa', options: [{ value: currentMake, label: currentMake }] },
+            ...carModelGroups,
+        ];
     }
-    return carMakeOptions;
+    return carModelGroups;
 });
 
 const form = useForm({
@@ -79,16 +82,17 @@ const submit = () => {
                                 <InputError class="mt-2" :message="form.errors.client_id" />
                             </div>
 
-                            <!-- Marka (Make) -->
+                            <!-- Mashina turi -->
                             <div>
-                                <InputLabel for="make" value="Mashina markasi *" />
+                                <InputLabel for="make" value="Mashina turi *" />
                                 <Multiselect
                                     id="make"
                                     v-model="form.make"
-                                    :options="makeOptions"
+                                    :options="makeOptionGroups"
+                                    :groups="true"
                                     :searchable="true"
-                                    placeholder="Mashina markasini tanlang"
-                                    noOptionsText="Markalar topilmadi"
+                                    placeholder="Mashina turini tanlang"
+                                    noOptionsText="Topilmadi"
                                     noResultsText="Natija topilmadi"
                                     class="mt-1"
                                 />

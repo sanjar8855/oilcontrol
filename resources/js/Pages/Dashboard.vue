@@ -6,7 +6,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carMakeOptions } from '@/constants/carMakes';
+import { carModelGroups } from '@/constants/carModels';
 
 defineProps({
     workshop: Object,
@@ -464,18 +464,19 @@ const submitClient = () => {
                             </div>
                         </div>
 
-                        <!-- Mashina markasi -->
+                        <!-- Mashina turi -->
                         <div>
                             <label for="make" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Mashina markasi
+                                Mashina turi
                             </label>
                             <Multiselect
                                 id="make"
                                 v-model="clientForm.make"
-                                :options="carMakeOptions"
+                                :options="carModelGroups"
+                                :groups="true"
                                 :searchable="true"
-                                placeholder="Mashina markasini tanlang"
-                                noOptionsText="Markalar topilmadi"
+                                placeholder="Mashina turini tanlang"
+                                noOptionsText="Topilmadi"
                                 noResultsText="Natija topilmadi"
                                 class="mt-1"
                             />

@@ -7,7 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carMakeOptions } from '@/constants/carMakes';
+import { carModelGroups } from '@/constants/carModels';
 
 const form = useForm({
     name: '',
@@ -113,16 +113,17 @@ const submit = () => {
                                         <InputError class="mt-2" :message="form.errors.plate_number" />
                                     </div>
 
-                                    <!-- Moshina markasi -->
+                                    <!-- Moshina turi -->
                                     <div>
-                                        <InputLabel for="make" value="Moshina markasi (ixtiyoriy)" />
+                                        <InputLabel for="make" value="Moshina turi (ixtiyoriy)" />
                                         <Multiselect
                                             id="make"
                                             v-model="form.make"
-                                            :options="carMakeOptions"
+                                            :options="carModelGroups"
+                                            :groups="true"
                                             :searchable="true"
-                                            placeholder="Mashina markasini tanlang"
-                                            noOptionsText="Markalar topilmadi"
+                                            placeholder="Mashina turini tanlang"
+                                            noOptionsText="Topilmadi"
                                             noResultsText="Natija topilmadi"
                                             class="mt-1"
                                         />
