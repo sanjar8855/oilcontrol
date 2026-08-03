@@ -99,6 +99,13 @@ class Product extends Model
             ->withTimestamps();
     }
 
+    public function carModels(): BelongsToMany
+    {
+        return $this->belongsToMany(CarModel::class, 'car_model_products')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);

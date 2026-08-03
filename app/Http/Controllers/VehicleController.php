@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarMake;
+use App\Models\CarModel;
 use App\Models\Client;
 use App\Models\Vehicle;
 use Illuminate\Http\RedirectResponse;
@@ -91,6 +93,7 @@ class VehicleController extends Controller
         return Inertia::render('Vehicles/Create', [
             'clients' => $clients,
             'selectedClientId' => $selectedClientId,
+            'carMakeGroups' => CarMake::optionGroups(),
         ]);
     }
 
@@ -170,9 +173,37 @@ class VehicleController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'unit', 'selling_price', 'stock_quantity', 'category_id']);
 
+        // Avtomobil turiga bog'langan texnik ma'lumot va tavsiya etilgan mahsulotlar
+        $carModel = CarModel::where('name', $vehicle->make)
+            ->with(['products' => function ($query) use ($workshop, $user) {
+                $query->where('products.workshop_id', $workshop->id)
+                    ->where('products.is_active', true)
+                    ->where('products.stock_quantity', '>', 0);
+
+                if (!$user->canAccessAllBranches()) {
+                    $query->where('products.branch_id', $user->branch_id);
+                }
+            }])
+            ->first();
+
+        $carModelInfo = $carModel ? [
+            'oil_capacity_liters' => $carModel->oil_capacity_liters,
+            'antifreeze_capacity_min_liters' => $carModel->antifreeze_capacity_min_liters,
+            'antifreeze_capacity_max_liters' => $carModel->antifreeze_capacity_max_liters,
+            'recommended_products' => $carModel->products->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'unit' => $product->unit,
+                'selling_price' => $product->selling_price,
+                'stock_quantity' => $product->stock_quantity,
+                'quantity' => (float) $product->pivot->quantity,
+            ])->all(),
+        ] : null;
+
         return Inertia::render('Vehicles/Show', [
             'vehicle' => $vehicle,
             'products' => $products,
+            'carModelInfo' => $carModelInfo,
         ]);
     }
 
@@ -208,6 +239,7 @@ class VehicleController extends Controller
         return Inertia::render('Vehicles/Edit', [
             'vehicle' => $vehicle,
             'clients' => $clients,
+            'carMakeGroups' => CarMake::optionGroups(),
         ]);
     }
 

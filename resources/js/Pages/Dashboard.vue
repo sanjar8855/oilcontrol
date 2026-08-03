@@ -6,12 +6,12 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carModelGroups } from '@/constants/carModels';
 
 defineProps({
     workshop: Object,
     stats: Object,
     recent_clients: Array,
+    carMakeGroups: Array,
 });
 
 const formatMoney = (amount) => {
@@ -472,7 +472,7 @@ const submitClient = () => {
                             <Multiselect
                                 id="make"
                                 v-model="clientForm.make"
-                                :options="carModelGroups"
+                                :options="carMakeGroups"
                                 :groups="true"
                                 :searchable="true"
                                 placeholder="Mashina turini tanlang"

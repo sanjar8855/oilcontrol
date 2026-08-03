@@ -8,23 +8,24 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carModelGroups, carModelOptions } from '@/constants/carModels';
-
 const props = defineProps({
     vehicle: Object,
     clients: Array,
+    carMakeGroups: Array,
 });
 
 // Avvaldan saqlangan qiymat ro'yxatda bo'lmasa ham ko'rsatish uchun
 const makeOptionGroups = computed(() => {
     const currentMake = props.vehicle.make;
-    if (currentMake && !carModelOptions.some((option) => option.value === currentMake)) {
+    const alreadyListed = props.carMakeGroups.some((group) => group.options.some((option) => option.value === currentMake));
+
+    if (currentMake && !alreadyListed) {
         return [
             { label: 'Boshqa', options: [{ value: currentMake, label: currentMake }] },
-            ...carModelGroups,
+            ...props.carMakeGroups,
         ];
     }
-    return carModelGroups;
+    return props.carMakeGroups;
 });
 
 const form = useForm({

@@ -82,6 +82,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Xodimlar
                                 </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
+                                    :href="route('car-makes.index')"
+                                    :active="route().current('car-makes.*')"
+                                >
+                                    Avto markalari
+                                </NavLink>
                             </div>
                         </div>
 
@@ -225,6 +232,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('users.*')"
                         >
                             Xodimlar
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
+                            :href="route('car-makes.index')"
+                            :active="route().current('car-makes.*')"
+                        >
+                            Avto markalari
                         </ResponsiveNavLink>
                     </div>
 

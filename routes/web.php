@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CarMakeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
@@ -43,6 +44,14 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 Route::middleware('auth')->group(function () {
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
     Route::resource('users', UserController::class);
+
+    // Avtomobil markalari va turlari CRUD - Faqat superadmin va director
+    Route::post('/car-makes/models', [CarMakeController::class, 'storeModel'])->name('car-makes.models.store');
+    Route::put('/car-makes/models/{carModel}', [CarMakeController::class, 'updateModel'])->name('car-makes.models.update');
+    Route::delete('/car-makes/models/{carModel}', [CarMakeController::class, 'destroyModel'])->name('car-makes.models.destroy');
+    Route::post('/car-makes/models/{carModel}/products', [CarMakeController::class, 'attachProduct'])->name('car-makes.models.products.attach');
+    Route::delete('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'detachProduct'])->name('car-makes.models.products.detach');
+    Route::resource('car-makes', CarMakeController::class)->except(['show', 'create', 'edit']);
 
     // Mijozlar (Clients) CRUD
     Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');

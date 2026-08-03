@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarMake;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -78,6 +79,7 @@ class DashboardController extends Controller
                 'profit_loss' => (float) $profitLoss,
             ],
             'recent_clients' => $recentClients,
+            'carMakeGroups' => CarMake::optionGroups(),
         ]);
     }
 }

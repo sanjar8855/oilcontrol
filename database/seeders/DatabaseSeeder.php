@@ -21,6 +21,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ============================================
+        // 0. Avtomobil markalari va turlari
+        // ============================================
+        $this->call(CarModelSeeder::class);
+
+        // ============================================
         // 1. SuperAdmin yaratish
         // ============================================
         $superadmin = User::create([

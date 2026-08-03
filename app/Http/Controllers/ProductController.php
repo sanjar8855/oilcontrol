@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarModel;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Services\StockMovementService;
@@ -60,6 +61,7 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Create', [
             'categories' => $categories,
+            'carModelGroups' => CarModel::optionGroupsWithId(),
         ]);
     }
 
@@ -88,6 +90,10 @@ class ProductController extends Controller
             // Eski maydonlar (backward compatibility)
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
+            // Bog'langan avtomobil turlari
+            'car_models' => 'nullable|array',
+            'car_models.*.car_model_id' => 'required|exists:car_models,id',
+            'car_models.*.quantity' => 'required|numeric|min:0.01|max:9999.99',
         ]);
 
         $user = $request->user();
@@ -105,9 +111,18 @@ class ProductController extends Controller
             ? ($request->input('branch_id') ?? $user->branch_id)
             : $user->branch_id;
 
+        $carModelLinks = $validated['car_models'] ?? [];
+        unset($validated['car_models']);
+
         DB::beginTransaction();
         try {
             $product = $workshop->products()->create($validated);
+
+            if (!empty($carModelLinks)) {
+                $product->carModels()->sync(collect($carModelLinks)->mapWithKeys(
+                    fn ($link) => [$link['car_model_id'] => ['quantity' => $link['quantity']]]
+                ));
+            }
 
             // StockMovementService orqali boshlang'ich qoldiqni qo'shish
             if ($product->stock_quantity > 0 && $product->track_inventory) {
@@ -204,9 +219,12 @@ class ProductController extends Controller
         $workshop = $user->workshop;
         $categories = $workshop->categories()->where('is_active', true)->get();
 
+        $product->load('carModels');
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'carModelGroups' => CarModel::optionGroupsWithId(),
         ]);
     }
 
@@ -246,9 +264,20 @@ class ProductController extends Controller
             // Eski maydonlar
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
+            // Bog'langan avtomobil turlari
+            'car_models' => 'nullable|array',
+            'car_models.*.car_model_id' => 'required|exists:car_models,id',
+            'car_models.*.quantity' => 'required|numeric|min:0.01|max:9999.99',
         ]);
 
+        $carModelLinks = $validated['car_models'] ?? [];
+        unset($validated['car_models']);
+
         $product->update($validated);
+
+        $product->carModels()->sync(collect($carModelLinks)->mapWithKeys(
+            fn ($link) => [$link['car_model_id'] => ['quantity' => $link['quantity']]]
+        ));
 
         return redirect()->route('products.show', $product)
             ->with('success', 'Mahsulot ma\'lumotlari yangilandi!');

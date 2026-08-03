@@ -5,9 +5,12 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
 
 const props = defineProps({
     categories: Array,
+    carModelGroups: Array,
 });
 
 const form = useForm({
@@ -23,7 +26,15 @@ const form = useForm({
     barcode: '',
     is_active: true,
     track_inventory: true,
+    car_models: [],
 });
+
+const addCarModelLink = () => {
+    form.car_models.push({ car_model_id: null, quantity: 1 });
+};
+const removeCarModelLink = (index) => {
+    form.car_models.splice(index, 1);
+};
 
 const submit = () => {
     form.transform((data) => ({
@@ -31,6 +42,7 @@ const submit = () => {
         currency: 'UZS',
         purchase_price_uzs: data.purchase_price,
         selling_price_uzs: data.selling_price,
+        car_models: data.car_models.filter((link) => link.car_model_id),
     })).post(route('products.store'));
 };
 </script>
@@ -218,6 +230,57 @@ const submit = () => {
                                     <label for="track_inventory" class="ml-2 text-sm text-gray-900 dark:text-gray-300">
                                         Omborda kuzatilsin
                                     </label>
+                                </div>
+                            </div>
+
+                            <!-- Bog'langan avtomobil turlari -->
+                            <div>
+                                <div class="mb-2 flex items-center justify-between">
+                                    <InputLabel value="Qaysi avtomobil turlariga mos (ixtiyoriy)" />
+                                    <button
+                                        type="button"
+                                        @click="addCarModelLink"
+                                        class="text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
+                                    >
+                                        + Qo'shish
+                                    </button>
+                                </div>
+                                <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Bog'lansa, savdo ekranida shu avtomobil turi tanlanganda ushbu mahsulot belgilangan miqdorda tezkor tavsiya qilinadi.
+                                </p>
+                                <div v-if="form.car_models.length > 0" class="space-y-2">
+                                    <div
+                                        v-for="(link, index) in form.car_models"
+                                        :key="index"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <div class="min-w-0 flex-1">
+                                            <Multiselect
+                                                v-model="link.car_model_id"
+                                                :options="carModelGroups"
+                                                :groups="true"
+                                                :searchable="true"
+                                                placeholder="Avtomobil turini tanlang"
+                                                noOptionsText="Topilmadi"
+                                                noResultsText="Natija topilmadi"
+                                            />
+                                        </div>
+                                        <input
+                                            v-model="link.quantity"
+                                            type="number"
+                                            step="0.1"
+                                            min="0.01"
+                                            placeholder="Miqdor"
+                                            class="w-24 shrink-0 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="removeCarModelLink(index)"
+                                            class="shrink-0 text-red-600 hover:text-red-800 dark:text-red-400"
+                                        >
+                                            O'chirish
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

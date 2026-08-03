@@ -7,11 +7,11 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-import { carModelGroups } from '@/constants/carModels';
 
 const props = defineProps({
     clients: Array,
     selectedClientId: [String, Number],
+    carMakeGroups: Array,
 });
 
 const form = useForm({
@@ -75,7 +75,7 @@ const submit = () => {
                                 <Multiselect
                                     id="make"
                                     v-model="form.make"
-                                    :options="carModelGroups"
+                                    :options="carMakeGroups"
                                     :groups="true"
                                     :searchable="true"
                                     placeholder="Mashina turini tanlang"

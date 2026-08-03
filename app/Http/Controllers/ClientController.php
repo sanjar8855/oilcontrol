@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarMake;
 use App\Models\Client;
 use App\Models\Vehicle;
 use Illuminate\Http\RedirectResponse;
@@ -41,7 +42,9 @@ class ClientController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Clients/Create');
+        return Inertia::render('Clients/Create', [
+            'carMakeGroups' => CarMake::optionGroups(),
+        ]);
     }
 
     /**

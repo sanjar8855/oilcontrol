@@ -8,6 +8,7 @@ import '@vueform/multiselect/themes/default.css';
 const props = defineProps({
     vehicle: Object,
     products: Array,
+    carModelInfo: Object,
 });
 
 const showSaleForm = ref(false);
@@ -120,6 +121,30 @@ const addToCart = () => {
 
 const removeFromCart = (index) => {
     cart.value.splice(index, 1);
+};
+
+const quickAddRecommended = (recommended) => {
+    if (recommended.quantity > recommended.stock_quantity) {
+        alert(`Omborda faqat ${recommended.stock_quantity} ${recommended.unit} mavjud`);
+        return;
+    }
+
+    const price = Number(recommended.selling_price);
+    const existingIndex = cart.value.findIndex(item => !item.is_manual && item.id === recommended.id);
+    if (existingIndex !== -1) {
+        cart.value[existingIndex].quantity += recommended.quantity;
+        cart.value[existingIndex].total_price = cart.value[existingIndex].quantity * price;
+    } else {
+        cart.value.push({
+            id: recommended.id,
+            name: recommended.name,
+            unit: recommended.unit,
+            quantity: recommended.quantity,
+            unit_price: price,
+            total_price: recommended.quantity * price,
+            is_manual: false,
+        });
+    }
 };
 
 const submitService = () => {
@@ -259,6 +284,41 @@ const toggleSaleForm = () => {
                                         placeholder="5000"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                     />
+                                </div>
+                            </div>
+
+                            <!-- Avtomobil turiga tavsiyalar -->
+                            <div
+                                v-if="carModelInfo && (carModelInfo.oil_capacity_liters || carModelInfo.antifreeze_capacity_min_liters || carModelInfo.recommended_products.length > 0)"
+                                class="mb-6 rounded-md bg-indigo-50 p-4 dark:bg-indigo-900/20"
+                            >
+                                <h4 class="mb-2 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                                    {{ vehicle.make }} uchun tavsiyalar
+                                </h4>
+                                <div v-if="carModelInfo.oil_capacity_liters || carModelInfo.antifreeze_capacity_min_liters" class="mb-3 flex flex-wrap gap-2">
+                                    <span
+                                        v-if="carModelInfo.oil_capacity_liters"
+                                        class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                    >
+                                        🛢 Motor moyi: {{ carModelInfo.oil_capacity_liters }} L
+                                    </span>
+                                    <span
+                                        v-if="carModelInfo.antifreeze_capacity_min_liters || carModelInfo.antifreeze_capacity_max_liters"
+                                        class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900 dark:text-sky-200"
+                                    >
+                                        ❄️ Antifriz: {{ carModelInfo.antifreeze_capacity_min_liters }}-{{ carModelInfo.antifreeze_capacity_max_liters }} L
+                                    </span>
+                                </div>
+                                <div v-if="carModelInfo.recommended_products.length > 0" class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="product in carModelInfo.recommended_products"
+                                        :key="product.id"
+                                        type="button"
+                                        @click="quickAddRecommended(product)"
+                                        class="inline-flex items-center gap-1 rounded-md border border-indigo-300 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-300 dark:hover:bg-gray-700"
+                                    >
+                                        + {{ product.name }} ({{ product.quantity }} {{ product.unit }})
+                                    </button>
                                 </div>
                             </div>
 
