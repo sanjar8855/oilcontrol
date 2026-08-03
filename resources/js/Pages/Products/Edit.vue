@@ -62,7 +62,7 @@ const submit = () => {
 
         <div class="py-6 sm:py-12">
             <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                <div class="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <form @submit.prevent="submit" class="p-6">
                         <div class="space-y-6">
                             <div class="rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/20">
@@ -250,7 +250,7 @@ const submit = () => {
                                         <input
                                             v-model="link.quantity"
                                             type="number"
-                                            step="0.1"
+                                            step="any"
                                             min="0.01"
                                             placeholder="Miqdor"
                                             class="w-24 shrink-0 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"

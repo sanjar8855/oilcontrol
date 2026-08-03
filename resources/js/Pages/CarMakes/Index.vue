@@ -199,7 +199,7 @@ const submitEditProductQty = (modelId, product) => {
                     <div
                         v-for="make in carMakes"
                         :key="make.id"
-                        class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800"
+                        class="rounded-lg bg-white shadow dark:bg-gray-800"
                     >
                         <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
                             <template v-if="editingMakeId === make.id">
@@ -268,7 +268,7 @@ const submitEditProductQty = (modelId, product) => {
                                                 <input
                                                     v-model="editModelForm.oil_capacity_liters"
                                                     type="number"
-                                                    step="0.1"
+                                                    step="any"
                                                     min="0"
                                                     placeholder="3.8"
                                                     class="block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -279,7 +279,7 @@ const submitEditProductQty = (modelId, product) => {
                                                 <input
                                                     v-model="editModelForm.antifreeze_capacity_min_liters"
                                                     type="number"
-                                                    step="0.1"
+                                                    step="any"
                                                     min="0"
                                                     placeholder="5"
                                                     class="block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -290,7 +290,7 @@ const submitEditProductQty = (modelId, product) => {
                                                 <input
                                                     v-model="editModelForm.antifreeze_capacity_max_liters"
                                                     type="number"
-                                                    step="0.1"
+                                                    step="any"
                                                     min="0"
                                                     placeholder="7"
                                                     class="block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -365,7 +365,7 @@ const submitEditProductQty = (modelId, product) => {
                                                     <input
                                                         v-model="editProductQtyForm.quantity"
                                                         type="number"
-                                                        step="0.1"
+                                                        step="any"
                                                         min="0.01"
                                                         autofocus
                                                         class="w-14 rounded border-gray-300 py-0 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-white"
@@ -408,7 +408,7 @@ const submitEditProductQty = (modelId, product) => {
                                         <input
                                             v-model="getLinkProductForm(model.id).quantity"
                                             type="number"
-                                            step="0.1"
+                                            step="any"
                                             min="0.01"
                                             class="w-20 rounded-md border-gray-300 py-1 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                         />
@@ -450,7 +450,7 @@ const submitEditProductQty = (modelId, product) => {
                                     <input
                                         v-model="getNewModelForm(make.id).oil_capacity_liters"
                                         type="number"
-                                        step="0.1"
+                                        step="any"
                                         min="0"
                                         placeholder="Moy L"
                                         title="Motor moyi hajmi (litr)"
@@ -459,7 +459,7 @@ const submitEditProductQty = (modelId, product) => {
                                     <input
                                         v-model="getNewModelForm(make.id).antifreeze_capacity_min_liters"
                                         type="number"
-                                        step="0.1"
+                                        step="any"
                                         min="0"
                                         placeholder="Antifriz min"
                                         class="w-28 shrink-0 rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -467,7 +467,7 @@ const submitEditProductQty = (modelId, product) => {
                                     <input
                                         v-model="getNewModelForm(make.id).antifreeze_capacity_max_liters"
                                         type="number"
-                                        step="0.1"
+                                        step="any"
                                         min="0"
                                         placeholder="Antifriz max"
                                         class="w-28 shrink-0 rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
