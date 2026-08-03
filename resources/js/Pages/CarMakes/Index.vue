@@ -130,6 +130,28 @@ const unlinkProduct = (modelId, product) => {
         router.delete(route('car-makes.models.products.detach', [modelId, product.id]), { preserveScroll: true });
     }
 };
+const fillOilQuantity = (modelId, oilCapacity) => {
+    getLinkProductForm(modelId).quantity = oilCapacity;
+};
+
+// Bog'langan mahsulot miqdorini tahrirlash
+const editingProductQty = ref(null);
+const editProductQtyForm = useForm({ quantity: 1 });
+const startEditProductQty = (modelId, product) => {
+    editingProductQty.value = `${modelId}-${product.id}`;
+    editProductQtyForm.quantity = product.pivot.quantity;
+};
+const cancelEditProductQty = () => {
+    editingProductQty.value = null;
+};
+const submitEditProductQty = (modelId, product) => {
+    editProductQtyForm.put(route('car-makes.models.products.update', [modelId, product.id]), {
+        preserveScroll: true,
+        onSuccess: () => {
+            editingProductQty.value = null;
+        },
+    });
+};
 </script>
 
 <template>
@@ -337,15 +359,39 @@ const unlinkProduct = (modelId, product) => {
                                             :key="product.id"
                                             class="inline-flex items-center gap-1 rounded-full bg-gray-100 py-0.5 pl-2 pr-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
                                         >
-                                            {{ product.name }} × {{ product.pivot.quantity }}
-                                            <button
-                                                @click="unlinkProduct(model.id, product)"
-                                                class="rounded-full p-0.5 text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-400"
-                                            >
-                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
+                                            <template v-if="editingProductQty === `${model.id}-${product.id}`">
+                                                <form @submit.prevent="submitEditProductQty(model.id, product)" class="flex items-center gap-1">
+                                                    {{ product.name }} ×
+                                                    <input
+                                                        v-model="editProductQtyForm.quantity"
+                                                        type="number"
+                                                        step="0.1"
+                                                        min="0.01"
+                                                        autofocus
+                                                        class="w-14 rounded border-gray-300 py-0 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                                    />
+                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">✓</button>
+                                                    <button type="button" @click="cancelEditProductQty" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">✕</button>
+                                                </form>
+                                            </template>
+                                            <template v-else>
+                                                {{ product.name }} ×
+                                                <button
+                                                    @click="startEditProductQty(model.id, product)"
+                                                    title="Miqdorni tahrirlash"
+                                                    class="font-semibold underline decoration-dotted hover:text-indigo-600 dark:hover:text-indigo-400"
+                                                >
+                                                    {{ product.pivot.quantity }}
+                                                </button>
+                                                <button
+                                                    @click="unlinkProduct(model.id, product)"
+                                                    class="rounded-full p-0.5 text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-400"
+                                                >
+                                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </template>
                                         </span>
                                     </div>
                                     <form @submit.prevent="submitLinkProduct(model.id)" class="flex items-center gap-1.5">
@@ -366,6 +412,15 @@ const unlinkProduct = (modelId, product) => {
                                             min="0.01"
                                             class="w-20 rounded-md border-gray-300 py-1 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                         />
+                                        <button
+                                            v-if="model.oil_capacity_liters"
+                                            type="button"
+                                            @click="fillOilQuantity(model.id, model.oil_capacity_liters)"
+                                            title="Moy hajmini miqdor sifatida qo'yish"
+                                            class="shrink-0 rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:hover:bg-amber-800"
+                                        >
+                                            🛢 {{ model.oil_capacity_liters }} L
+                                        </button>
                                         <button
                                             type="submit"
                                             :disabled="getLinkProductForm(model.id).processing"

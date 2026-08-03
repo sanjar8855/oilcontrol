@@ -196,6 +196,28 @@ class CarMakeController extends Controller
     }
 
     /**
+     * Update the linked quantity for a product already attached to a car model.
+     */
+    public function updateProductQuantity(Request $request, CarModel $carModel, Product $product): RedirectResponse
+    {
+        $this->authorizeAccess($request);
+
+        $workshop = $request->user()->workshop;
+        if (!$workshop || $product->workshop_id !== $workshop->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:0.01|max:9999.99',
+        ]);
+
+        $carModel->products()->updateExistingPivot($product->id, ['quantity' => $validated['quantity']]);
+
+        return redirect()->route('car-makes.index')
+            ->with('success', 'Miqdor yangilandi!');
+    }
+
+    /**
      * Unlink a workshop product from a car model.
      */
     public function detachProduct(Request $request, CarModel $carModel, Product $product): RedirectResponse

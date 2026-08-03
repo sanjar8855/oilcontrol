@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/car-makes/models/{carModel}', [CarMakeController::class, 'updateModel'])->name('car-makes.models.update');
     Route::delete('/car-makes/models/{carModel}', [CarMakeController::class, 'destroyModel'])->name('car-makes.models.destroy');
     Route::post('/car-makes/models/{carModel}/products', [CarMakeController::class, 'attachProduct'])->name('car-makes.models.products.attach');
+    Route::put('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'updateProductQuantity'])->name('car-makes.models.products.update');
     Route::delete('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'detachProduct'])->name('car-makes.models.products.detach');
     Route::resource('car-makes', CarMakeController::class)->except(['show', 'create', 'edit']);
 

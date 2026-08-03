@@ -22,7 +22,9 @@
       "Bash(xargs sed -i -E 's/\\(mx-auto max-w-[a-zA-Z0-9]+\\) sm:px-6 lg:px-8/\\\\1 px-3 sm:px-6 lg:px-8/g')",
       "Bash(npx vite *)",
       "WebSearch",
-      "Bash(php -l database/seeders/CarModelSeeder.php)"
+      "Bash(php -l database/seeders/CarModelSeeder.php)",
+      "Bash(php -l app/Http/Controllers/CarMakeController.php)",
+      "Bash(php -l routes/web.php)"
     ]
   }
 }
