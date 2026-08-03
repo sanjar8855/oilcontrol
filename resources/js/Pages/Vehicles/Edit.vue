@@ -5,10 +5,23 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
+import { carMakeOptions } from '@/constants/carMakes';
 
 const props = defineProps({
     vehicle: Object,
     clients: Array,
+});
+
+// Avvaldan saqlangan marka ro'yxatda bo'lmasa ham ko'rsatish uchun
+const makeOptions = computed(() => {
+    const currentMake = props.vehicle.make;
+    if (currentMake && !carMakeOptions.some((option) => option.value === currentMake)) {
+        return [{ value: currentMake, label: currentMake }, ...carMakeOptions];
+    }
+    return carMakeOptions;
 });
 
 const form = useForm({
@@ -69,13 +82,15 @@ const submit = () => {
                             <!-- Marka (Make) -->
                             <div>
                                 <InputLabel for="make" value="Mashina markasi *" />
-                                <TextInput
+                                <Multiselect
                                     id="make"
                                     v-model="form.make"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                    autofocus
+                                    :options="makeOptions"
+                                    :searchable="true"
+                                    placeholder="Mashina markasini tanlang"
+                                    noOptionsText="Markalar topilmadi"
+                                    noResultsText="Natija topilmadi"
+                                    class="mt-1"
                                 />
                                 <InputError class="mt-2" :message="form.errors.make" />
                             </div>

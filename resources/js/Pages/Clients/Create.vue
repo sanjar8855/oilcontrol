@@ -5,6 +5,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
+import { carMakeOptions } from '@/constants/carMakes';
 
 const form = useForm({
     name: '',
@@ -113,12 +116,15 @@ const submit = () => {
                                     <!-- Moshina markasi -->
                                     <div>
                                         <InputLabel for="make" value="Moshina markasi (ixtiyoriy)" />
-                                        <TextInput
+                                        <Multiselect
                                             id="make"
                                             v-model="form.make"
-                                            type="text"
-                                            class="mt-1 block w-full"
-                                            placeholder="Masalan: Chevrolet Cobalt"
+                                            :options="carMakeOptions"
+                                            :searchable="true"
+                                            placeholder="Mashina markasini tanlang"
+                                            noOptionsText="Markalar topilmadi"
+                                            noResultsText="Natija topilmadi"
+                                            class="mt-1"
                                         />
                                         <InputError class="mt-2" :message="form.errors.make" />
                                     </div>

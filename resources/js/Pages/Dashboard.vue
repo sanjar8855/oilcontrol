@@ -6,15 +6,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
-
-// O'zbekistonda aktiv sotuvdagi avtomobil markalari
-const carMakeOptions = [
-    'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Dongfeng', 'Exeed',
-    'FAW', 'GAC', 'Genesis', 'Geely', 'Great Wall', 'Haval', 'Hyundai',
-    'Isuzu', 'JAC', 'Jaecoo', 'Jetour', 'Kia', 'Lada (VAZ)', 'Lexus',
-    'Mercedes-Benz', 'MG', 'Nissan', 'Omoda', 'Skoda', 'Tank', 'Toyota',
-    'Volkswagen', 'Voyah',
-].map((make) => ({ value: make, label: make }));
+import { carMakeOptions } from '@/constants/carMakes';
 
 defineProps({
     workshop: Object,
