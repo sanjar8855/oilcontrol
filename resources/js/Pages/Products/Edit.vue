@@ -26,18 +26,8 @@ const form = useForm({
     barcode: props.product.barcode,
     is_active: props.product.is_active,
     track_inventory: props.product.track_inventory,
-    car_models: (props.product.car_models || []).map((carModel) => ({
-        car_model_id: carModel.id,
-        quantity: carModel.pivot.quantity,
-    })),
+    car_models: (props.product.car_models || []).map((carModel) => carModel.id),
 });
-
-const addCarModelLink = () => {
-    form.car_models.push({ car_model_id: null, quantity: 1 });
-};
-const removeCarModelLink = (index) => {
-    form.car_models.splice(index, 1);
-};
 
 const submit = () => {
     form.transform((data) => ({
@@ -45,7 +35,6 @@ const submit = () => {
         currency: props.product.currency ?? 'UZS',
         purchase_price_uzs: data.purchase_price,
         selling_price_uzs: data.selling_price,
-        car_models: data.car_models.filter((link) => link.car_model_id),
     })).put(route('products.update', props.product.id));
 };
 </script>
@@ -217,53 +206,21 @@ const submit = () => {
 
                             <!-- Bog'langan avtomobil turlari -->
                             <div>
-                                <div class="mb-2 flex items-center justify-between">
-                                    <InputLabel value="Qaysi avtomobil turlariga mos (ixtiyoriy)" />
-                                    <button
-                                        type="button"
-                                        @click="addCarModelLink"
-                                        class="text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
-                                    >
-                                        + Qo'shish
-                                    </button>
-                                </div>
+                                <InputLabel value="Qaysi avtomobil turlariga mos (ixtiyoriy)" />
                                 <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                                    Bog'lansa, savdo ekranida shu avtomobil turi tanlanganda ushbu mahsulot belgilangan miqdorda tezkor tavsiya qilinadi.
+                                    Tanlangan turlarga bu mahsulot savdo ekranida tezkor tavsiya sifatida chiqadi.
                                 </p>
-                                <div v-if="form.car_models.length > 0" class="space-y-2">
-                                    <div
-                                        v-for="(link, index) in form.car_models"
-                                        :key="index"
-                                        class="flex items-center gap-2"
-                                    >
-                                        <div class="min-w-0 flex-1">
-                                            <Multiselect
-                                                v-model="link.car_model_id"
-                                                :options="carModelGroups"
-                                                :groups="true"
-                                                :searchable="true"
-                                                placeholder="Avtomobil turini tanlang"
-                                                noOptionsText="Topilmadi"
-                                                noResultsText="Natija topilmadi"
-                                            />
-                                        </div>
-                                        <input
-                                            v-model="link.quantity"
-                                            type="number"
-                                            step="any"
-                                            min="0.01"
-                                            placeholder="Miqdor"
-                                            class="w-24 shrink-0 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                                        />
-                                        <button
-                                            type="button"
-                                            @click="removeCarModelLink(index)"
-                                            class="shrink-0 text-red-600 hover:text-red-800 dark:text-red-400"
-                                        >
-                                            O'chirish
-                                        </button>
-                                    </div>
-                                </div>
+                                <Multiselect
+                                    v-model="form.car_models"
+                                    mode="multiple"
+                                    :options="carModelGroups"
+                                    :groups="true"
+                                    :searchable="true"
+                                    placeholder="Avtomobil turlarini tanlang"
+                                    noOptionsText="Topilmadi"
+                                    noResultsText="Natija topilmadi"
+                                />
+                                <InputError :message="form.errors.car_models" class="mt-2" />
                             </div>
 
                             <div class="flex items-center gap-4">

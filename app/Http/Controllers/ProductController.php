@@ -92,8 +92,7 @@ class ProductController extends Controller
             'selling_price' => 'nullable|numeric|min:0',
             // Bog'langan avtomobil turlari
             'car_models' => 'nullable|array',
-            'car_models.*.car_model_id' => 'required|exists:car_models,id',
-            'car_models.*.quantity' => 'required|numeric|min:0.01|max:9999.99',
+            'car_models.*' => 'integer|exists:car_models,id',
         ]);
 
         $user = $request->user();
@@ -111,16 +110,17 @@ class ProductController extends Controller
             ? ($request->input('branch_id') ?? $user->branch_id)
             : $user->branch_id;
 
-        $carModelLinks = $validated['car_models'] ?? [];
+        $carModelIds = $validated['car_models'] ?? [];
         unset($validated['car_models']);
 
         DB::beginTransaction();
         try {
             $product = $workshop->products()->create($validated);
 
-            if (!empty($carModelLinks)) {
-                $product->carModels()->sync(collect($carModelLinks)->mapWithKeys(
-                    fn ($link) => [$link['car_model_id'] => ['quantity' => $link['quantity']]]
+            if (!empty($carModelIds)) {
+                // Miqdor keyinchalik "Avto markalari" sahifasida aniqlashtiriladi, hozircha 1
+                $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
+                    fn ($carModelId) => [$carModelId => ['quantity' => 1]]
                 ));
             }
 
@@ -266,17 +266,21 @@ class ProductController extends Controller
             'selling_price' => 'nullable|numeric|min:0',
             // Bog'langan avtomobil turlari
             'car_models' => 'nullable|array',
-            'car_models.*.car_model_id' => 'required|exists:car_models,id',
-            'car_models.*.quantity' => 'required|numeric|min:0.01|max:9999.99',
+            'car_models.*' => 'integer|exists:car_models,id',
         ]);
 
-        $carModelLinks = $validated['car_models'] ?? [];
+        $carModelIds = $validated['car_models'] ?? [];
         unset($validated['car_models']);
 
         $product->update($validated);
 
-        $product->carModels()->sync(collect($carModelLinks)->mapWithKeys(
-            fn ($link) => [$link['car_model_id'] => ['quantity' => $link['quantity']]]
+        // Avvaldan bog'langan turlar uchun miqdorni saqlab qolamiz (masalan, "Avto
+        // markalari" sahifasida moy hajmiga moslab qo'yilgan bo'lishi mumkin),
+        // yangi bog'langan turlarga esa boshlang'ich sifatida 1 qo'yiladi.
+        $existingQuantities = $product->carModels()->pluck('car_model_products.quantity', 'car_models.id');
+
+        $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
+            fn ($carModelId) => [$carModelId => ['quantity' => $existingQuantities[$carModelId] ?? 1]]
         ));
 
         return redirect()->route('products.show', $product)
