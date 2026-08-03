@@ -4,6 +4,17 @@ import Modal from '@/Components/Modal.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import axios from 'axios';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
+
+// O'zbekistonda aktiv sotuvdagi avtomobil markalari
+const carMakeOptions = [
+    'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Dongfeng', 'Exeed',
+    'FAW', 'GAC', 'Genesis', 'Geely', 'Great Wall', 'Haval', 'Hyundai',
+    'Isuzu', 'JAC', 'Jaecoo', 'Jetour', 'Kia', 'Lada (VAZ)', 'Lexus',
+    'Mercedes-Benz', 'MG', 'Nissan', 'Omoda', 'Skoda', 'Tank', 'Toyota',
+    'Volkswagen', 'Voyah',
+].map((make) => ({ value: make, label: make }));
 
 defineProps({
     workshop: Object,
@@ -77,7 +88,7 @@ watch(searchPlateNumber, (value) => {
 
     searchDebounceTimer = setTimeout(() => {
         searchVehicle(value, { onNotFound: 'modal' });
-    }, 500);
+    }, 1000);
 });
 
 const closeModal = () => {
@@ -466,12 +477,15 @@ const submitClient = () => {
                             <label for="make" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Mashina markasi
                             </label>
-                            <input
+                            <Multiselect
                                 id="make"
                                 v-model="clientForm.make"
-                                type="text"
-                                placeholder="Chevrolet Cobalt"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                :options="carMakeOptions"
+                                :searchable="true"
+                                placeholder="Mashina markasini tanlang"
+                                noOptionsText="Markalar topilmadi"
+                                noResultsText="Natija topilmadi"
+                                class="mt-1"
                             />
                             <div v-if="clientForm.errors.make" class="mt-1 text-sm text-red-600">
                                 {{ clientForm.errors.make }}
