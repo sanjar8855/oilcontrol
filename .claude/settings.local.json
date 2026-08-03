@@ -21,7 +21,8 @@
       "Bash(xargs sed -i 's/class=\"py-12\"/class=\"py-6 sm:py-12\"/g')",
       "Bash(xargs sed -i -E 's/\\(mx-auto max-w-[a-zA-Z0-9]+\\) sm:px-6 lg:px-8/\\\\1 px-3 sm:px-6 lg:px-8/g')",
       "Bash(npx vite *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(php -l database/seeders/CarModelSeeder.php)"
     ]
   }
 }
