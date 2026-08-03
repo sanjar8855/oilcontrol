@@ -80,14 +80,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('users.index')"
                                     :active="route().current('users.*')"
                                 >
-                                    Foydalanuvchilar
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
-                                    :href="route('salaries.index')"
-                                    :active="route().current('salaries.*')"
-                                >
-                                    Oylik maoshlar
+                                    Xodimlar
                                 </NavLink>
                             </div>
                         </div>
@@ -231,14 +224,7 @@ const showingNavigationDropdown = ref(false);
                             :href="route('users.index')"
                             :active="route().current('users.*')"
                         >
-                            Foydalanuvchilar
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            v-if="$page.props.auth.user.role === 'superadmin' || $page.props.auth.user.role === 'director'"
-                            :href="route('salaries.index')"
-                            :active="route().current('salaries.*')"
-                        >
-                            Oylik maoshlar
+                            Xodimlar
                         </ResponsiveNavLink>
                     </div>
 
