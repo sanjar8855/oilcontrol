@@ -25,7 +25,9 @@
       "Bash(php -l database/seeders/CarModelSeeder.php)",
       "Bash(php -l app/Http/Controllers/CarMakeController.php)",
       "Bash(php -l routes/web.php)",
-      "Bash(php -l app/Http/Controllers/ProductController.php)"
+      "Bash(php -l app/Http/Controllers/ProductController.php)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(php *)"
     ]
   }
 }
