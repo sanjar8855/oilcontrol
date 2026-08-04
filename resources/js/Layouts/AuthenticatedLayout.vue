@@ -93,6 +93,16 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                            <!-- Faol workshop (superadmin) -->
+                            <Link
+                                v-if="$page.props.auth.user.role === 'superadmin'"
+                                :href="route('workshops.switch.index')"
+                                class="mr-3 inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800"
+                            >
+                                {{ $page.props.activeWorkshop ? $page.props.activeWorkshop.name : 'Workshop tanlanmagan' }}
+                                <span class="ml-1">↻</span>
+                            </Link>
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">

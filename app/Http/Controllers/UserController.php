@@ -25,14 +25,13 @@ class UserController extends Controller
             abort(403, 'Sizda bu sahifani ko\'rish uchun ruxsat yo\'q');
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
-        // Superadmin barcha foydalanuvchilarni ko'ra oladi
-        // Director faqat o'z workshop'idagi foydalanuvchilarni ko'radi
+        // Superadmin tanlagan workshop nomidan, director esa o'z workshop'i
+        // doirasidagi foydalanuvchilarni ko'radi
         $query = User::query();
 
-        if ($user->isDirector()) {
-            // Director faqat o'z workshop'iga tegishli foydalanuvchilarni ko'radi
+        if ($workshop) {
             $query->whereHas('workshop', function ($q) use ($workshop) {
                 $q->where('id', $workshop->id);
             })->orWhere(function ($q) use ($workshop) {
@@ -69,7 +68,7 @@ class UserController extends Controller
             abort(403, 'Sizda foydalanuvchi qo\'shish uchun ruxsat yo\'q');
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Filiallar ro'yxati
         $branches = $workshop->branches()->where('is_active', true)->get(['id', 'name', 'code']);
@@ -127,7 +126,7 @@ class UserController extends Controller
         // Branch tekshiruvi
         if (isset($validated['branch_id'])) {
             $branch = Branch::findOrFail($validated['branch_id']);
-            if ($branch->workshop_id !== $currentUser->workshop->id) {
+            if ($branch->workshop_id !== $currentUser->currentWorkshop()?->id) {
                 abort(403, 'Bu filial sizga tegishli emas');
             }
         }
@@ -163,11 +162,10 @@ class UserController extends Controller
             abort(403);
         }
 
-        // Director faqat o'z workshop'idagi foydalanuvchilarni ko'ra oladi
-        if ($currentUser->isDirector()) {
-            if ($user->branch && $user->branch->workshop_id !== $currentUser->workshop->id) {
-                abort(403);
-            }
+        // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni ko'rish mumkin
+        $workshop = $currentUser->currentWorkshop();
+        if ($user->branch && $workshop && $user->branch->workshop_id !== $workshop->id) {
+            abort(403);
         }
 
         $user->load(['workshop', 'branch', 'salaries' => function ($query) {
@@ -191,18 +189,16 @@ class UserController extends Controller
             abort(403, 'Sizda tahrirlash uchun ruxsat yo\'q');
         }
 
-        // Director faqat o'z workshop'idagi foydalanuvchilarni tahrirlashi mumkin
-        if ($currentUser->isDirector()) {
-            if ($user->branch && $user->branch->workshop_id !== $currentUser->workshop->id) {
-                abort(403);
-            }
-            // Director superadmin'ni tahrirlashi mumkin emas
-            if ($user->isSuperAdmin()) {
-                abort(403, 'Super admin\'ni tahrirlash mumkin emas');
-            }
+        // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni tahrirlash mumkin
+        $workshop = $currentUser->currentWorkshop();
+        if ($user->branch && $workshop && $user->branch->workshop_id !== $workshop->id) {
+            abort(403);
         }
 
-        $workshop = $currentUser->workshop;
+        // Director superadmin'ni tahrirlashi mumkin emas
+        if ($currentUser->isDirector() && $user->isSuperAdmin()) {
+            abort(403, 'Super admin\'ni tahrirlash mumkin emas');
+        }
 
         // Filiallar ro'yxati
         $branches = $workshop->branches()->where('is_active', true)->get(['id', 'name', 'code']);
@@ -238,15 +234,15 @@ class UserController extends Controller
             abort(403, 'Sizda tahrirlash uchun ruxsat yo\'q');
         }
 
-        // Director faqat o'z workshop'idagi foydalanuvchilarni tahrirlashi mumkin
-        if ($currentUser->isDirector()) {
-            if ($user->branch && $user->branch->workshop_id !== $currentUser->workshop->id) {
-                abort(403);
-            }
-            // Director superadmin'ni tahrirlashi mumkin emas
-            if ($user->isSuperAdmin()) {
-                abort(403, 'Super admin\'ni tahrirlash mumkin emas');
-            }
+        // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni tahrirlash mumkin
+        $currentWorkshop = $currentUser->currentWorkshop();
+        if ($user->branch && $currentWorkshop && $user->branch->workshop_id !== $currentWorkshop->id) {
+            abort(403);
+        }
+
+        // Director superadmin'ni tahrirlashi mumkin emas
+        if ($currentUser->isDirector() && $user->isSuperAdmin()) {
+            abort(403, 'Super admin\'ni tahrirlash mumkin emas');
         }
 
         $validated = $request->validate([
@@ -272,7 +268,7 @@ class UserController extends Controller
         // Branch tekshiruvi
         if (isset($validated['branch_id'])) {
             $branch = Branch::findOrFail($validated['branch_id']);
-            if ($branch->workshop_id !== $currentUser->workshop->id) {
+            if ($branch->workshop_id !== $currentWorkshop?->id) {
                 abort(403, 'Bu filial sizga tegishli emas');
             }
         }
@@ -325,11 +321,10 @@ class UserController extends Controller
             abort(403, 'Super admin\'ni o\'chirish mumkin emas');
         }
 
-        // Director faqat o'z workshop'idagi foydalanuvchilarni o'chirishi mumkin
-        if ($currentUser->isDirector()) {
-            if ($user->branch && $user->branch->workshop_id !== $currentUser->workshop->id) {
-                abort(403);
-            }
+        // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni o'chirish mumkin
+        $workshop = $currentUser->currentWorkshop();
+        if ($user->branch && $workshop && $user->branch->workshop_id !== $workshop->id) {
+            abort(403);
         }
 
         $user->delete();

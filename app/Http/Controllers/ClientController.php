@@ -18,7 +18,7 @@ class ClientController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = $workshop->clients();
 
@@ -61,7 +61,7 @@ class ClientController extends Controller
         ]);
 
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Set branch_id: Directors can choose, but managers/employees use their own branch
         $branchId = $user->canAccessAllBranches()
@@ -107,7 +107,7 @@ class ClientController extends Controller
         ]);
 
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Set branch_id: Directors can choose, but managers/employees use their own branch
         $validated['branch_id'] = $user->canAccessAllBranches()
@@ -128,7 +128,7 @@ class ClientController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -152,7 +152,7 @@ class ClientController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -174,7 +174,7 @@ class ClientController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -205,7 +205,7 @@ class ClientController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 

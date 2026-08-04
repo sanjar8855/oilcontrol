@@ -148,8 +148,11 @@ class ProductSeeder extends Seeder
                         'category_id' => $categoryFiltr->id,
                         'unit' => 'dona',
                         'currency' => 'UZS',
+                        'purchase_price' => $filter['purchase'],
+                        'selling_price' => $filter['selling'],
                         'purchase_price_uzs' => $filter['purchase'],
                         'selling_price_uzs' => $filter['selling'],
+                        'stock_quantity' => 20,
                         'is_active' => true,
                         'track_inventory' => true,
                     ]
@@ -171,8 +174,11 @@ class ProductSeeder extends Seeder
                     'category_id' => $categoryYog->id,
                     'unit' => 'litr',
                     'currency' => 'UZS',
+                    'purchase_price' => $oil['purchase'],
+                    'selling_price' => $oil['selling'],
                     'purchase_price_uzs' => $oil['purchase'],
                     'selling_price_uzs' => $oil['selling'],
+                    'stock_quantity' => 20,
                     'is_active' => true,
                     'track_inventory' => true,
                 ]

@@ -68,6 +68,28 @@ class User extends Authenticatable
         return $this->hasOne(Workshop::class);
     }
 
+    /**
+     * Foydalanuvchi hozir amalda ishlayotgan workshop.
+     *
+     * - Direktor uchun — o'ziga tegishli (egalik qiladigan) workshop.
+     * - Menejer/xodim uchun — o'z filiali orqali bog'langan workshop.
+     * - Superadmin uchun — sessiyada tanlangan workshop (agar tanlanmagan bo'lsa, null).
+     */
+    public function currentWorkshop(): ?Workshop
+    {
+        if ($this->isSuperAdmin()) {
+            $workshopId = session('active_workshop_id');
+
+            return $workshopId ? Workshop::find($workshopId) : null;
+        }
+
+        if ($this->isDirector()) {
+            return $this->workshop;
+        }
+
+        return $this->branch?->workshop;
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

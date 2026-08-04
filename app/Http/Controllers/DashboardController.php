@@ -12,10 +12,10 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
-        // Agar workshop bo'lmasa, yangi yaratamiz (backup)
-        if (!$workshop) {
+        // Agar direktor hali workshopga ega bo'lmasa, yangi yaratamiz (backup)
+        if (!$workshop && $user->isDirector()) {
             $workshop = $user->workshop()->create([
                 'name' => $user->name . ' Ustaxonasi',
                 'owner_name' => $user->name,

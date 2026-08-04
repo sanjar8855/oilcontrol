@@ -20,7 +20,7 @@ class ServiceLogController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = ServiceLog::whereHas('vehicle.client', function ($q) use ($workshop) {
             $q->where('workshop_id', $workshop->id);
@@ -47,7 +47,7 @@ class ServiceLogController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Avtomobillar ro'yxati (mijoz nomi bilan) - branch filtered
         $vehiclesQuery = Vehicle::whereHas('client', function ($query) use ($workshop, $user) {
@@ -82,9 +82,10 @@ class ServiceLogController extends Controller
         }
 
         $products = $productsQuery
-            ->select('id', 'name', 'selling_price', 'stock_quantity', 'unit')
+            ->select('id', 'name', 'selling_price', 'selling_price_uzs', 'selling_price_usd', 'currency', 'stock_quantity', 'unit')
             ->orderBy('name')
             ->get();
+        $products->each(fn ($product) => $product->selling_price = $product->getSellingPrice());
 
         // Agar query parametrda vehicle_id berilgan bo'lsa
         $selectedVehicleId = $request->query('vehicle_id');
@@ -135,7 +136,7 @@ class ServiceLogController extends Controller
 
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -176,7 +177,7 @@ class ServiceLogController extends Controller
                     $product = \App\Models\Product::findOrFail($productData['id']);
 
                     // Tekshirish: Mahsulot bu workshop'ga tegishli ekanligini
-                    if ($product->workshop_id !== $user->workshop->id) {
+                    if ($product->workshop_id !== $user->currentWorkshop()->id) {
                         abort(403);
                     }
 
@@ -246,7 +247,7 @@ class ServiceLogController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($serviceLog->vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -270,7 +271,7 @@ class ServiceLogController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($serviceLog->vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -279,7 +280,7 @@ class ServiceLogController extends Controller
             abort(403);
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $vehiclesQuery = Vehicle::whereHas('client', function ($query) use ($workshop, $user) {
             $query->where('workshop_id', $workshop->id);
@@ -314,7 +315,7 @@ class ServiceLogController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($serviceLog->vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -336,7 +337,7 @@ class ServiceLogController extends Controller
 
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -359,7 +360,7 @@ class ServiceLogController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($serviceLog->vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 

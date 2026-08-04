@@ -28,7 +28,7 @@ class CarMakeController extends Controller
     {
         $this->authorizeAccess($request);
 
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
 
         $carMakes = CarMake::with(['carModels' => function ($query) use ($workshop) {
             $query->orderBy('name')->with(['products' => function ($query) use ($workshop) {
@@ -175,7 +175,7 @@ class CarMakeController extends Controller
     {
         $this->authorizeAccess($request);
 
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -202,7 +202,7 @@ class CarMakeController extends Controller
     {
         $this->authorizeAccess($request);
 
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
         if (!$workshop || $product->workshop_id !== $workshop->id) {
             abort(403);
         }
@@ -224,7 +224,7 @@ class CarMakeController extends Controller
     {
         $this->authorizeAccess($request);
 
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
         if (!$workshop || $product->workshop_id !== $workshop->id) {
             abort(403);
         }

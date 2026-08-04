@@ -13,7 +13,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
 
         $categories = $workshop->categories()
             ->withCount('products')
@@ -39,7 +39,7 @@ class CategoryController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
         $validated['slug'] = Str::slug($validated['name']);
         $workshop->categories()->create($validated);
 
@@ -49,7 +49,7 @@ class CategoryController extends Controller
 
     public function edit(Request $request, Category $category): Response
     {
-        if ($category->workshop_id !== $request->user()->workshop->id) {
+        if ($category->workshop_id !== $request->user()->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -60,7 +60,7 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category): RedirectResponse
     {
-        if ($category->workshop_id !== $request->user()->workshop->id) {
+        if ($category->workshop_id !== $request->user()->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -83,7 +83,7 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, Category $category): RedirectResponse
     {
-        if ($category->workshop_id !== $request->user()->workshop->id) {
+        if ($category->workshop_id !== $request->user()->currentWorkshop()->id) {
             abort(403);
         }
 

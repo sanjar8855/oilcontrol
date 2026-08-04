@@ -23,7 +23,7 @@ class VehicleController extends Controller
         ]);
 
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $vehicle = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
             $q->where('workshop_id', $workshop->id);
@@ -49,7 +49,7 @@ class VehicleController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
             $q->where('workshop_id', $workshop->id);
@@ -75,7 +75,7 @@ class VehicleController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Mijozlar ro'yxati - branch filtered
         $clientsQuery = $workshop->clients();
@@ -116,7 +116,7 @@ class VehicleController extends Controller
 
         // Tekshirish: Client shu ustaxonaga tegishli ekanligini
         $client = Client::findOrFail($validated['client_id']);
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -142,10 +142,10 @@ class VehicleController extends Controller
     public function show(Request $request, Vehicle $vehicle): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Check workshop access
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -171,7 +171,8 @@ class VehicleController extends Controller
         $products = $productsQuery
             ->with('category')
             ->orderBy('name')
-            ->get(['id', 'name', 'unit', 'selling_price', 'stock_quantity', 'category_id']);
+            ->get(['id', 'name', 'unit', 'selling_price', 'selling_price_uzs', 'selling_price_usd', 'currency', 'stock_quantity', 'category_id']);
+        $products->each(fn ($product) => $product->selling_price = $product->getSellingPrice());
 
         // Avtomobil turiga bog'langan texnik ma'lumot va tavsiya etilgan mahsulotlar
         $carModel = CarModel::where('name', $vehicle->make)
@@ -194,7 +195,7 @@ class VehicleController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'unit' => $product->unit,
-                'selling_price' => $product->selling_price,
+                'selling_price' => $product->getSellingPrice(),
                 'stock_quantity' => $product->stock_quantity,
                 'quantity' => (float) $product->pivot->quantity,
             ])->all(),
@@ -215,7 +216,7 @@ class VehicleController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -224,7 +225,7 @@ class VehicleController extends Controller
             abort(403);
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Mijozlar ro'yxati - branch filtered
         $clientsQuery = $workshop->clients();
@@ -251,7 +252,7 @@ class VehicleController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -279,7 +280,7 @@ class VehicleController extends Controller
 
         // Tekshirish: Client shu ustaxonaga tegishli ekanligini
         $client = Client::findOrFail($validated['client_id']);
-        if ($client->workshop_id !== $user->workshop->id) {
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -302,7 +303,7 @@ class VehicleController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 

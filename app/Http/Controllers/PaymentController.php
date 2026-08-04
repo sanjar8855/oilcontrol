@@ -17,7 +17,7 @@ class PaymentController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = Payment::where('workshop_id', $workshop->id);
 
@@ -48,7 +48,7 @@ class PaymentController extends Controller
                 ->findOrFail($serviceLogId);
 
             // Tekshirish
-            if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
+            if ($serviceLog->vehicle->client->workshop_id !== $request->user()->currentWorkshop()->id) {
                 abort(403);
             }
         }
@@ -76,7 +76,7 @@ class PaymentController extends Controller
         $serviceLog = ServiceLog::with('vehicle.client')->findOrFail($validated['service_log_id']);
 
         // Tekshirish
-        if ($serviceLog->vehicle->client->workshop_id !== $user->workshop->id) {
+        if ($serviceLog->vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -111,7 +111,7 @@ class PaymentController extends Controller
         $user = $request->user();
 
         // Tekshirish
-        if ($payment->workshop_id !== $user->workshop->id) {
+        if ($payment->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -135,7 +135,7 @@ class PaymentController extends Controller
         $user = $request->user();
 
         // Tekshirish
-        if ($payment->workshop_id !== $user->workshop->id) {
+        if ($payment->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 

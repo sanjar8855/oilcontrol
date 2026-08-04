@@ -13,7 +13,7 @@ class ExpenseController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = $workshop->expenses();
 
@@ -75,7 +75,7 @@ class ExpenseController extends Controller
 
     public function create(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Expenses/Create', [
@@ -86,7 +86,7 @@ class ExpenseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Get active category names for validation
         $categoryNames = $workshop->categories()
@@ -120,7 +120,7 @@ class ExpenseController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($expense->workshop_id !== $user->workshop->id) {
+        if ($expense->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -129,7 +129,7 @@ class ExpenseController extends Controller
             abort(403);
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Expenses/Edit', [
@@ -143,7 +143,7 @@ class ExpenseController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($expense->workshop_id !== $user->workshop->id) {
+        if ($expense->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -152,7 +152,7 @@ class ExpenseController extends Controller
             abort(403);
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         // Get active category names for validation
         $categoryNames = $workshop->categories()
@@ -181,7 +181,7 @@ class ExpenseController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($expense->workshop_id !== $user->workshop->id) {
+        if ($expense->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 

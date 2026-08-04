@@ -27,7 +27,15 @@
       "Bash(php -l routes/web.php)",
       "Bash(php -l app/Http/Controllers/ProductController.php)",
       "Bash(xargs -I{} basename {})",
-      "Bash(php *)"
+      "Bash(php *)",
+      "Bash(curl -sI http://127.0.0.1:8123)",
+      "Bash(node test3.js)",
+      "Bash(node test4.js)",
+      "Bash(node test5.js)",
+      "Bash(node test6.js)",
+      "Bash(netstat -ano)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -r -I{} taskkill //PID {} //F)"
     ]
   }
 }

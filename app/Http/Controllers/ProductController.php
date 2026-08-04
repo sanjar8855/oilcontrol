@@ -17,7 +17,7 @@ class ProductController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         $query = $workshop->products()->with('category');
 
@@ -56,7 +56,7 @@ class ProductController extends Controller
 
     public function create(Request $request): Response
     {
-        $workshop = $request->user()->workshop;
+        $workshop = $request->user()->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Products/Create', [
@@ -96,7 +96,7 @@ class ProductController extends Controller
         ]);
 
         $user = $request->user();
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
 
         if (isset($validated['category_id'])) {
             $category = $workshop->categories()->find($validated['category_id']);
@@ -181,7 +181,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -207,7 +207,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -216,7 +216,7 @@ class ProductController extends Controller
             abort(403);
         }
 
-        $workshop = $user->workshop;
+        $workshop = $user->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         $product->load('carModels');
@@ -233,7 +233,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -292,7 +292,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -312,7 +312,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -331,7 +331,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         // Check workshop access
-        if ($product->workshop_id !== $user->workshop->id) {
+        if ($product->workshop_id !== $user->currentWorkshop()->id) {
             abort(403);
         }
 
@@ -385,7 +385,7 @@ class ProductController extends Controller
                 $unitPrice = $currency === 'USD' ? $unitPriceUsd : $unitPriceUzs;
 
                 // Xarajat yaratish
-                $user->workshop->expenses()->create([
+                $user->currentWorkshop()->expenses()->create([
                     'branch_id' => $product->branch_id,
                     'category' => 'Boshqa',
                     'title' => "Mahsulot sotib olish: {$product->name}",
@@ -417,7 +417,7 @@ class ProductController extends Controller
             $unitPrice = $currency === 'USD' ? ($unitPriceUsd ?? 0) : ($unitPriceUzs ?? 0);
 
             InventoryTransaction::create([
-                'workshop_id' => $user->workshop->id,
+                'workshop_id' => $user->currentWorkshop()->id,
                 'branch_id' => $product->branch_id,
                 'product_id' => $product->id,
                 'type' => $validated['type'],

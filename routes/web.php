@@ -13,6 +13,7 @@ use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\WorkshopSwitchController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -42,6 +43,11 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Superadmin uchun workshop tanlash (nomidan ishlash)
+    Route::get('/workshops/switch', [WorkshopSwitchController::class, 'index'])->name('workshops.switch.index');
+    Route::post('/workshops/switch/{workshop}', [WorkshopSwitchController::class, 'switch'])->name('workshops.switch');
+    Route::post('/workshops/switch-exit', [WorkshopSwitchController::class, 'exit'])->name('workshops.switch.exit');
+
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
     Route::resource('users', UserController::class);
 
