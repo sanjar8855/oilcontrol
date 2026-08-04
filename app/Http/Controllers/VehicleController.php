@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\CarMake;
 use App\Models\CarModel;
 use App\Models\Client;
+use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\Workshop;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,18 +16,22 @@ use Inertia\Response;
 class VehicleController extends Controller
 {
     /**
-     * Search for a vehicle by plate number.
+     * Avto raqam yoki mijoz telefon raqami bo'yicha qisman (substring) qidiruv.
+     * Masalan "aa" so'rovi "01 A 111 AA" va "01 A 222 AA" ikkisini ham topadi.
      */
     public function search(Request $request)
     {
         $validated = $request->validate([
-            'plate_number' => 'required|string',
+            'query' => 'required|string|min:2',
         ]);
 
         $user = $request->user();
         $workshop = $user->currentWorkshop();
 
-        $vehicle = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
+        // Bo'sh joy/chiziqchalarsiz, kichik harfda solishtirish uchun
+        $term = mb_strtolower(preg_replace('/[\s\-]+/', '', $validated['query']));
+
+        $vehicles = Vehicle::whereHas('client', function ($q) use ($workshop, $user) {
             $q->where('workshop_id', $workshop->id);
 
             // Branch filtering based on user role
@@ -33,13 +39,18 @@ class VehicleController extends Controller
                 $q->where('branch_id', $user->branch_id);
             }
         })
-        ->where('plate_number', $validated['plate_number'])
+        ->where(function ($q) use ($term) {
+            $q->whereRaw("LOWER(REPLACE(REPLACE(plate_number, ' ', ''), '-', '')) LIKE ?", ["%{$term}%"])
+                ->orWhereHas('client', function ($cq) use ($term) {
+                    $cq->whereRaw("LOWER(REPLACE(REPLACE(phone, ' ', ''), '-', '')) LIKE ?", ["%{$term}%"]);
+                });
+        })
         ->with(['client', 'latestService'])
-        ->first();
+        ->limit(8)
+        ->get();
 
         return response()->json([
-            'found' => $vehicle ? true : false,
-            'vehicle' => $vehicle,
+            'vehicles' => $vehicles,
         ]);
     }
 
@@ -174,7 +185,41 @@ class VehicleController extends Controller
             ->get(['id', 'name', 'unit', 'selling_price', 'selling_price_uzs', 'selling_price_usd', 'currency', 'stock_quantity', 'category_id']);
         $products->each(fn ($product) => $product->selling_price = $product->getSellingPrice());
 
-        // Avtomobil turiga bog'langan texnik ma'lumot va tavsiya etilgan mahsulotlar
+        return Inertia::render('Vehicles/Show', [
+            'vehicle' => $vehicle,
+            'products' => $products,
+            'carModelInfo' => $this->buildCarModelInfo($vehicle, $workshop, $user),
+        ]);
+    }
+
+    /**
+     * Avtomobil turiga bog'langan texnik ma'lumot (moy/antifriz hajmi) va
+     * tavsiya etilgan mahsulotlarni JSON sifatida qaytaradi. Servis yozuvi
+     * yaratishda avtomobil tanlanganda tavsiyalarni dinamik yuklash uchun.
+     */
+    public function carModelInfo(Request $request, Vehicle $vehicle)
+    {
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+
+        if ($vehicle->client->workshop_id !== $workshop->id) {
+            abort(403);
+        }
+
+        if (!$user->canAccessAllBranches() && $vehicle->client->branch_id !== $user->branch_id) {
+            abort(403);
+        }
+
+        return response()->json([
+            'carModelInfo' => $this->buildCarModelInfo($vehicle, $workshop, $user),
+        ]);
+    }
+
+    /**
+     * Avtomobil turiga bog'langan texnik ma'lumot va tavsiya etilgan mahsulotlarni tuzish.
+     */
+    private function buildCarModelInfo(Vehicle $vehicle, Workshop $workshop, User $user): ?array
+    {
         $carModel = CarModel::where('name', $vehicle->make)
             ->with(['products' => function ($query) use ($workshop, $user) {
                 $query->where('products.workshop_id', $workshop->id)
@@ -187,7 +232,11 @@ class VehicleController extends Controller
             }])
             ->first();
 
-        $carModelInfo = $carModel ? [
+        if (!$carModel) {
+            return null;
+        }
+
+        return [
             'oil_capacity_liters' => $carModel->oil_capacity_liters,
             'antifreeze_capacity_min_liters' => $carModel->antifreeze_capacity_min_liters,
             'antifreeze_capacity_max_liters' => $carModel->antifreeze_capacity_max_liters,
@@ -199,13 +248,7 @@ class VehicleController extends Controller
                 'stock_quantity' => $product->stock_quantity,
                 'quantity' => (float) $product->pivot->quantity,
             ])->all(),
-        ] : null;
-
-        return Inertia::render('Vehicles/Show', [
-            'vehicle' => $vehicle,
-            'products' => $products,
-            'carModelInfo' => $carModelInfo,
-        ]);
+        ];
     }
 
     /**

@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
 
     // Avtomobillar (Vehicles) CRUD
     Route::get('/vehicles/search', [VehicleController::class, 'search'])->name('vehicles.search');
+    Route::get('/vehicles/{vehicle}/car-model-info', [VehicleController::class, 'carModelInfo'])->name('vehicles.car-model-info');
     Route::resource('vehicles', VehicleController::class);
 
     // Servis Yozuvlari (Service Logs) CRUD

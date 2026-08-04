@@ -18,9 +18,11 @@ const formatMoney = (amount) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
 };
 
-// Qidiruv uchun
-const searchPlateNumber = ref('');
+// Qidiruv uchun (avto raqam yoki telefon raqami bo'yicha, qisman moslik)
+const searchQuery = ref('');
 const searching = ref(false);
+const searchResults = ref([]);
+const hasSearched = ref(false);
 const showAddClientModal = ref(false);
 
 // Mijoz qo'shish form
@@ -32,13 +34,12 @@ const clientForm = useForm({
     make: '',
 });
 
-const searchVehicle = async (plateNumber, { onNotFound = 'modal' } = {}) => {
-    const plate = plateNumber.trim();
+const runSearch = async (query) => {
+    const term = query.trim();
 
-    if (!plate) {
-        if (onNotFound === 'alert') {
-            alert('Iltimos, avto raqamni kiriting');
-        }
+    if (term.length < 2) {
+        searchResults.value = [];
+        hasSearched.value = false;
         return;
     }
 
@@ -46,24 +47,13 @@ const searchVehicle = async (plateNumber, { onNotFound = 'modal' } = {}) => {
 
     try {
         const response = await axios.get(route('vehicles.search'), {
-            params: {
-                plate_number: plate,
-            },
+            params: { query: term },
         });
 
-        if (response.data.found) {
-            // Topildi - vehicles.show sahifasiga o'tish
-            router.visit(route('vehicles.show', response.data.vehicle.id));
-        } else if (onNotFound === 'modal') {
-            // Topilmadi - mijoz qo'shish modal ochish
-            clientForm.plate_number = plate;
-            showAddClientModal.value = true;
-        }
+        searchResults.value = response.data.vehicles;
+        hasSearched.value = true;
     } catch (error) {
         console.error('Qidiruv xatosi:', error);
-        if (onNotFound === 'alert') {
-            alert('Qidiruv vaqtida xatolik yuz berdi');
-        }
     } finally {
         searching.value = false;
     }
@@ -71,17 +61,29 @@ const searchVehicle = async (plateNumber, { onNotFound = 'modal' } = {}) => {
 
 let searchDebounceTimer = null;
 
-watch(searchPlateNumber, (value) => {
+watch(searchQuery, (value) => {
     clearTimeout(searchDebounceTimer);
 
     if (!value.trim()) {
+        searchResults.value = [];
+        hasSearched.value = false;
         return;
     }
 
     searchDebounceTimer = setTimeout(() => {
-        searchVehicle(value, { onNotFound: 'modal' });
+        runSearch(value);
     }, 1000);
 });
+
+const openVehicle = (vehicleId) => {
+    router.visit(route('vehicles.show', vehicleId));
+};
+
+const openAddClientModal = () => {
+    // Agar qidiruv matni avto raqamga o'xshasa, formaga oldindan qo'yamiz
+    clientForm.plate_number = searchQuery.value.trim();
+    showAddClientModal.value = true;
+};
 
 const closeModal = () => {
     showAddClientModal.value = false;
@@ -120,23 +122,58 @@ const submitClient = () => {
 
         <div class="py-6 sm:py-12">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
-                <!-- Avto raqam qidiruv -->
-                <div class="mb-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+                <!-- Avto raqam / telefon raqam qidiruv -->
+                <div class="relative mb-6 rounded-lg bg-white shadow dark:bg-gray-800">
                     <div class="p-4 sm:p-6">
                         <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                             Avtomobil qidirish
                         </h3>
                         <div class="flex gap-4">
                             <input
-                                v-model="searchPlateNumber"
+                                v-model="searchQuery"
                                 type="text"
-                                placeholder="Avto raqamni kiriting (masalan: 01A123AA)"
+                                placeholder="Avto raqam yoki telefon raqami (masalan: AA yoki 9012)"
                                 class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                @keyup.enter="clearTimeout(searchDebounceTimer); searchVehicle(searchPlateNumber, { onNotFound: 'modal' })"
+                                @keyup.enter="clearTimeout(searchDebounceTimer); runSearch(searchQuery)"
                             />
                             <span v-if="searching" class="self-center text-sm text-gray-500 dark:text-gray-400">
                                 Qidirilmoqda...
                             </span>
+                        </div>
+
+                        <!-- Natijalar -->
+                        <div v-if="hasSearched && !searching" class="mt-3">
+                            <div v-if="searchResults.length > 0" class="divide-y divide-gray-100 rounded-md border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+                                <button
+                                    v-for="vehicle in searchResults"
+                                    :key="vehicle.id"
+                                    type="button"
+                                    @click="openVehicle(vehicle.id)"
+                                    class="flex w-full items-center justify-between p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    <div>
+                                        <span class="font-semibold text-gray-900 dark:text-white">
+                                            {{ vehicle.plate_number || 'Raqamsiz' }}
+                                        </span>
+                                        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                                            {{ vehicle.make }} {{ vehicle.model }}
+                                        </span>
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ vehicle.client?.name }} · {{ vehicle.client?.phone }}
+                                    </div>
+                                </button>
+                            </div>
+                            <div v-else class="flex items-center justify-between rounded-md border border-gray-200 p-3 dark:border-gray-700">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Hech narsa topilmadi</span>
+                                <button
+                                    type="button"
+                                    @click="openAddClientModal"
+                                    class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500"
+                                >
+                                    + Yangi mijoz qo'shish
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

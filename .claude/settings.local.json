@@ -35,7 +35,9 @@
       "Bash(node test6.js)",
       "Bash(netstat -ano)",
       "Bash(awk '{print $5}')",
-      "Bash(xargs -r -I{} taskkill //PID {} //F)"
+      "Bash(xargs -r -I{} taskkill //PID {} //F)",
+      "Bash(node test7.js)",
+      "Bash(node test8.js)"
     ]
   }
 }

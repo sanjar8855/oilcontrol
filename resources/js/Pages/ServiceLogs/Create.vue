@@ -5,7 +5,10 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import axios from 'axios';
+import Multiselect from '@vueform/multiselect';
+import '@vueform/multiselect/themes/default.css';
 
 const props = defineProps({
     vehicles: Array,
@@ -14,68 +17,194 @@ const props = defineProps({
 });
 
 const form = useForm({
-    vehicle_id: props.selectedVehicleId || '',
+    vehicle_id: props.selectedVehicleId || null,
     service_date: new Date().toISOString().split('T')[0],
     odometer_reading: '',
     next_service_km: 5000,
     avg_monthly_km: '',
     service_type: 'oil_change',
-    cost: '',
-    labor_cost: '',
+    cost: 0,
+    labor_cost: 0,
     notes: '',
     products: [],
+    manual_items: [],
+    payment_type: 'cash',
+    payment_status: 'paid',
+    paid_amount: 0,
 });
 
-const selectedProducts = ref([]);
+const vehicleOptions = computed(() => {
+    return props.vehicles.map((v) => ({ value: v.id, label: v.label }));
+});
 
-const addProduct = () => {
-    selectedProducts.value.push({
-        id: null,
-        quantity: 1,
-        unit_price: 0,
-    });
+const carModelInfo = ref(null);
+const loadingCarModelInfo = ref(false);
+
+watch(() => form.vehicle_id, async (vehicleId) => {
+    carModelInfo.value = null;
+    if (!vehicleId) {
+        return;
+    }
+    loadingCarModelInfo.value = true;
+    try {
+        const response = await axios.get(route('vehicles.car-model-info', vehicleId));
+        carModelInfo.value = response.data.carModelInfo;
+    } catch (error) {
+        console.error('Avtomobil ma\'lumotini olishda xatolik:', error);
+    } finally {
+        loadingCarModelInfo.value = false;
+    }
+}, { immediate: true });
+
+const cart = ref([]);
+const selectedProductId = ref(null);
+const selectedQuantity = ref(1);
+const isManualMode = ref(false);
+const manualProductName = ref('');
+const manualProductPrice = ref('');
+
+const productOptions = computed(() => {
+    return props.products.map(p => ({
+        value: p.id,
+        label: `${p.name} - ${p.selling_price.toLocaleString()} so'm (${p.stock_quantity} ${p.unit})`,
+        product: p,
+    }));
+});
+
+const cartTotal = computed(() => {
+    return cart.value.reduce((sum, item) => sum + item.total_price, 0);
+});
+
+const laborCostValue = computed(() => parseFloat(form.labor_cost) || 0);
+
+const grandTotal = computed(() => cartTotal.value + laborCostValue.value);
+
+const toggleManualMode = () => {
+    isManualMode.value = !isManualMode.value;
+    selectedProductId.value = null;
+    manualProductName.value = '';
+    manualProductPrice.value = '';
+    selectedQuantity.value = 1;
 };
 
-const removeProduct = (index) => {
-    selectedProducts.value.splice(index, 1);
-};
+const addToCart = () => {
+    const qty = parseFloat(selectedQuantity.value) || 0;
+    if (qty <= 0) {
+        alert('Miqdorni kiriting');
+        return;
+    }
 
-const getProduct = (productId) => {
-    return props.products.find(p => p.id === productId);
-};
-
-const updateProductPrice = (index) => {
-    const selected = selectedProducts.value[index];
-    if (selected.id) {
-        const product = getProduct(selected.id);
-        if (product) {
-            selected.unit_price = product.selling_price;
+    if (isManualMode.value) {
+        if (!manualProductName.value.trim()) {
+            alert('Mahsulot nomini kiriting');
+            return;
         }
+        const price = parseFloat(manualProductPrice.value) || 0;
+        cart.value.push({
+            id: null,
+            name: manualProductName.value.trim(),
+            unit: '',
+            quantity: qty,
+            unit_price: price,
+            total_price: qty * price,
+            is_manual: true,
+        });
+        manualProductName.value = '';
+        manualProductPrice.value = '';
+        selectedQuantity.value = 1;
+        return;
+    }
+
+    if (!selectedProductId.value) {
+        alert('Mahsulotni tanlang');
+        return;
+    }
+
+    const product = props.products.find(p => p.id === selectedProductId.value);
+    if (!product) return;
+
+    if (qty > product.stock_quantity) {
+        alert(`Omborda faqat ${product.stock_quantity} ${product.unit} mavjud`);
+        return;
+    }
+
+    const existingIndex = cart.value.findIndex(item => !item.is_manual && item.id === product.id);
+    if (existingIndex !== -1) {
+        cart.value[existingIndex].quantity += qty;
+        cart.value[existingIndex].total_price = cart.value[existingIndex].quantity * product.selling_price;
+    } else {
+        cart.value.push({
+            id: product.id,
+            name: product.name,
+            unit: product.unit,
+            quantity: qty,
+            unit_price: product.selling_price,
+            total_price: qty * product.selling_price,
+            is_manual: false,
+        });
+    }
+
+    selectedProductId.value = null;
+    selectedQuantity.value = 1;
+};
+
+const removeFromCart = (index) => {
+    cart.value.splice(index, 1);
+};
+
+const quickAddRecommended = (recommended) => {
+    if (recommended.quantity > recommended.stock_quantity) {
+        alert(`Omborda faqat ${recommended.stock_quantity} ${recommended.unit} mavjud`);
+        return;
+    }
+
+    const price = Number(recommended.selling_price);
+    const existingIndex = cart.value.findIndex(item => !item.is_manual && item.id === recommended.id);
+    if (existingIndex !== -1) {
+        cart.value[existingIndex].quantity += recommended.quantity;
+        cart.value[existingIndex].total_price = cart.value[existingIndex].quantity * price;
+    } else {
+        cart.value.push({
+            id: recommended.id,
+            name: recommended.name,
+            unit: recommended.unit,
+            quantity: recommended.quantity,
+            unit_price: price,
+            total_price: recommended.quantity * price,
+            is_manual: false,
+        });
     }
 };
 
-const calculateProductTotal = (item) => {
-    return (item.quantity || 0) * (item.unit_price || 0);
-};
-
-const productsTotal = computed(() => {
-    return selectedProducts.value.reduce((sum, item) => {
-        return sum + calculateProductTotal(item);
-    }, 0);
-});
-
-const laborCostValue = computed(() => {
-    return parseFloat(form.labor_cost) || 0;
-});
-
-const grandTotal = computed(() => {
-    return productsTotal.value + laborCostValue.value;
-});
-
 const submit = () => {
-    // Mahsulotlarni formaga qo'shish
-    form.products = selectedProducts.value.filter(p => p.id !== null);
-    form.cost = grandTotal.value; // Jami summani saqlash
+    if (!form.vehicle_id) {
+        alert('Avtomobilni tanlang');
+        return;
+    }
+    if (cart.value.length === 0) {
+        alert('Kamida bitta mahsulot qo\'shing');
+        return;
+    }
+
+    const catalogItems = cart.value.filter(item => !item.is_manual);
+    const manualItems = cart.value.filter(item => item.is_manual);
+
+    form.products = catalogItems.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+    }));
+
+    form.manual_items = manualItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+    }));
+
+    form.cost = grandTotal.value;
+    form.paid_amount = grandTotal.value;
+
     form.post(route('service-logs.store'));
 };
 </script>
@@ -100,28 +229,26 @@ const submit = () => {
 
         <div class="py-6 sm:py-12">
             <div class="mx-auto max-w-4xl px-3 sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                <div class="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
                         <form @submit.prevent="submit" class="space-y-6">
                             <!-- Avtomobil tanlash -->
                             <div>
                                 <InputLabel for="vehicle_id" value="Avtomobil *" />
-                                <select
+                                <Multiselect
                                     id="vehicle_id"
                                     v-model="form.vehicle_id"
-                                    required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                                >
-                                    <option value="">Avtomobilni tanlang</option>
-                                    <option v-for="vehicle in vehicles" :key="vehicle.id" :value="vehicle.id">
-                                        {{ vehicle.label }}
-                                    </option>
-                                </select>
+                                    :options="vehicleOptions"
+                                    :searchable="true"
+                                    placeholder="Avtomobilni tanlang"
+                                    noOptionsText="Avtomobil topilmadi"
+                                    noResultsText="Natija topilmadi"
+                                    class="mt-1"
+                                />
                                 <InputError class="mt-2" :message="form.errors.vehicle_id" />
                             </div>
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <!-- Servis sanasi -->
                                 <div>
                                     <InputLabel for="service_date" value="Servis sanasi *" />
                                     <TextInput
@@ -134,7 +261,6 @@ const submit = () => {
                                     <InputError class="mt-2" :message="form.errors.service_date" />
                                 </div>
 
-                                <!-- Servis turi -->
                                 <div>
                                     <InputLabel for="service_type" value="Servis turi *" />
                                     <select
@@ -155,7 +281,6 @@ const submit = () => {
                             </div>
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                <!-- Probeg (Odometer) -->
                                 <div>
                                     <InputLabel for="odometer_reading" value="Hozirgi probeg (km) *" />
                                     <TextInput
@@ -170,7 +295,6 @@ const submit = () => {
                                     <InputError class="mt-2" :message="form.errors.odometer_reading" />
                                 </div>
 
-                                <!-- Keyingi servis km -->
                                 <div>
                                     <InputLabel for="next_service_km" value="Keyingi servis (km) *" />
                                     <TextInput
@@ -186,7 +310,6 @@ const submit = () => {
                                     <InputError class="mt-2" :message="form.errors.next_service_km" />
                                 </div>
 
-                                <!-- O'rtacha oylik km -->
                                 <div>
                                     <InputLabel for="avg_monthly_km" value="Oylik km" />
                                     <TextInput
@@ -201,97 +324,182 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <!-- Ishlatilgan mahsulotlar -->
-                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
-                                <div class="mb-4 flex items-center justify-between">
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                                        Ishlatilgan mahsulotlar
-                                    </h3>
-                                    <button
-                                        type="button"
-                                        @click="addProduct"
-                                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                            <!-- Avtomobil turiga tavsiyalar -->
+                            <div
+                                v-if="carModelInfo && (carModelInfo.oil_capacity_liters || carModelInfo.antifreeze_capacity_min_liters || carModelInfo.recommended_products.length > 0)"
+                                class="rounded-md bg-indigo-50 p-4 dark:bg-indigo-900/20"
+                            >
+                                <h4 class="mb-2 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                                    Tanlangan avtomobil uchun tavsiyalar
+                                </h4>
+                                <div v-if="carModelInfo.oil_capacity_liters || carModelInfo.antifreeze_capacity_min_liters" class="mb-3 flex flex-wrap gap-2">
+                                    <span
+                                        v-if="carModelInfo.oil_capacity_liters"
+                                        class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                     >
-                                        + Mahsulot qo'shish
+                                        🛢 Motor moyi: {{ carModelInfo.oil_capacity_liters }} L
+                                    </span>
+                                    <span
+                                        v-if="carModelInfo.antifreeze_capacity_min_liters || carModelInfo.antifreeze_capacity_max_liters"
+                                        class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900 dark:text-sky-200"
+                                    >
+                                        ❄️ Antifriz: {{ carModelInfo.antifreeze_capacity_min_liters }}-{{ carModelInfo.antifreeze_capacity_max_liters }} L
+                                    </span>
+                                </div>
+                                <div v-if="carModelInfo.recommended_products.length > 0" class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="product in carModelInfo.recommended_products"
+                                        :key="product.id"
+                                        type="button"
+                                        @click="quickAddRecommended(product)"
+                                        class="inline-flex items-center gap-1 rounded-md border border-indigo-300 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-300 dark:hover:bg-gray-700"
+                                    >
+                                        + {{ product.name }} ({{ product.quantity }} {{ product.unit }})
                                     </button>
                                 </div>
+                            </div>
 
-                                <div v-if="selectedProducts.length > 0" class="space-y-3">
-                                    <div
-                                        v-for="(item, index) in selectedProducts"
-                                        :key="index"
-                                        class="grid grid-cols-12 gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
-                                    >
-                                        <!-- Mahsulot -->
-                                        <div class="col-span-5">
-                                            <select
-                                                v-model="item.id"
-                                                @change="updateProductPrice(index)"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                                required
-                                            >
-                                                <option :value="null">Mahsulot tanlang</option>
-                                                <option v-for="product in products" :key="product.id" :value="product.id">
-                                                    {{ product.name }} ({{ product.stock_quantity }} {{ product.unit }})
-                                                </option>
-                                            </select>
-                                        </div>
+                            <!-- Mahsulotlar qo'shish -->
+                            <div class="mb-4">
+                                <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                                    Mahsulotlar qo'shish
+                                </h4>
 
-                                        <!-- Miqdor -->
-                                        <div class="col-span-2">
-                                            <input
-                                                v-model.number="item.quantity"
-                                                type="number"
-                                                step="0.01"
-                                                min="0.01"
-                                                placeholder="Miqdor"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                                required
-                                            />
-                                        </div>
+                                <div class="flex items-end gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <template v-if="!isManualMode">
+                                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Mahsulot tanlang
+                                            </label>
+                                            <div class="flex items-center gap-1">
+                                                <div class="min-w-0 flex-1">
+                                                    <Multiselect
+                                                        v-model="selectedProductId"
+                                                        :options="productOptions"
+                                                        :searchable="true"
+                                                        placeholder="Mahsulot qidirish..."
+                                                        noOptionsText="Mahsulot topilmadi"
+                                                        noResultsText="Natija topilmadi"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    @click="toggleManualMode"
+                                                    title="Qo'lda kiritish"
+                                                    class="shrink-0 rounded-md border border-gray-300 bg-white p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
 
-                                        <!-- Narxi -->
-                                        <div class="col-span-2">
-                                            <input
-                                                v-model.number="item.unit_price"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                placeholder="Narxi"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                                required
-                                            />
-                                        </div>
+                                        <template v-else>
+                                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Qo'lda kiritish
+                                            </label>
+                                            <div class="flex items-center gap-1">
+                                                <input
+                                                    v-model="manualProductName"
+                                                    type="text"
+                                                    placeholder="Mahsulot nomi"
+                                                    class="min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                                />
+                                                <input
+                                                    v-model="manualProductPrice"
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="Narxi"
+                                                    class="w-28 shrink-0 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="toggleManualMode"
+                                                    title="Katalogdan tanlash"
+                                                    class="shrink-0 rounded-md border border-gray-300 bg-white p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
 
-                                        <!-- Jami -->
-                                        <div class="col-span-2 flex items-center">
-                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {{ calculateProductTotal(item).toLocaleString() }}
-                                            </span>
-                                        </div>
+                                    <div class="w-16 shrink-0">
+                                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Miqdor
+                                        </label>
+                                        <input
+                                            v-model="selectedQuantity"
+                                            type="number"
+                                            step="any"
+                                            placeholder="1"
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
 
-                                        <!-- O'chirish -->
-                                        <div class="col-span-1 flex items-center justify-end">
-                                            <button
-                                                type="button"
-                                                @click="removeProduct(index)"
-                                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                            >
-                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <label class="mb-1 block text-sm font-medium text-transparent">_</label>
+                                        <button
+                                            type="button"
+                                            @click="addToCart"
+                                            class="whitespace-nowrap rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                                        >
+                                            + Qo'shish
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Xizmat haqqilari -->
-                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
-                                <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">
-                                    Xizmat haqqi
-                                </h3>
+                            <!-- Savatcha -->
+                            <div v-if="cart.length > 0" class="mb-6">
+                                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">Mahsulot</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">Miqdor</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">Narx</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">Jami</th>
+                                                <th class="px-4 py-2"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                                            <tr v-for="(item, index) in cart" :key="index">
+                                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.name }}
+                                                    <span v-if="item.is_manual" class="ml-1 rounded bg-yellow-100 px-1 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
+                                                        qo'lda
+                                                    </span>
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.quantity }} {{ item.unit }}
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                                    {{ item.unit_price.toLocaleString() }} so'm
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {{ item.total_price.toLocaleString() }} so'm
+                                                </td>
+                                                <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                                    <button
+                                                        type="button"
+                                                        @click="removeFromCart(index)"
+                                                        class="text-red-600 hover:text-red-800 dark:text-red-400"
+                                                    >
+                                                        O'chirish
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
 
+                            <!-- Xizmat haqqi va jami -->
+                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
                                         <InputLabel for="labor_cost" value="Ish haqi" />
@@ -301,7 +509,7 @@ const submit = () => {
                                             type="number"
                                             class="mt-1 block w-full"
                                             min="0"
-                                            step="0.01"
+                                            step="any"
                                             placeholder="50000"
                                         />
                                         <InputError class="mt-2" :message="form.errors.labor_cost" />
@@ -312,7 +520,7 @@ const submit = () => {
                                             <div class="flex justify-between text-sm">
                                                 <span class="text-gray-600 dark:text-gray-400">Mahsulotlar:</span>
                                                 <span class="font-medium text-gray-900 dark:text-white">
-                                                    {{ productsTotal.toLocaleString() }} so'm
+                                                    {{ cartTotal.toLocaleString() }} so'm
                                                 </span>
                                             </div>
                                             <div class="mt-2 flex justify-between text-sm">
@@ -338,7 +546,7 @@ const submit = () => {
                                 <textarea
                                     id="notes"
                                     v-model="form.notes"
-                                    rows="4"
+                                    rows="3"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                     placeholder="Qanday ishlar bajarildi..."
                                 ></textarea>
@@ -353,8 +561,8 @@ const submit = () => {
                                 >
                                     Bekor qilish
                                 </Link>
-                                <PrimaryButton :disabled="form.processing">
-                                    Saqlash
+                                <PrimaryButton :disabled="form.processing || cart.length === 0">
+                                    {{ form.processing ? 'Saqlanmoqda...' : 'Saqlash' }}
                                 </PrimaryButton>
                             </div>
                         </form>
