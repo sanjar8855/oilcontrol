@@ -115,7 +115,36 @@ class ProductSeeder extends Seeder
         );
 
         // ============================================
-        // 2. Kategoriyalar
+        // 2. Xodimlar (menejer va sotuvchi)
+        //    Filial yo'q (bitta joydan ishlaydigan do'kon) — branch_id null
+        //    bo'lsa, direktor yaratgan barcha yozuvlarni ham ko'ra oladi.
+        // ============================================
+        $manager = User::firstOrCreate(
+            ['phone' => '+998901112234'],
+            [
+                'name' => 'Alisher Yusupov',
+                'email' => 'alisher@moyantifriz.uz',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'branch_id' => null,
+            ]
+        );
+        $manager->assignRole('manager');
+
+        $employee = User::firstOrCreate(
+            ['phone' => '+998901112235'],
+            [
+                'name' => 'Bekzod Qodirov',
+                'email' => 'bekzod@moyantifriz.uz',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'branch_id' => null,
+            ]
+        );
+        $employee->assignRole('employee');
+
+        // ============================================
+        // 3. Kategoriyalar
         // ============================================
         $categoryYog = Category::firstOrCreate(
             ['workshop_id' => $workshop->id, 'name' => 'Yog\'', 'type' => 'product'],
@@ -128,7 +157,7 @@ class ProductSeeder extends Seeder
         );
 
         // ============================================
-        // 3. Kerakli avtomobil turlarini olish
+        // 4. Kerakli avtomobil turlarini olish
         // ============================================
         $carModels = CarModel::whereIn('name', ['Tracker', 'Malibu'])
             ->whereHas('carMake', fn ($q) => $q->where('name', 'Chevrolet'))
@@ -136,7 +165,7 @@ class ProductSeeder extends Seeder
             ->keyBy(fn (CarModel $carModel) => 'Chevrolet '.$carModel->name);
 
         // ============================================
-        // 4. Filtrlar (har bir avtomobil turiga o'ziga xos, miqdori 1 dona)
+        // 5. Filtrlar (har bir avtomobil turiga o'ziga xos, miqdori 1 dona)
         // ============================================
         foreach (self::FILTERS as $carModelKey => $filters) {
             $carModel = $carModels[$carModelKey] ?? null;
@@ -165,7 +194,7 @@ class ProductSeeder extends Seeder
         }
 
         // ============================================
-        // 5. Moylar (umumiy mahsulot, hajmi avtomobil turiga qarab bog'lanadi)
+        // 6. Moylar (umumiy mahsulot, hajmi avtomobil turiga qarab bog'lanadi)
         // ============================================
         foreach (self::OILS as $oil) {
             $product = Product::updateOrCreate(
@@ -199,7 +228,7 @@ class ProductSeeder extends Seeder
         }
 
         // ============================================
-        // 6. Xulosa
+        // 7. Xulosa
         // ============================================
         $filtersCount = collect(self::FILTERS)->flatten(1)->count();
         $oilsCount = count(self::OILS);
@@ -207,10 +236,18 @@ class ProductSeeder extends Seeder
         echo "\n✅ \"Moy Antifriz\" mahsulotlari muvaffaqiyatli yaratildi!\n\n";
         echo "📊 Yaratilgan ma'lumotlar:\n";
         echo "   - Workshop: {$workshop->name}\n";
+        echo "   - Xodimlar: 3 ta (direktor, menejer, sotuvchi)\n";
         echo "   - Filtrlar: {$filtersCount} ta\n";
         echo "   - Moylar: {$oilsCount} ta\n\n";
-        echo "🔐 Login ma'lumotlari (telefon raqam orqali):\n";
+        echo "🔐 Login ma'lumotlari (telefon raqam orqali):\n\n";
+        echo "   Direktor (Muhammadjon Aka, hammasini ko'radi):\n";
         echo "     Telefon: +998901112233\n";
+        echo "     Parol: password\n\n";
+        echo "   Menejer (Alisher Yusupov):\n";
+        echo "     Telefon: +998901112234\n";
+        echo "     Parol: password\n\n";
+        echo "   Sotuvchi/Xodim (Bekzod Qodirov, faqat savdo huquqi):\n";
+        echo "     Telefon: +998901112235\n";
         echo "     Parol: password\n\n";
     }
 }
