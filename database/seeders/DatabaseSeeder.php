@@ -364,5 +364,11 @@ class DatabaseSeeder extends Seeder
         echo "   Employee Chilonzor (faqat Chilonzor filialini ko'radi):\n";
         echo "     Login: employee2\n";
         echo "     Parol: password\n\n";
+
+        // ============================================
+        // 9. Qo'shimcha demo workshop (moy/filtr mahsulotlari
+        //    va avtomobil turlariga bog'lanishlari bilan)
+        // ============================================
+        $this->call(ProductSeeder::class);
     }
 }
