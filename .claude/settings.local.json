@@ -25,7 +25,13 @@
       "Bash(php -l database/seeders/CarModelSeeder.php)",
       "Bash(php -l app/Http/Controllers/CarMakeController.php)",
       "Bash(php -l routes/web.php)",
-      "Bash(php -l app/Http/Controllers/ProductController.php)"
+      "Bash(php -l app/Http/Controllers/ProductController.php)",
+      "Bash(chromium-cli --help)",
+      "Bash(timeout 5 curl -sI https://registry.npmjs.org)",
+      "Bash(mkdir -p \"C:/Users/User/AppData/Local/Temp/claude/C--xamppp-htdocs-oilcontrol/3470412e-8d75-44a0-b0e4-71ed2d6c2be9/scratchpad/pwtest\")",
+      "Bash(npm init *)",
+      "Bash(npx playwright *)",
+      "Bash(node test.js)"
     ]
   }
 }
