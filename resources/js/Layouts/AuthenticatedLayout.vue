@@ -59,7 +59,7 @@ const initials = (label) => {
         <!-- Sidebar -->
         <aside
             :class="[
-                'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 sm:static sm:translate-x-0',
+                'fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-gray-200 bg-white transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 sm:sticky sm:top-0 sm:translate-x-0',
                 collapsed ? 'sm:w-20' : 'sm:w-64',
                 mobileOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full',
             ]"
@@ -127,7 +127,7 @@ const initials = (label) => {
 
             <!-- Foydalanuvchi -->
             <div class="border-t border-gray-100 p-2 dark:border-gray-700">
-                <Dropdown align="right" width="48">
+                <Dropdown align="right" width="48" direction="up">
                     <template #trigger>
                         <button
                             type="button"
@@ -143,9 +143,9 @@ const initials = (label) => {
                     </template>
 
                     <template #content>
-                        <DropdownLink :href="route('profile.edit')">Profile</DropdownLink>
+                        <DropdownLink :href="route('profile.edit')">Profil</DropdownLink>
                         <DropdownLink :href="route('logout')" method="post" as="button">
-                            Log Out
+                            Chiqish
                         </DropdownLink>
                     </template>
                 </Dropdown>
@@ -168,18 +168,11 @@ const initials = (label) => {
                 <ApplicationLogo class="ml-3 h-7 w-7 fill-current text-gray-800 dark:text-gray-200" />
             </div>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow dark:bg-gray-800"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-                    <slot name="header" />
-                </div>
-            </header>
-
             <!-- Page Content -->
             <main class="flex-1">
+                <div v-if="$slots.header" class="mx-auto max-w-7xl px-3 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+                    <slot name="header" />
+                </div>
                 <slot />
             </main>
         </div>
