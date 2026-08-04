@@ -33,17 +33,16 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'login' => 'required|string|max:255|unique:'.User::class,
             'phone' => 'required|string|max:20|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
-            'login' => $request->login,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
+        $user->assignRole('director');
 
         // Avtomatik Workshop yaratish
         Workshop::create([

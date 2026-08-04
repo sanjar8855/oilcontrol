@@ -18,7 +18,7 @@ const props = defineProps({
 
 const form = useForm({
     vehicle_id: props.selectedVehicleId || null,
-    service_date: new Date().toISOString().split('T')[0],
+    service_date: new Date().toLocaleDateString('sv-SE'),
     odometer_reading: '',
     next_service_km: 5000,
     avg_monthly_km: '',
@@ -28,9 +28,10 @@ const form = useForm({
     notes: '',
     products: [],
     manual_items: [],
-    payment_type: 'cash',
-    payment_status: 'paid',
-    paid_amount: 0,
+    cash_amount: 0,
+    click_amount: 0,
+    is_credit: false,
+    due_date: '',
 });
 
 const vehicleOptions = computed(() => {
@@ -78,6 +79,16 @@ const cartTotal = computed(() => {
 const laborCostValue = computed(() => parseFloat(form.labor_cost) || 0);
 
 const grandTotal = computed(() => cartTotal.value + laborCostValue.value);
+
+const cashAmountValue = computed(() => parseFloat(form.cash_amount) || 0);
+const clickAmountValue = computed(() => parseFloat(form.click_amount) || 0);
+const paidTotal = computed(() => cashAmountValue.value + clickAmountValue.value);
+const remainingAmount = computed(() => Math.max(grandTotal.value - paidTotal.value, 0));
+
+const fillFullCash = () => {
+    form.cash_amount = grandTotal.value;
+    form.click_amount = 0;
+};
 
 const toggleManualMode = () => {
     isManualMode.value = !isManualMode.value;
@@ -203,7 +214,6 @@ const submit = () => {
     }));
 
     form.cost = grandTotal.value;
-    form.paid_amount = grandTotal.value;
 
     form.post(route('service-logs.store'));
 };
@@ -536,6 +546,93 @@ const submit = () => {
                                                 </span>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- To'lov -->
+                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
+                                <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                                    To'lov
+                                </h4>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <InputLabel for="cash_amount" value="Naqd" />
+                                        <TextInput
+                                            id="cash_amount"
+                                            v-model="form.cash_amount"
+                                            type="number"
+                                            class="mt-1 block w-full"
+                                            min="0"
+                                            step="any"
+                                            placeholder="0"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.cash_amount" />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel for="click_amount" value="Click" />
+                                        <TextInput
+                                            id="click_amount"
+                                            v-model="form.click_amount"
+                                            type="number"
+                                            class="mt-1 block w-full"
+                                            min="0"
+                                            step="any"
+                                            placeholder="0"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.click_amount" />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    @click="fillFullCash"
+                                    class="mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                                >
+                                    To'liq summani naqdga qo'yish
+                                </button>
+
+                                <div class="mt-4 flex items-center gap-2">
+                                    <input
+                                        id="is_credit"
+                                        v-model="form.is_credit"
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    />
+                                    <label for="is_credit" class="text-sm text-gray-900 dark:text-gray-300">
+                                        Qolgan summa nasiyaga qoldirilsin
+                                    </label>
+                                </div>
+
+                                <div v-if="form.is_credit" class="mt-2 max-w-xs">
+                                    <InputLabel for="due_date" value="Nasiya muddati" />
+                                    <TextInput
+                                        id="due_date"
+                                        v-model="form.due_date"
+                                        type="date"
+                                        class="mt-1 block w-full"
+                                    />
+                                    <InputError class="mt-2" :message="form.errors.due_date" />
+                                </div>
+
+                                <div class="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + Click):</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">
+                                            {{ paidTotal.toLocaleString() }} so'm
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 flex justify-between text-sm">
+                                        <span class="text-gray-600 dark:text-gray-400">
+                                            {{ form.is_credit ? 'Nasiyadagi summa:' : 'Qolgan (to\'lanmagan):' }}
+                                        </span>
+                                        <span
+                                            class="font-semibold"
+                                            :class="remainingAmount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
+                                        >
+                                            {{ remainingAmount.toLocaleString() }} so'm
+                                        </span>
                                     </div>
                                 </div>
                             </div>

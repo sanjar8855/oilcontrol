@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarMake;
 use App\Models\CarModel;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
@@ -14,6 +15,13 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    /**
+     * Jadval sarlavhasi orqali saralash mumkin bo'lgan ustunlar (SQL injection'dan himoya).
+     */
+    private const SORTABLE_COLUMNS = [
+        'name', 'stock_quantity', 'purchase_price', 'selling_price', 'created_at',
+    ];
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -27,15 +35,20 @@ class ProductController extends Controller
             $query->where('branch_id', $user->branch_id);
         }
 
-        if ($request->has('category_id')) {
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        if ($request->boolean('low_stock')) {
-            $query->whereColumn('stock_quantity', '<=', 'min_stock_level');
+        if ($request->filled('stock_status')) {
+            match ($request->string('stock_status')->toString()) {
+                'out' => $query->where('stock_quantity', '<=', 0),
+                'low' => $query->whereColumn('stock_quantity', '>', 0)->whereColumn('stock_quantity', '<=', 'min_stock_level'),
+                'in_stock' => $query->whereColumn('stock_quantity', '>', 'min_stock_level'),
+                default => null,
+            };
         }
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -43,14 +56,24 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->latest()->paginate(10);
+        $sortBy = in_array($request->string('sort_by')->toString(), self::SORTABLE_COLUMNS, true)
+            ? $request->string('sort_by')->toString()
+            : 'created_at';
+        $sortDir = $request->string('sort_dir')->toString() === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage = in_array((int) $request->input('per_page'), [10, 25, 50, 100], true)
+            ? (int) $request->input('per_page')
+            : 10;
+
+        $products = $query->paginate($perPage)->withQueryString();
 
         $categories = $workshop->categories()->where('is_active', true)->get();
 
         return Inertia::render('Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['category_id', 'low_stock', 'search']),
+            'filters' => $request->only(['category_id', 'stock_status', 'search', 'sort_by', 'sort_dir', 'per_page']),
         ]);
     }
 
@@ -192,6 +215,7 @@ class ProductController extends Controller
 
         $product->load([
             'category',
+            'carModels',
             'inventoryTransactions' => function($query) {
                 $query->latest()->limit(20);
             }
@@ -199,6 +223,10 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Show', [
             'product' => $product,
+            'carMakes' => CarMake::with(['carModels' => fn ($query) => $query->orderBy('name')])
+                ->orderBy('name')
+                ->get(),
+            'canManageCarMakes' => $user->can('car-makes.manage'),
         ]);
     }
 

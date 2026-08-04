@@ -20,7 +20,6 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'login' => 'required|string|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'workshop_name' => 'nullable|string|max:255',
@@ -29,10 +28,10 @@ class AuthController extends Controller
         // User yaratish
         $user = User::create([
             'name' => $request->name,
-            'login' => $request->login,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
+        $user->assignRole('director');
 
         // Workshop yaratish
         $workshop = Workshop::create([
@@ -53,7 +52,6 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],
@@ -68,15 +66,15 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'login' => 'required|string',
+            'phone' => 'required|string',
             'password' => 'required',
         ]);
 
-        $user = User::where('login', $request->login)->first();
+        $user = User::where('phone', $request->phone)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'login' => ['The provided credentials are incorrect.'],
+                'phone' => ['The provided credentials are incorrect.'],
             ]);
         }
 
@@ -91,7 +89,6 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],
@@ -125,7 +122,6 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'login' => $user->login,
                 'email' => $user->email,
                 'phone' => $user->phone,
             ],

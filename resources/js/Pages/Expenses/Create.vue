@@ -15,7 +15,7 @@ const form = useForm({
     title: '',
     description: '',
     amount: 0,
-    expense_date: new Date().toISOString().split('T')[0],
+    expense_date: new Date().toLocaleDateString('sv-SE'),
     payment_method: null,
     receipt_number: '',
 });

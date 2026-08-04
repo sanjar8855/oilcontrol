@@ -5,9 +5,11 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
@@ -49,46 +51,63 @@ Route::middleware('auth')->group(function () {
     Route::post('/workshops/switch-exit', [WorkshopSwitchController::class, 'exit'])->name('workshops.switch.exit');
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
-    Route::resource('users', UserController::class);
+    Route::resource('users', UserController::class)->middleware('can:users.manage');
 
     // Avtomobil markalari va turlari CRUD - Faqat superadmin va director
-    Route::post('/car-makes/models', [CarMakeController::class, 'storeModel'])->name('car-makes.models.store');
-    Route::put('/car-makes/models/{carModel}', [CarMakeController::class, 'updateModel'])->name('car-makes.models.update');
-    Route::delete('/car-makes/models/{carModel}', [CarMakeController::class, 'destroyModel'])->name('car-makes.models.destroy');
-    Route::post('/car-makes/models/{carModel}/products', [CarMakeController::class, 'attachProduct'])->name('car-makes.models.products.attach');
-    Route::put('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'updateProductQuantity'])->name('car-makes.models.products.update');
-    Route::delete('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'detachProduct'])->name('car-makes.models.products.detach');
-    Route::resource('car-makes', CarMakeController::class)->except(['show', 'create', 'edit']);
+    Route::middleware('can:car-makes.manage')->group(function () {
+        Route::post('/car-makes/models', [CarMakeController::class, 'storeModel'])->name('car-makes.models.store');
+        Route::put('/car-makes/models/{carModel}', [CarMakeController::class, 'updateModel'])->name('car-makes.models.update');
+        Route::delete('/car-makes/models/{carModel}', [CarMakeController::class, 'destroyModel'])->name('car-makes.models.destroy');
+        Route::post('/car-makes/models/{carModel}/products', [CarMakeController::class, 'attachProduct'])->name('car-makes.models.products.attach');
+        Route::put('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'updateProductQuantity'])->name('car-makes.models.products.update');
+        Route::delete('/car-makes/models/{carModel}/products/{product}', [CarMakeController::class, 'detachProduct'])->name('car-makes.models.products.detach');
+        Route::resource('car-makes', CarMakeController::class)->except(['show', 'create', 'edit']);
+    });
 
-    // Mijozlar (Clients) CRUD
-    Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');
-    Route::resource('clients', ClientController::class);
+    // Mijozlar (Clients) CRUD - savdo jarayoni, xodim ham kira oladi
+    Route::middleware('can:clients.manage')->group(function () {
+        Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');
+        Route::resource('clients', ClientController::class);
+    });
 
-    // Avtomobillar (Vehicles) CRUD
-    Route::get('/vehicles/search', [VehicleController::class, 'search'])->name('vehicles.search');
-    Route::get('/vehicles/{vehicle}/car-model-info', [VehicleController::class, 'carModelInfo'])->name('vehicles.car-model-info');
-    Route::resource('vehicles', VehicleController::class);
+    // Avtomobillar (Vehicles) CRUD - savdo jarayoni, xodim ham kira oladi
+    Route::middleware('can:vehicles.manage')->group(function () {
+        Route::get('/vehicles/search', [VehicleController::class, 'search'])->name('vehicles.search');
+        Route::get('/vehicles/{vehicle}/car-model-info', [VehicleController::class, 'carModelInfo'])->name('vehicles.car-model-info');
+        Route::resource('vehicles', VehicleController::class);
+    });
 
-    // Servis Yozuvlari (Service Logs) CRUD
-    Route::resource('service-logs', ServiceLogController::class);
+    // Servis Yozuvlari (Service Logs) CRUD - savdo jarayoni, xodim ham kira oladi
+    Route::resource('service-logs', ServiceLogController::class)->middleware('can:service-logs.manage');
 
-    // Kategoriyalar (Categories) CRUD
-    Route::resource('categories', CategoryController::class)->except(['show']);
+    // Kategoriyalar (Categories) CRUD - faqat superadmin/director/menejer
+    Route::resource('categories', CategoryController::class)->except(['show'])->middleware('can:categories.manage');
 
-    // Mahsulotlar (Products) CRUD
-    Route::resource('products', ProductController::class);
-    Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
-    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');
+    // Mahsulotlar (Products) CRUD - faqat superadmin/director/menejer
+    Route::middleware('can:products.manage')->group(function () {
+        Route::resource('products', ProductController::class);
+        Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
+        Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');
 
-    // Xarajatlar (Expenses) CRUD
-    Route::resource('expenses', ExpenseController::class)->except(['show']);
+        // Inventarizatsiya (ombor sanog'i) - faqat superadmin/director/menejer
+        Route::post('/inventories/{inventory}/complete', [InventoryController::class, 'complete'])->name('inventories.complete');
+        Route::resource('inventories', InventoryController::class)->except(['edit']);
+    });
 
-    // To'lovlar (Payments) CRUD
-    Route::resource('payments', PaymentController::class);
+    // Xarajatlar (Expenses) CRUD - faqat superadmin/director/menejer
+    Route::resource('expenses', ExpenseController::class)->except(['show'])->middleware('can:expenses.manage');
 
-    // Oylik maoshlar (Salaries) CRUD
-    Route::get('/salaries/report', [SalaryController::class, 'report'])->name('salaries.report');
-    Route::resource('salaries', SalaryController::class)->except(['edit', 'update']);
+    // To'lovlar (Payments) CRUD - savdo jarayoni, xodim ham kira oladi
+    Route::resource('payments', PaymentController::class)->middleware('can:payments.manage');
+
+    // Oylik maoshlar (Salaries) CRUD - faqat superadmin/director/menejer
+    Route::middleware('can:salaries.manage')->group(function () {
+        Route::get('/salaries/report', [SalaryController::class, 'report'])->name('salaries.report');
+        Route::resource('salaries', SalaryController::class)->except(['edit', 'update']);
+    });
+
+    // Hisobotlar - faqat superadmin/director/menejer
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index')->middleware('can:reports.view');
 
     // Profil boshqaruvi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

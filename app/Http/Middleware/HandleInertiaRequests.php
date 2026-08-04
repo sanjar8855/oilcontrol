@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
+                'permissions' => $user?->getAllPermissions()->pluck('name') ?? [],
             ],
             'activeWorkshop' => $user && $user->isSuperAdmin()
                 ? $user->currentWorkshop()?->only(['id', 'name'])

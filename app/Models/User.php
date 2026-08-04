@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -23,12 +24,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'login',
         'email',
         'phone',
         'phone_secondary',
         'password',
-        'role',
         'branch_id',
         'salary',
         'hire_date',
@@ -36,6 +35,11 @@ class User extends Authenticatable
         'employment_status',
         'address',
     ];
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['role'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -101,29 +105,34 @@ class User extends Authenticatable
     }
 
     // Role helper methods
+    public function getRoleAttribute(): ?string
+    {
+        return $this->getRoleNames()->first();
+    }
+
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'superadmin';
+        return $this->hasRole('superadmin');
     }
 
     public function isDirector(): bool
     {
-        return $this->role === 'director';
+        return $this->hasRole('director');
     }
 
     public function isManager(): bool
     {
-        return $this->role === 'manager';
+        return $this->hasRole('manager');
     }
 
     public function isEmployee(): bool
     {
-        return $this->role === 'employee';
+        return $this->hasRole('employee');
     }
 
     public function canAccessAllBranches(): bool
     {
-        return in_array($this->role, ['superadmin', 'director']);
+        return $this->hasAnyRole(['superadmin', 'director']);
     }
 
     public function canAccessBranch(int $branchId): bool

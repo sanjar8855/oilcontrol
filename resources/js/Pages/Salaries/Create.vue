@@ -14,7 +14,7 @@ const form = useForm({
     branch_id: null,
     amount: '',
     month: '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: new Date().toLocaleDateString('sv-SE'),
     payment_method: 'cash',
     bonus: 0,
     deduction: 0,

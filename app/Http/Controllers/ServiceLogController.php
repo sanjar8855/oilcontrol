@@ -120,10 +120,10 @@ class ServiceLogController extends Controller
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|numeric|min:0.01',
             'products.*.unit_price' => 'required|numeric|min:0',
-            // Yangi to'lov maydonlari
-            'payment_type' => 'required|in:cash,credit,installment',
-            'payment_status' => 'nullable|in:paid,partial,unpaid',
-            'paid_amount' => 'nullable|numeric|min:0',
+            // To'lov maydonlari: naqd va Click alohida-alohida kiritiladi
+            'cash_amount' => 'nullable|numeric|min:0',
+            'click_amount' => 'nullable|numeric|min:0',
+            'is_credit' => 'nullable|boolean',
             'due_date' => 'nullable|date|after_or_equal:service_date',
             'currency' => 'nullable|in:USD,UZS',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -150,8 +150,6 @@ class ServiceLogController extends Controller
 
         // Default qiymatlar
         $validated['currency'] = $validated['currency'] ?? 'UZS';
-        $validated['payment_status'] = $validated['payment_status'] ?? 'unpaid';
-        $validated['paid_amount'] = $validated['paid_amount'] ?? 0;
         $validated['discount_amount'] = $validated['discount_amount'] ?? 0;
         $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
         $validated['is_consignment'] = $validated['is_consignment'] ?? false;
@@ -217,12 +215,23 @@ class ServiceLogController extends Controller
             // Total amount ni hisoblash
             $serviceLog->calculateTotal();
 
-            // Agar to'langan summa berilgan bo'lsa, to'lovni qayd qilish
-            if ($validated['payment_type'] === 'cash' && $validated['paid_amount'] > 0) {
+            // Naqd va Click to'lovlari kiritilgan bo'lsa, alohida-alohida qayd qilinadi
+            $cashAmount = (float) ($validated['cash_amount'] ?? 0);
+            $clickAmount = (float) ($validated['click_amount'] ?? 0);
+
+            if ($cashAmount > 0) {
                 $serviceLog->addPayment(
-                    amount: $validated['paid_amount'],
+                    amount: $cashAmount,
                     method: 'cash',
-                    notes: 'Boshlang\'ich to\'lov'
+                    notes: 'Boshlang\'ich to\'lov (naqd)'
+                );
+            }
+
+            if ($clickAmount > 0) {
+                $serviceLog->addPayment(
+                    amount: $clickAmount,
+                    method: 'click',
+                    notes: 'Boshlang\'ich to\'lov (Click)'
                 );
             }
 
@@ -256,7 +265,7 @@ class ServiceLogController extends Controller
             abort(403);
         }
 
-        $serviceLog->load(['vehicle.client', 'reminders', 'products']);
+        $serviceLog->load(['vehicle.client', 'reminders', 'products', 'payments' => fn ($q) => $q->latest('payment_date')]);
 
         return Inertia::render('ServiceLogs/Show', [
             'serviceLog' => $serviceLog,

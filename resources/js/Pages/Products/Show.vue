@@ -1,9 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     product: Object,
+    carMakes: Array,
+    canManageCarMakes: Boolean,
 });
 
 const formatMoney = (amount) => {
@@ -12,6 +15,25 @@ const formatMoney = (amount) => {
 
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString('uz-UZ');
+};
+
+const linkedModelIds = computed(() => new Set((props.product.car_models ?? []).map((m) => m.id)));
+
+const toggleModel = (model, checked) => {
+    if (!props.canManageCarMakes) {
+        return;
+    }
+
+    if (checked) {
+        router.post(route('car-makes.models.products.attach', model.id), {
+            product_id: props.product.id,
+            quantity: 1,
+        }, { preserveScroll: true });
+    } else {
+        router.delete(route('car-makes.models.products.detach', [model.id, props.product.id]), {
+            preserveScroll: true,
+        });
+    }
 };
 </script>
 
@@ -42,7 +64,10 @@ const formatDate = (date) => {
         </template>
 
         <div class="py-6 sm:py-12">
-            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                <!-- Chap ustun: mahsulot ma'lumotlari -->
+                <div class="space-y-6">
                 <!-- Product Details -->
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
@@ -164,6 +189,56 @@ const formatDate = (date) => {
                         ← Orqaga
                     </Link>
                 </div>
+                </div>
+
+                <!-- O'ng ustun: avtomobil turlariga tavsiya qilish -->
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                            Avtomobil turlariga tavsiya
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Qaysi avtomobil turlariga ushbu mahsulot tavsiya etilishini belgilang.
+                        </p>
+
+                        <div v-if="!canManageCarMakes" class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                            Bu bo'limni faqat direktor/superadmin tahrirlashi mumkin.
+                        </div>
+
+                        <div v-if="carMakes.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+                            Avtomobil markalari hali qo'shilmagan.
+                        </div>
+
+                        <div v-else class="space-y-4 max-h-[32rem] overflow-y-auto pr-1">
+                            <div v-for="make in carMakes" :key="make.id">
+                                <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    {{ make.name }}
+                                </h4>
+                                <div v-if="make.car_models.length === 0" class="pl-2 text-xs text-gray-400">
+                                    Hali turlari yo'q
+                                </div>
+                                <div v-else class="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                    <label
+                                        v-for="model in make.car_models"
+                                        :key="model.id"
+                                        class="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        :class="canManageCarMakes ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            :checked="linkedModelIds.has(model.id)"
+                                            :disabled="!canManageCarMakes"
+                                            @change="toggleModel(model, $event.target.checked)"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                                        />
+                                        <span class="text-gray-700 dark:text-gray-300">{{ model.name }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
     </AuthenticatedLayout>

@@ -21,7 +21,7 @@ const manualProductPrice = ref('');
 
 const serviceForm = useForm({
     vehicle_id: props.vehicle.id,
-    service_date: new Date().toISOString().split('T')[0],
+    service_date: new Date().toLocaleDateString('sv-SE'),
     odometer_reading: props.vehicle.service_logs?.[0]
         ? props.vehicle.service_logs[0].odometer_reading + props.vehicle.service_logs[0].next_service_km
         : '',

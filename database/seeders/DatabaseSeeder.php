@@ -21,37 +21,36 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ============================================
-        // 0. Avtomobil markalari va turlari
+        // 0. Avtomobil markalari va turlari, rol/huquqlar
         // ============================================
         $this->call(CarModelSeeder::class);
+        $this->call(RolePermissionSeeder::class);
 
         // ============================================
         // 1. SuperAdmin yaratish
         // ============================================
         $superadmin = User::create([
             'name' => 'SuperAdmin',
-            'login' => 'superadmin',
             'phone' => '+998937058855',
             'email' => 'superadmin@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'superadmin',
             'branch_id' => null,
         ]);
+        $superadmin->assignRole('superadmin');
 
         // ============================================
         // 2. Tadbirkor (Director) va Workshop yaratish
         // ============================================
         $director = User::create([
             'name' => 'Sardor Toshmatov',
-            'login' => 'director',
             'phone' => '+998901234567',
             'email' => 'director@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'director',
             'branch_id' => null, // Director barcha filiallarni ko'radi
         ]);
+        $director->assignRole('director');
 
         $workshop = Workshop::create([
             'user_id' => $director->id,
@@ -95,48 +94,44 @@ class DatabaseSeeder extends Seeder
         // Yunusobod filiali
         $manager1 = User::create([
             'name' => 'Aziz Rahmonov',
-            'login' => 'manager1',
             'phone' => '+998905555001',
             'email' => 'manager1@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'manager',
             'branch_id' => $branch1->id,
         ]);
+        $manager1->assignRole('manager');
 
         $employee1 = User::create([
             'name' => 'Jamshid Karimov',
-            'login' => 'employee1',
             'phone' => '+998905555011',
             'email' => 'employee1@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'employee',
             'branch_id' => $branch1->id,
         ]);
+        $employee1->assignRole('employee');
 
         // Chilonzor filiali
         $manager2 = User::create([
             'name' => 'Bobur Aliyev',
-            'login' => 'manager2',
             'phone' => '+998905555002',
             'email' => 'manager2@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'manager',
             'branch_id' => $branch2->id,
         ]);
+        $manager2->assignRole('manager');
 
         $employee2 = User::create([
             'name' => 'Rustam Usmonov',
-            'login' => 'employee2',
             'phone' => '+998905555022',
             'email' => 'employee2@oilcontrol.uz',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'employee',
             'branch_id' => $branch2->id,
         ]);
+        $employee2->assignRole('employee');
 
         // ============================================
         // 5. Kategoriyalar yaratish
@@ -339,30 +334,30 @@ class DatabaseSeeder extends Seeder
         echo "   - Avtomobillar: 4 ta\n";
         echo "   - Servis yozuvlari: 4 ta\n\n";
 
-        echo "🔐 Login ma'lumotlari:\n\n";
+        echo "🔐 Login ma'lumotlari (telefon raqam orqali):\n\n";
 
         echo "   SuperAdmin (barcha tizimni ko'radi):\n";
-        echo "     Login: superadmin\n";
+        echo "     Telefon: +998937058855\n";
         echo "     Parol: password\n\n";
 
         echo "   Director (barcha filiallarni ko'radi):\n";
-        echo "     Login: director\n";
+        echo "     Telefon: +998901234567\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Login: manager1\n";
+        echo "     Telefon: +998905555001\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Yunusobod (faqat Yunusobod filialini ko'radi):\n";
-        echo "     Login: employee1\n";
+        echo "     Telefon: +998905555011\n";
         echo "     Parol: password\n\n";
 
         echo "   Manager Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Login: manager2\n";
+        echo "     Telefon: +998905555002\n";
         echo "     Parol: password\n\n";
 
         echo "   Employee Chilonzor (faqat Chilonzor filialini ko'radi):\n";
-        echo "     Login: employee2\n";
+        echo "     Telefon: +998905555022\n";
         echo "     Parol: password\n\n";
 
         // ============================================

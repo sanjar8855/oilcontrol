@@ -138,6 +138,70 @@ const productsTotal = () => {
                     </div>
                 </div>
 
+                <!-- To'lovlar -->
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="border-b border-gray-200 px-6 py-3 dark:border-gray-700 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">To'lovlar</h3>
+                        <span
+                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold"
+                            :class="{
+                                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': serviceLog.payment_status === 'paid',
+                                'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200': serviceLog.payment_status === 'partial',
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': serviceLog.payment_status === 'unpaid',
+                            }"
+                        >
+                            {{ { paid: 'To\'langan', partial: 'Qisman to\'langan', unpaid: 'To\'lanmagan' }[serviceLog.payment_status] || serviceLog.payment_status }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 divide-x divide-gray-100 px-6 py-3 dark:divide-gray-700">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">To'langan</p>
+                            <p class="mt-0.5 text-sm font-semibold text-green-600 dark:text-green-400">
+                                {{ Number(serviceLog.paid_amount || 0).toLocaleString() }} so'm
+                            </p>
+                        </div>
+                        <div class="pl-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Qolgan / Nasiya</p>
+                            <p class="mt-0.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                                {{ Number(serviceLog.remaining_amount || 0).toLocaleString() }} so'm
+                            </p>
+                        </div>
+                        <div class="pl-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Nasiya muddati</p>
+                            <p class="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                {{ serviceLog.due_date ? new Date(serviceLog.due_date).toLocaleDateString('uz-UZ') : '-' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div v-if="serviceLog.payments && serviceLog.payments.length > 0" class="border-t border-gray-100 dark:border-gray-700">
+                        <div
+                            v-for="payment in serviceLog.payments"
+                            :key="payment.id"
+                            class="flex items-center justify-between px-6 py-2 text-sm"
+                        >
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="{
+                                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': payment.payment_method === 'click',
+                                        'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200': payment.payment_method !== 'click',
+                                    }"
+                                >
+                                    {{ payment.payment_method === 'click' ? 'Click' : payment.payment_method === 'cash' ? 'Naqd' : payment.payment_method }}
+                                </span>
+                                <span class="text-gray-500 dark:text-gray-400">
+                                    {{ new Date(payment.payment_date).toLocaleDateString('uz-UZ') }}
+                                </span>
+                            </div>
+                            <span class="font-medium text-gray-900 dark:text-white">
+                                {{ Number(payment.amount).toLocaleString() }} so'm
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Izoh -->
                 <div v-if="serviceLog.notes" class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="px-6 py-4">

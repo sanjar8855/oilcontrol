@@ -126,9 +126,7 @@ const submitLinkProduct = (modelId) => {
     });
 };
 const unlinkProduct = (modelId, product) => {
-    if (confirm(`"${product.name}" mahsulotini shu turdan uzmoqchimisiz?`)) {
-        router.delete(route('car-makes.models.products.detach', [modelId, product.id]), { preserveScroll: true });
-    }
+    router.delete(route('car-makes.models.products.detach', [modelId, product.id]), { preserveScroll: true });
 };
 const fillOilQuantity = (modelId, oilCapacity) => {
     getLinkProductForm(modelId).quantity = oilCapacity;
@@ -252,6 +250,9 @@ const submitEditProductQty = (modelId, product) => {
 
                         <div class="divide-y divide-gray-100 dark:divide-gray-700">
                             <div v-for="model in make.car_models" :key="model.id" class="p-4">
+                            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            <!-- Chap ustun: tur ma'lumotlari -->
+                            <div>
                                 <!-- Tahrirlash rejimi -->
                                 <template v-if="editingModelId === model.id">
                                     <form @submit.prevent="submitEditModel(model)" class="space-y-2">
@@ -350,86 +351,103 @@ const submitEditProductQty = (modelId, product) => {
                                         </div>
                                     </div>
                                 </template>
+                            </div>
 
-                                <!-- Bog'langan mahsulotlar (workshop mavjud bo'lsa) -->
-                                <div v-if="products.length > 0" class="mt-2 pl-1">
-                                    <div v-if="model.products.length > 0" class="mb-2 flex flex-wrap gap-1.5">
-                                        <span
-                                            v-for="product in model.products"
-                                            :key="product.id"
-                                            class="inline-flex items-center gap-1 rounded-full bg-gray-100 py-0.5 pl-2 pr-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-                                        >
-                                            <template v-if="editingProductQty === `${model.id}-${product.id}`">
-                                                <form @submit.prevent="submitEditProductQty(model.id, product)" class="flex items-center gap-1">
-                                                    {{ product.name }} ×
-                                                    <input
-                                                        v-model="editProductQtyForm.quantity"
-                                                        type="number"
-                                                        step="any"
-                                                        min="0.01"
-                                                        autofocus
-                                                        class="w-14 rounded border-gray-300 py-0 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                                    />
-                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">✓</button>
-                                                    <button type="button" @click="cancelEditProductQty" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">✕</button>
-                                                </form>
-                                            </template>
-                                            <template v-else>
-                                                {{ product.name }} ×
-                                                <button
-                                                    @click="startEditProductQty(model.id, product)"
-                                                    title="Miqdorni tahrirlash"
-                                                    class="font-semibold underline decoration-dotted hover:text-indigo-600 dark:hover:text-indigo-400"
-                                                >
-                                                    {{ product.pivot.quantity }}
-                                                </button>
-                                                <button
-                                                    @click="unlinkProduct(model.id, product)"
-                                                    class="rounded-full p-0.5 text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-400"
-                                                >
-                                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </template>
-                                        </span>
-                                    </div>
-                                    <form @submit.prevent="submitLinkProduct(model.id)" class="flex items-center gap-1.5">
-                                        <div class="w-56">
-                                            <Multiselect
-                                                v-model="getLinkProductForm(model.id).product_id"
-                                                :options="productOptions"
-                                                :searchable="true"
-                                                placeholder="Mahsulot bog'lash..."
-                                                noOptionsText="Mahsulot topilmadi"
-                                                noResultsText="Natija topilmadi"
-                                            />
-                                        </div>
-                                        <input
-                                            v-model="getLinkProductForm(model.id).quantity"
-                                            type="number"
-                                            step="any"
-                                            min="0.01"
-                                            class="w-20 rounded-md border-gray-300 py-1 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            <!-- O'ng ustun: bog'langan mahsulotlar (faqat select2 orqali qo'shiladi) -->
+                            <div
+                                v-if="products.length > 0"
+                                class="border-t border-gray-100 pt-3 dark:border-gray-700 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0"
+                            >
+                                <h5 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                    Bog'langan mahsulotlar
+                                </h5>
+
+                                <form @submit.prevent="submitLinkProduct(model.id)" class="mb-2 flex flex-wrap items-center gap-1.5">
+                                    <div class="w-full min-w-[10rem] flex-1">
+                                        <Multiselect
+                                            v-model="getLinkProductForm(model.id).product_id"
+                                            :options="productOptions"
+                                            :searchable="true"
+                                            placeholder="Mahsulot qo'shish..."
+                                            noOptionsText="Mahsulot topilmadi"
+                                            noResultsText="Natija topilmadi"
                                         />
+                                    </div>
+                                    <input
+                                        v-model="getLinkProductForm(model.id).quantity"
+                                        type="number"
+                                        step="any"
+                                        min="0.01"
+                                        title="Miqdori"
+                                        class="w-20 rounded-md border-gray-300 py-1 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <button
+                                        v-if="model.oil_capacity_liters"
+                                        type="button"
+                                        @click="fillOilQuantity(model.id, model.oil_capacity_liters)"
+                                        title="Moy hajmini miqdor sifatida qo'yish"
+                                        class="shrink-0 rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:hover:bg-amber-800"
+                                    >
+                                        🛢 {{ model.oil_capacity_liters }} L
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        :disabled="getLinkProductForm(model.id).processing || !getLinkProductForm(model.id).product_id"
+                                        class="shrink-0 rounded-md bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                    >
+                                        + Qo'shish
+                                    </button>
+                                </form>
+
+                                <div v-if="model.products.length > 0" class="space-y-1">
+                                    <div
+                                        v-for="product in model.products"
+                                        :key="product.id"
+                                        class="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    >
+                                        <input
+                                            :id="`linked-product-${model.id}-${product.id}`"
+                                            type="checkbox"
+                                            checked
+                                            title="O'chirilsa bog'lanish uziladi"
+                                            @change="unlinkProduct(model.id, product)"
+                                            class="shrink-0 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+                                        />
+                                        <label
+                                            :for="`linked-product-${model.id}-${product.id}`"
+                                            class="min-w-0 flex-1 cursor-pointer truncate text-gray-700 dark:text-gray-300"
+                                        >
+                                            {{ product.name }}
+                                        </label>
+
+                                        <template v-if="editingProductQty === `${model.id}-${product.id}`">
+                                            <form @submit.prevent="submitEditProductQty(model.id, product)" class="flex shrink-0 items-center gap-1">
+                                                <input
+                                                    v-model="editProductQtyForm.quantity"
+                                                    type="number"
+                                                    step="any"
+                                                    min="0.01"
+                                                    autofocus
+                                                    class="w-14 rounded border-gray-300 py-0 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                                />
+                                                <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">✓</button>
+                                                <button type="button" @click="cancelEditProductQty" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">✕</button>
+                                            </form>
+                                        </template>
                                         <button
-                                            v-if="model.oil_capacity_liters"
+                                            v-else
                                             type="button"
-                                            @click="fillOilQuantity(model.id, model.oil_capacity_liters)"
-                                            title="Moy hajmini miqdor sifatida qo'yish"
-                                            class="shrink-0 rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:hover:bg-amber-800"
+                                            @click="startEditProductQty(model.id, product)"
+                                            title="Miqdorni tahrirlash"
+                                            class="shrink-0 text-xs font-semibold text-gray-500 underline decoration-dotted hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
                                         >
-                                            🛢 {{ model.oil_capacity_liters }} L
+                                            ×{{ product.pivot.quantity }}
                                         </button>
-                                        <button
-                                            type="submit"
-                                            :disabled="getLinkProductForm(model.id).processing"
-                                            class="shrink-0 rounded-md bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                                        >
-                                            + Bog'lash
-                                        </button>
-                                    </form>
+                                    </div>
                                 </div>
+                                <p v-else class="text-xs text-gray-400">Hali mahsulot bog'lanmagan</p>
+                            </div>
+                            </div>
                             </div>
 
                             <p v-if="make.car_models.length === 0" class="p-4 text-sm text-gray-500 dark:text-gray-400">

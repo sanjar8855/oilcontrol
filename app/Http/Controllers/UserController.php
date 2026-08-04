@@ -20,11 +20,6 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        // Faqat superadmin va director ko'ra oladi
-        if (!$user->isSuperAdmin() && !$user->isDirector()) {
-            abort(403, 'Sizda bu sahifani ko\'rish uchun ruxsat yo\'q');
-        }
-
         $workshop = $user->currentWorkshop();
 
         // Superadmin tanlagan workshop nomidan, director esa o'z workshop'i
@@ -47,7 +42,7 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->with(['workshop', 'branch'])
+        $users = $query->with(['workshop', 'branch', 'roles'])
             ->latest()
             ->paginate(15);
 
@@ -62,11 +57,6 @@ class UserController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-
-        // Faqat superadmin va director yarata oladi
-        if (!$user->isSuperAdmin() && !$user->isDirector()) {
-            abort(403, 'Sizda foydalanuvchi qo\'shish uchun ruxsat yo\'q');
-        }
 
         $workshop = $user->currentWorkshop();
 
@@ -98,14 +88,8 @@ class UserController extends Controller
     {
         $currentUser = $request->user();
 
-        // Faqat superadmin va director yarata oladi
-        if (!$currentUser->isSuperAdmin() && !$currentUser->isDirector()) {
-            abort(403, 'Sizda foydalanuvchi qo\'shish uchun ruxsat yo\'q');
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'login' => 'required|string|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
@@ -131,12 +115,10 @@ class UserController extends Controller
             }
         }
 
-        User::create([
+        $newUser = User::create([
             'name' => $validated['name'],
-            'login' => $validated['login'],
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
             'salary' => $validated['salary'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
@@ -145,6 +127,7 @@ class UserController extends Controller
             'phone_secondary' => $validated['phone_secondary'] ?? null,
             'address' => $validated['address'] ?? null,
         ]);
+        $newUser->assignRole($validated['role']);
 
         return redirect()->route('users.index')
             ->with('success', 'Foydalanuvchi muvaffaqiyatli qo\'shildi!');
@@ -156,11 +139,6 @@ class UserController extends Controller
     public function show(Request $request, User $user): Response
     {
         $currentUser = $request->user();
-
-        // Access control
-        if (!$currentUser->isSuperAdmin() && !$currentUser->isDirector()) {
-            abort(403);
-        }
 
         // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni ko'rish mumkin
         $workshop = $currentUser->currentWorkshop();
@@ -183,11 +161,6 @@ class UserController extends Controller
     public function edit(Request $request, User $user): Response
     {
         $currentUser = $request->user();
-
-        // Access control
-        if (!$currentUser->isSuperAdmin() && !$currentUser->isDirector()) {
-            abort(403, 'Sizda tahrirlash uchun ruxsat yo\'q');
-        }
 
         // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni tahrirlash mumkin
         $workshop = $currentUser->currentWorkshop();
@@ -229,11 +202,6 @@ class UserController extends Controller
     {
         $currentUser = $request->user();
 
-        // Access control
-        if (!$currentUser->isSuperAdmin() && !$currentUser->isDirector()) {
-            abort(403, 'Sizda tahrirlash uchun ruxsat yo\'q');
-        }
-
         // Faqat o'z (yoki tanlangan) workshop'idagi foydalanuvchilarni tahrirlash mumkin
         $currentWorkshop = $currentUser->currentWorkshop();
         if ($user->branch && $currentWorkshop && $user->branch->workshop_id !== $currentWorkshop->id) {
@@ -247,7 +215,6 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'login' => 'required|string|max:255|unique:users,login,' . $user->id,
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
@@ -275,9 +242,7 @@ class UserController extends Controller
 
         $updateData = [
             'name' => $validated['name'],
-            'login' => $validated['login'],
             'phone' => $validated['phone'],
-            'role' => $validated['role'],
             'branch_id' => $validated['branch_id'],
             'salary' => $validated['salary'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
@@ -293,6 +258,7 @@ class UserController extends Controller
         }
 
         $user->update($updateData);
+        $user->syncRoles([$validated['role']]);
 
         return redirect()->route('users.index')
             ->with('success', 'Foydalanuvchi ma\'lumotlari yangilandi!');
@@ -304,11 +270,6 @@ class UserController extends Controller
     public function destroy(Request $request, User $user): RedirectResponse
     {
         $currentUser = $request->user();
-
-        // Access control
-        if (!$currentUser->isSuperAdmin() && !$currentUser->isDirector()) {
-            abort(403, 'Sizda o\'chirish uchun ruxsat yo\'q');
-        }
 
         // O'zini o'chirish mumkin emas
         if ($user->id === $currentUser->id) {

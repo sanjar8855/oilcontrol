@@ -12,22 +12,11 @@ use Inertia\Response;
 
 class CarMakeController extends Controller
 {
-    private function authorizeAccess(Request $request): void
-    {
-        $user = $request->user();
-
-        if (!$user->isSuperAdmin() && !$user->isDirector()) {
-            abort(403, 'Sizda bu sahifani ko\'rish uchun ruxsat yo\'q');
-        }
-    }
-
     /**
      * Display a listing of car makes with their models.
      */
     public function index(Request $request): Response
     {
-        $this->authorizeAccess($request);
-
         $workshop = $request->user()->currentWorkshop();
 
         $carMakes = CarMake::with(['carModels' => function ($query) use ($workshop) {
@@ -53,8 +42,6 @@ class CarMakeController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:car_makes,name',
         ]);
@@ -70,8 +57,6 @@ class CarMakeController extends Controller
      */
     public function update(Request $request, CarMake $carMake): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:car_makes,name,' . $carMake->id,
         ]);
@@ -87,8 +72,6 @@ class CarMakeController extends Controller
      */
     public function destroy(Request $request, CarMake $carMake): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $carMake->delete();
 
         return redirect()->route('car-makes.index')
@@ -100,8 +83,6 @@ class CarMakeController extends Controller
      */
     public function storeModel(Request $request): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $validated = $request->validate([
             'car_make_id' => 'required|exists:car_makes,id',
             'name' => 'required|string|max:255',
@@ -130,8 +111,6 @@ class CarMakeController extends Controller
      */
     public function updateModel(Request $request, CarModel $carModel): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'oil_capacity_liters' => 'nullable|numeric|min:0|max:99.99',
@@ -160,8 +139,6 @@ class CarMakeController extends Controller
      */
     public function destroyModel(Request $request, CarModel $carModel): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $carModel->delete();
 
         return redirect()->route('car-makes.index')
@@ -173,8 +150,6 @@ class CarMakeController extends Controller
      */
     public function attachProduct(Request $request, CarModel $carModel): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $workshop = $request->user()->currentWorkshop();
 
         $validated = $request->validate([
@@ -191,8 +166,7 @@ class CarMakeController extends Controller
             $product->id => ['quantity' => $validated['quantity']],
         ]);
 
-        return redirect()->route('car-makes.index')
-            ->with('success', 'Mahsulot avtomobil turiga bog\'landi!');
+        return back()->with('success', 'Mahsulot avtomobil turiga bog\'landi!');
     }
 
     /**
@@ -200,8 +174,6 @@ class CarMakeController extends Controller
      */
     public function updateProductQuantity(Request $request, CarModel $carModel, Product $product): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $workshop = $request->user()->currentWorkshop();
         if (!$workshop || $product->workshop_id !== $workshop->id) {
             abort(403);
@@ -213,8 +185,7 @@ class CarMakeController extends Controller
 
         $carModel->products()->updateExistingPivot($product->id, ['quantity' => $validated['quantity']]);
 
-        return redirect()->route('car-makes.index')
-            ->with('success', 'Miqdor yangilandi!');
+        return back()->with('success', 'Miqdor yangilandi!');
     }
 
     /**
@@ -222,8 +193,6 @@ class CarMakeController extends Controller
      */
     public function detachProduct(Request $request, CarModel $carModel, Product $product): RedirectResponse
     {
-        $this->authorizeAccess($request);
-
         $workshop = $request->user()->currentWorkshop();
         if (!$workshop || $product->workshop_id !== $workshop->id) {
             abort(403);
@@ -231,7 +200,6 @@ class CarMakeController extends Controller
 
         $carModel->products()->detach($product->id);
 
-        return redirect()->route('car-makes.index')
-            ->with('success', 'Mahsulot bog\'lanishi o\'chirildi!');
+        return back()->with('success', 'Mahsulot bog\'lanishi o\'chirildi!');
     }
 }

@@ -82,24 +82,24 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Avtomobil turlari (motor moyi hajmi shu yerdan olinadi)
+        // Avtomobil turlari (motor moyi hajmi shu yerdan olinadi), rol/huquqlar
         $this->call(CarModelSeeder::class);
+        $this->call(RolePermissionSeeder::class);
 
         // ============================================
         // 1. "Moy Antifriz" workshopi va egasi
         // ============================================
         $owner = User::firstOrCreate(
-            ['login' => 'muhammadjon'],
+            ['phone' => '+998901112233'],
             [
                 'name' => 'Muhammadjon Aka',
-                'phone' => '+998901112233',
                 'email' => 'muhammadjon@moyantifriz.uz',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'role' => 'director',
                 'branch_id' => null,
             ]
         );
+        $owner->assignRole('director');
 
         $workshop = Workshop::firstOrCreate(
             ['user_id' => $owner->id],
@@ -209,8 +209,8 @@ class ProductSeeder extends Seeder
         echo "   - Workshop: {$workshop->name}\n";
         echo "   - Filtrlar: {$filtersCount} ta\n";
         echo "   - Moylar: {$oilsCount} ta\n\n";
-        echo "🔐 Login ma'lumotlari:\n";
-        echo "     Login: muhammadjon\n";
+        echo "🔐 Login ma'lumotlari (telefon raqam orqali):\n";
+        echo "     Telefon: +998901112233\n";
         echo "     Parol: password\n\n";
     }
 }
