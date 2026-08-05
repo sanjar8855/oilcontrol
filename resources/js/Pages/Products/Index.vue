@@ -15,7 +15,7 @@ const filters = reactive({
     stock_status: props.filters.stock_status || '',
     sort_by: props.filters.sort_by || 'created_at',
     sort_dir: props.filters.sort_dir || 'desc',
-    per_page: props.filters.per_page || 10,
+    per_page: props.filters.per_page || 30,
 });
 
 const reload = () => {
@@ -40,7 +40,7 @@ const resetFilters = () => {
     filters.stock_status = '';
     filters.sort_by = 'created_at';
     filters.sort_dir = 'desc';
-    filters.per_page = 10;
+    filters.per_page = 30;
     reload();
 };
 
@@ -137,6 +137,7 @@ const formatMoney = (amount) => {
                                 >
                                     <option :value="10">10</option>
                                     <option :value="25">25</option>
+                                    <option :value="30">30</option>
                                     <option :value="50">50</option>
                                     <option :value="100">100</option>
                                 </select>
@@ -153,7 +154,7 @@ const formatMoney = (amount) => {
                 </div>
 
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <div class="p-6">
+                    <div class="p-4">
                         <div v-if="products.data.length > 0" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-gray-900">
@@ -162,7 +163,7 @@ const formatMoney = (amount) => {
                                             v-for="col in sortColumns"
                                             :key="col.key"
                                             scope="col"
-                                            class="cursor-pointer select-none px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                            class="cursor-pointer select-none px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                             @click="toggleSort(col.key)"
                                         >
                                             {{ col.label }}
@@ -170,17 +171,17 @@ const formatMoney = (amount) => {
                                                 {{ filters.sort_dir === 'asc' ? '▲' : '▼' }}
                                             </span>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                        <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                             Kategoriya
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                        <th scope="col" class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                             Amallar
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                     <tr v-for="product in products.data" :key="product.id" :class="{'bg-red-50 dark:bg-red-900/20': product.stock_quantity <= product.min_stock_level}">
-                                        <td class="px-6 py-4">
+                                        <td class="px-4 py-1.5">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">
                                                 {{ product.name }}
                                             </div>
@@ -188,7 +189,7 @@ const formatMoney = (amount) => {
                                                 {{ product.sku || '-' }}
                                             </div>
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4">
+                                        <td class="whitespace-nowrap px-4 py-1.5">
                                             <div class="text-sm text-gray-900 dark:text-white">
                                                 {{ product.stock_quantity }} {{ product.unit }}
                                             </div>
@@ -196,19 +197,19 @@ const formatMoney = (amount) => {
                                                 Kam qolgan!
                                             </div>
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
+                                        <td class="whitespace-nowrap px-4 py-1.5 text-sm text-gray-900 dark:text-gray-300">
                                             {{ formatMoney(product.purchase_price) }}
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
+                                        <td class="whitespace-nowrap px-4 py-1.5 text-sm text-gray-900 dark:text-gray-300">
                                             {{ formatMoney(product.selling_price) }}
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4">
+                                        <td class="whitespace-nowrap px-4 py-1.5">
                                             <span v-if="product.category" class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                                 {{ product.category.name }}
                                             </span>
                                             <span v-else class="text-sm text-gray-500 dark:text-gray-400">-</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                                        <td class="whitespace-nowrap px-4 py-1.5 text-right text-sm font-medium">
                                             <Link
                                                 :href="route('products.show', product.id)"
                                                 class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

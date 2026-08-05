@@ -43,7 +43,8 @@
       "Bash(node test10.js)",
       "Bash(node test11.js)",
       "Bash(node test12.js)",
-      "Bash(node test13.js)"
+      "Bash(node test13.js)",
+      "Bash(node test14.js)"
     ]
   }
 }

@@ -62,9 +62,9 @@ class ProductController extends Controller
         $sortDir = $request->string('sort_dir')->toString() === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = in_array((int) $request->input('per_page'), [10, 25, 50, 100], true)
+        $perPage = in_array((int) $request->input('per_page'), [10, 25, 30, 50, 100], true)
             ? (int) $request->input('per_page')
-            : 10;
+            : 30;
 
         $products = $query->paginate($perPage)->withQueryString();
 
