@@ -38,7 +38,7 @@ const productsTotal = () => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8 space-y-4">
 
                 <!-- Asosiy ma'lumotlar -->

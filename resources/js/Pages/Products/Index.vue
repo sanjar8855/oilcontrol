@@ -90,7 +90,7 @@ const formatMoney = (amount) => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                 <!-- Filters -->
                 <div class="mb-4 overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">

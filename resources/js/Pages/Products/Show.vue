@@ -63,7 +63,7 @@ const toggleModel = (model, checked) => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
                 <!-- Chap ustun: mahsulot ma'lumotlari -->

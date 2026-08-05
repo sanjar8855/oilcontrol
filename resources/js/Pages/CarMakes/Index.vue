@@ -162,7 +162,7 @@ const submitEditProductQty = (modelId, product) => {
             </h2>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-4xl px-3 sm:px-6 lg:px-8">
                 <!-- Yangi marka qo'shish -->
                 <div class="mb-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">

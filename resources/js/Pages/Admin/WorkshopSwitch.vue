@@ -22,7 +22,7 @@ const switchTo = (workshop) => {
             </h2>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-4xl px-3 sm:px-6 lg:px-8">
                 <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
                     Superadmin sifatida tizimdagi istalgan workshop nomidan kirib, uning ma'lumotlarini ko'rish va boshqarish mumkin. Pastdan birini tanlang.

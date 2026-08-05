@@ -92,7 +92,7 @@ const formatDateTime = (date) => (date ? new Date(date).toLocaleString('uz-UZ') 
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6">
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
                     <div class="flex items-center gap-3">

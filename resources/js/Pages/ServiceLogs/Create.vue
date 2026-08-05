@@ -22,7 +22,7 @@ const form = useForm({
     odometer_reading: '',
     next_service_km: 5000,
     avg_monthly_km: '',
-    service_type: 'oil_change',
+    service_type: 'Servis',
     cost: 0,
     labor_cost: 0,
     notes: '',
@@ -76,17 +76,13 @@ const cartTotal = computed(() => {
     return cart.value.reduce((sum, item) => sum + item.total_price, 0);
 });
 
-const laborCostValue = computed(() => parseFloat(form.labor_cost) || 0);
-
-const grandTotal = computed(() => cartTotal.value + laborCostValue.value);
-
 const cashAmountValue = computed(() => parseFloat(form.cash_amount) || 0);
 const clickAmountValue = computed(() => parseFloat(form.click_amount) || 0);
 const paidTotal = computed(() => cashAmountValue.value + clickAmountValue.value);
-const remainingAmount = computed(() => Math.max(grandTotal.value - paidTotal.value, 0));
+const remainingAmount = computed(() => Math.max(cartTotal.value - paidTotal.value, 0));
 
 const fillFullCash = () => {
-    form.cash_amount = grandTotal.value;
+    form.cash_amount = cartTotal.value;
     form.click_amount = 0;
 };
 
@@ -213,7 +209,7 @@ const submit = () => {
         total_price: item.total_price,
     }));
 
-    form.cost = grandTotal.value;
+    form.cost = cartTotal.value;
 
     form.post(route('service-logs.store'));
 };
@@ -237,7 +233,7 @@ const submit = () => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-4xl px-3 sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
@@ -258,36 +254,16 @@ const submit = () => {
                                 <InputError class="mt-2" :message="form.errors.vehicle_id" />
                             </div>
 
-                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div>
-                                    <InputLabel for="service_date" value="Servis sanasi *" />
-                                    <TextInput
-                                        id="service_date"
-                                        v-model="form.service_date"
-                                        type="date"
-                                        class="mt-1 block w-full"
-                                        required
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.service_date" />
-                                </div>
-
-                                <div>
-                                    <InputLabel for="service_type" value="Servis turi *" />
-                                    <select
-                                        id="service_type"
-                                        v-model="form.service_type"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                                    >
-                                        <option value="oil_change">Moy almashtirish</option>
-                                        <option value="filter_change">Filtr almashtirish</option>
-                                        <option value="full_service">To'liq servis</option>
-                                        <option value="inspection">Ko'rik</option>
-                                        <option value="repair">Ta'mirlash</option>
-                                        <option value="other">Boshqa</option>
-                                    </select>
-                                    <InputError class="mt-2" :message="form.errors.service_type" />
-                                </div>
+                            <div>
+                                <InputLabel for="service_date" value="Servis sanasi *" />
+                                <TextInput
+                                    id="service_date"
+                                    v-model="form.service_date"
+                                    type="date"
+                                    class="mt-1 block w-full"
+                                    required
+                                />
+                                <InputError class="mt-2" :message="form.errors.service_date" />
                             </div>
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -504,54 +480,21 @@ const submit = () => {
                                                 </td>
                                             </tr>
                                         </tbody>
+                                        <tfoot class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <td colspan="3" class="px-4 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Jami:</td>
+                                                <td class="whitespace-nowrap px-4 py-2 text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                                                    {{ cartTotal.toLocaleString() }} so'm
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Xizmat haqqi va jami -->
-                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
-                                        <InputLabel for="labor_cost" value="Ish haqi" />
-                                        <TextInput
-                                            id="labor_cost"
-                                            v-model="form.labor_cost"
-                                            type="number"
-                                            class="mt-1 block w-full"
-                                            min="0"
-                                            step="any"
-                                            placeholder="50000"
-                                        />
-                                        <InputError class="mt-2" :message="form.errors.labor_cost" />
-                                    </div>
-
-                                    <div class="flex flex-col justify-end">
-                                        <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                                            <div class="flex justify-between text-sm">
-                                                <span class="text-gray-600 dark:text-gray-400">Mahsulotlar:</span>
-                                                <span class="font-medium text-gray-900 dark:text-white">
-                                                    {{ cartTotal.toLocaleString() }} so'm
-                                                </span>
-                                            </div>
-                                            <div class="mt-2 flex justify-between text-sm">
-                                                <span class="text-gray-600 dark:text-gray-400">Ish haqi:</span>
-                                                <span class="font-medium text-gray-900 dark:text-white">
-                                                    {{ laborCostValue.toLocaleString() }} so'm
-                                                </span>
-                                            </div>
-                                            <div class="mt-3 flex justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
-                                                <span class="font-semibold text-gray-900 dark:text-white">Jami:</span>
-                                                <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                                                    {{ grandTotal.toLocaleString() }} so'm
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- To'lov -->
-                            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
+                            <div v-if="cart.length > 0" class="border-t border-gray-200 pt-6 dark:border-gray-700">
                                 <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
                                     To'lov
                                 </h4>

@@ -33,9 +33,10 @@ const serviceForm = useForm({
     notes: '',
     products: [],
     manual_items: [],
-    payment_type: 'cash',
-    payment_status: 'paid',
-    paid_amount: 0,
+    cash_amount: 0,
+    click_amount: 0,
+    is_credit: false,
+    due_date: '',
 });
 
 const productOptions = computed(() => {
@@ -49,6 +50,16 @@ const productOptions = computed(() => {
 const cartTotal = computed(() => {
     return cart.value.reduce((sum, item) => sum + item.total_price, 0);
 });
+
+const cashAmountValue = computed(() => parseFloat(serviceForm.cash_amount) || 0);
+const clickAmountValue = computed(() => parseFloat(serviceForm.click_amount) || 0);
+const paidTotal = computed(() => cashAmountValue.value + clickAmountValue.value);
+const remainingAmount = computed(() => Math.max(cartTotal.value - paidTotal.value, 0));
+
+const fillFullCash = () => {
+    serviceForm.cash_amount = cartTotal.value;
+    serviceForm.click_amount = 0;
+};
 
 const toggleManualMode = () => {
     isManualMode.value = !isManualMode.value;
@@ -174,7 +185,6 @@ const submitService = () => {
         total_price: item.total_price,
     }));
     serviceForm.cost = cartTotal.value;
-    serviceForm.paid_amount = cartTotal.value;
 
     serviceForm.post(route('service-logs.store'), {
         onSuccess: () => {
@@ -220,7 +230,7 @@ const toggleSaleForm = () => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
 
                 <!-- Savdo tugmasi -->
@@ -475,6 +485,87 @@ const toggleSaleForm = () => {
                                             </tr>
                                         </tfoot>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- To'lov -->
+                            <div v-if="cart.length > 0" class="mb-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+                                <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                                    To'lov
+                                </h4>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Naqd</label>
+                                        <input
+                                            v-model="serviceForm.cash_amount"
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            placeholder="0"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Click</label>
+                                        <input
+                                            v-model="serviceForm.click_amount"
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            placeholder="0"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    @click="fillFullCash"
+                                    class="mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                                >
+                                    To'liq summani naqdga qo'yish
+                                </button>
+
+                                <div class="mt-4 flex items-center gap-2">
+                                    <input
+                                        id="is_credit"
+                                        v-model="serviceForm.is_credit"
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    />
+                                    <label for="is_credit" class="text-sm text-gray-900 dark:text-gray-300">
+                                        Qolgan summa nasiyaga qoldirilsin
+                                    </label>
+                                </div>
+
+                                <div v-if="serviceForm.is_credit" class="mt-2 max-w-xs">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nasiya muddati</label>
+                                    <input
+                                        v-model="serviceForm.due_date"
+                                        type="date"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                <div class="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + Click):</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">
+                                            {{ paidTotal.toLocaleString() }} so'm
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 flex justify-between text-sm">
+                                        <span class="text-gray-600 dark:text-gray-400">
+                                            {{ serviceForm.is_credit ? 'Nasiyadagi summa:' : 'Qolgan (to\'lanmagan):' }}
+                                        </span>
+                                        <span
+                                            class="font-semibold"
+                                            :class="remainingAmount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
+                                        >
+                                            {{ remainingAmount.toLocaleString() }} so'm
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

@@ -42,7 +42,7 @@ const formatDate = (date) => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6">
                 <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">

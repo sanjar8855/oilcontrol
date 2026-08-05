@@ -120,7 +120,7 @@ const submitClient = () => {
             </div>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                 <!-- Avto raqam / telefon raqam qidiruv -->
                 <div class="relative mb-6 rounded-lg bg-white shadow dark:bg-gray-800">

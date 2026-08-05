@@ -77,7 +77,7 @@ const formatMoney = (amount) => new Intl.NumberFormat('uz-UZ').format(Math.round
             </h2>
         </template>
 
-        <div class="py-6 sm:py-12">
+        <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6">
                 <!-- Sana filtri -->
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
