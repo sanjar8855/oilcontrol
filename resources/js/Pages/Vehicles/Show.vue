@@ -507,7 +507,7 @@ const toggleSaleForm = () => {
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Click</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Plastik</label>
                                         <input
                                             v-model="serviceForm.click_amount"
                                             type="number"
@@ -550,7 +550,7 @@ const toggleSaleForm = () => {
 
                                 <div class="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + Click):</span>
+                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + plastik):</span>
                                         <span class="font-medium text-gray-900 dark:text-white">
                                             {{ paidTotal.toLocaleString() }} so'm
                                         </span>

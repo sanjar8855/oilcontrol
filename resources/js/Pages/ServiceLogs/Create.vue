@@ -46,6 +46,14 @@ watch(() => form.vehicle_id, async (vehicleId) => {
     if (!vehicleId) {
         return;
     }
+
+    // Oxirgi servisdan probeg va oylik km ni avtomat to'ldirish
+    const vehicle = props.vehicles.find((v) => v.id === vehicleId);
+    if (vehicle) {
+        form.odometer_reading = vehicle.suggested_odometer_reading ?? '';
+        form.avg_monthly_km = vehicle.avg_monthly_km || 1000;
+    }
+
     loadingCarModelInfo.value = true;
     try {
         const response = await axios.get(route('vehicles.car-model-info', vehicleId));
@@ -514,7 +522,7 @@ const submit = () => {
                                     </div>
 
                                     <div>
-                                        <InputLabel for="click_amount" value="Click" />
+                                        <InputLabel for="click_amount" value="Plastik" />
                                         <TextInput
                                             id="click_amount"
                                             v-model="form.click_amount"
@@ -561,7 +569,7 @@ const submit = () => {
 
                                 <div class="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + Click):</span>
+                                        <span class="text-gray-600 dark:text-gray-400">To'langan (naqd + plastik):</span>
                                         <span class="font-medium text-gray-900 dark:text-white">
                                             {{ paidTotal.toLocaleString() }} so'm
                                         </span>

@@ -60,7 +60,7 @@ class ServiceLogController extends Controller
         });
 
         $vehicles = $vehiclesQuery
-            ->with('client')
+            ->with(['client', 'latestService'])
             ->get()
             ->map(function ($vehicle) {
                 return [
@@ -68,6 +68,10 @@ class ServiceLogController extends Controller
                     'label' => $vehicle->client->name . ' - ' . $vehicle->make . ' ' . $vehicle->model,
                     'make' => $vehicle->make,
                     'model' => $vehicle->model,
+                    'avg_monthly_km' => $vehicle->avg_monthly_km,
+                    'suggested_odometer_reading' => $vehicle->latestService
+                        ? $vehicle->latestService->odometer_reading + $vehicle->latestService->next_service_km
+                        : null,
                 ];
             });
 

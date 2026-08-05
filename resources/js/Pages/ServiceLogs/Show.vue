@@ -189,7 +189,7 @@ const productsTotal = () => {
                                         'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200': payment.payment_method !== 'click',
                                     }"
                                 >
-                                    {{ payment.payment_method === 'click' ? 'Click' : payment.payment_method === 'cash' ? 'Naqd' : payment.payment_method }}
+                                    {{ payment.payment_method === 'click' ? 'Plastik' : payment.payment_method === 'cash' ? 'Naqd' : payment.payment_method }}
                                 </span>
                                 <span class="text-gray-500 dark:text-gray-400">
                                     {{ new Date(payment.payment_date).toLocaleDateString('uz-UZ') }}

@@ -171,7 +171,7 @@ const formatMoney = (amount) => new Intl.NumberFormat('uz-UZ').format(Math.round
                             <p class="mt-1 text-xl font-bold text-gray-900 dark:text-white">{{ formatMoney(paymentsByMethod.cash) }}</p>
                         </div>
                         <div class="p-5">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">📲 Click</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">💳 Plastik</p>
                             <p class="mt-1 text-xl font-bold text-gray-900 dark:text-white">{{ formatMoney(paymentsByMethod.click) }}</p>
                         </div>
                         <div class="p-5">
