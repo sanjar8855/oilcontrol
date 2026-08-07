@@ -125,29 +125,41 @@ Local serverda test qilish uchun ngrok ishlatamiz:
 
 2. `/start` bosing
 
-3. Bot javob berishi kerak:
+3. Bot javob berishi kerak — telefon raqamingizni so'raydi va "📱 Telefon raqamni yuborish" tugmasini chiqaradi:
    ```
    🚗 OilControl Bot'ga xush kelibsiz!
 
    Assalomu alaykum, [Ismingiz]!
 
-   📱 Sizning Telegram ID:
-   1234567890
+   Servis eslatmalarini olish uchun ustaxonaga bergan telefon
+   raqamingizni yuboring.
 
-   📋 Bu ID ni nima qilish kerak?
-   Bu ID raqamini avtomobil servisiga bering...
+   📱 Pastdagi tugmani bosing yoki raqamni qo'lda yozing
+   (masalan: +998901234567).
    ```
 
-4. Boshqa buyruqlar:
+4. Tugmani bosing (yoki raqamni qo'lda yozing). Agar raqam tizimda mavjud mijozning raqami bilan mos kelsa, bot avtomatik bog'laydi:
+   ```
+   ✅ Muvaffaqiyatli bog'landi, [Ismingiz]!
+
+   • Abbos Karimov (OilControl Servis)
+
+   🔔 Endi servis eslatmalarini shu yerda olasiz.
+   ```
+
+   Bitta Telegram akkaunt bir nechta mijoz yozuviga (masalan, boshqa telefon raqamiga yoki boshqa ustaxonadagi hisobga) ham bog'lanishi mumkin — buning uchun keyingi raqamni ham botga yuborish kifoya.
+
+5. Boshqa buyruqlar:
    - `/help` - Yordam
-   - `/myid` - Faqat Telegram ID ni ko'rsatadi
+   - `/myid` - Telegram ID va shu akkauntga bog'langan mijozlar ro'yxatini ko'rsatadi
 
 ### B. Mijoz Qo'shish va Test
 
 1. **Loyihaga kiring** va yangi mijoz qo'shing:
    - Ism: Abbos Karimov
-   - Telefon: +998901234567
-   - **Telegram ID: 1234567890** (botdan olgan ID)
+   - Telefon: +998901234567 (mijoz botga xuddi shu raqamni yuboradi)
+
+   **Eslatma:** Telegram ID ni qo'lda kiritish shart emas — mijoz botga o'z telefon raqamini yuborganda tizim uni avtomatik topib bog'laydi.
 
 2. **Avtomobil qo'shing**:
    - Marka: Chevrolet
@@ -161,12 +173,14 @@ Local serverda test qilish uchun ngrok ishlatamiz:
    - O'rtacha oylik km: 1,000 km
    - Servis turi: Yog' almashtirish
 
-4. **Eslatma yuborishni test qiling**:
+4. **Mijozga botda `/start` bosdiring va telefon raqamini yubordiring** (yuqoridagi 4-qadamga qarang).
+
+5. **Eslatma yuborishni test qiling**:
    ```bash
    php artisan reminders:send
    ```
 
-5. Agar mijozning Telegram ID to'g'ri bo'lsa, bot eslatma yuboradi!
+6. Agar mijoz raqami orqali botga bog'langan bo'lsa, bot eslatma yuboradi!
 
 ---
 
@@ -246,9 +260,9 @@ Quyidagini qo'shing:
 2. Botingizni tanlang
 3. Quyidagilarni yuboring:
    ```
-   start - Botni boshlash va Telegram ID olish
+   start - Botni boshlash va telefon raqamni bog'lash
    help - Yordam
-   myid - Telegram ID ni ko'rish
+   myid - Bog'langan mijozlarni va Telegram ID ni ko'rish
    ```
 
 ---
@@ -319,8 +333,8 @@ php artisan reminders:send
 ```
 
 **Sabablari:**
-- Mijozda Telegram ID yo'q
-- Telegram ID noto'g'ri
+- Mijoz hali botga telefon raqamini yubormagan (Telegram ID yo'q)
+- Mijozning tizimdagi telefon raqami botga yuborgan raqamdan farq qiladi
 - Bot token noto'g'ri
 - Schedulerni ishlamayapti
 
@@ -344,13 +358,13 @@ crontab -l
 systemctl status cron
 ```
 
-### 4. Telegram ID topilmayapti
+### 4. Mijoz botga bog'lanmayapti
 
 **Hal qilish:**
-- Botga `/start` yuboring
-- Bot sizga Telegram ID ni ko'rsatadi
-- `<code>1234567890</code>` ko'rinishida
-- Bu ID ni mijozga qo'shing
+- Mijoz botga `/start` yuborsin va telefon raqamini jo'natsin (tugma orqali yoki qo'lda yozib)
+- Bot yubotgan raqamni tizimdagi mijozlar bilan oxirgi 9 raqami bo'yicha solishtiradi (prefiks: `+998`, `998`, `0` — farqi yo'q)
+- Agar "raqam topilmadi" degan javob kelsa, mijozning tizimdagi telefon raqami (`Mijozlar` bo'limida) botga yuborilgan raqam bilan mos emas — to'g'irlang
+- Muvaffaqiyatli bog'langanda mijoz `/myid` orqali o'ziga bog'langan barcha mijoz yozuvlarini ko'rishi mumkin
 
 ---
 
@@ -425,8 +439,8 @@ Muammo yuzaga kelsa:
 
 Endi sizning OilControl loyihangiz to'liq ishlaydi:
 
-1. ✅ Mijozlar o'z Telegram ID larini botdan olishadi
-2. ✅ Siz mijozlarga Telegram ID ni qo'shasiz
+1. ✅ Mijozlar botga `/start` bosib, telefon raqamlarini yuborishadi
+2. ✅ Tizim raqamni avtomatik topib, Telegram akkauntni mijoz yozuviga bog'laydi (qo'lda hech narsa kiritish shart emas)
 3. ✅ Servis qo'shilganda avtomatik 3 ta eslatma yaratiladi
 4. ✅ Har kuni soat 9:00 da Scheduler eslatmalarni yuboradi
 5. ✅ Mijozlar Telegram orqali eslatma olishadi

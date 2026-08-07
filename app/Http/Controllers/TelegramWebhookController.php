@@ -32,14 +32,20 @@ class TelegramWebhookController extends Controller
             $chatId = $message['chat']['id'];
             $text = $message['text'] ?? '';
             $firstName = $message['from']['first_name'] ?? 'Foydalanuvchi';
+            $fromUserId = $message['from']['id'] ?? null;
 
-            // Buyruqlarni tekshirish
-            if ($text === '/start') {
+            // Foydalanuvchi "Telefon raqamni yuborish" tugmasi orqali kontakt yuborsa
+            if (isset($message['contact'])) {
+                $this->telegramBot->handleContactShared($chatId, $message['contact'], $fromUserId, $firstName);
+            } elseif ($text === '/start') {
                 $this->telegramBot->handleStartCommand($chatId, $firstName);
             } elseif ($text === '/help') {
                 $this->telegramBot->handleHelpCommand($chatId);
             } elseif ($text === '/myid') {
                 $this->telegramBot->handleMyIdCommand($chatId);
+            } elseif ($text !== '' && $this->telegramBot->looksLikePhoneNumber($text)) {
+                // Foydalanuvchi telefon raqamni qo'lda matn sifatida yozgan bo'lsa
+                $this->telegramBot->handlePhoneNumber($chatId, $text, $firstName);
             } else {
                 // Har qanday boshqa xabar uchun
                 $this->telegramBot->handleDefaultMessage($chatId, $firstName);
