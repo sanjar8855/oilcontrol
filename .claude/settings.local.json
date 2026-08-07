@@ -53,7 +53,20 @@
       "Bash(node test20.js)",
       "Bash(node test_workshops.js)",
       "Bash(node test_workshops_debug.js)",
-      "Bash(taskkill *)"
+      "Bash(taskkill *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000)",
+      "Bash(tasklist)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost/oilcontrol/public/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost/)",
+      "Read(//c/Windows/System32/drivers/etc/**)",
+      "PowerShell(Get-Process *)",
+      "Read(//c/xamppp//**)",
+      "Read(//c/xamppp/mysql/bin/**)",
+      "Read(//c/xamppp/apache/bin/**)",
+      "Bash(curl -s -o /dev/null -w \"localhost/oilcontrol/public: %{http_code}\\\\n\" http://localhost/oilcontrol/public/)",
+      "Bash(curl -s -o /dev/null -w \"localhost: %{http_code}\\\\n\" http://localhost/)",
+      "PowerShell(winget install *)",
+      "PowerShell(winget search *)"
     ]
   }
 }
