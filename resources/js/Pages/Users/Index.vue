@@ -182,7 +182,7 @@ const formatCurrency = (amount) => {
                                                 :href="route('users.edit', user.id)"
                                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
                                             >
-                                                Tahrirlash
+                                                O'zgartirish
                                             </Link>
                                             <button
                                                 @click="deleteUser(user)"

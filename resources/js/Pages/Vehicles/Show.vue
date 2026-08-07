@@ -218,7 +218,7 @@ const toggleSaleForm = () => {
                         :href="route('vehicles.edit', vehicle.id)"
                         class="rounded-md bg-yellow-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-500"
                     >
-                        Tahrirlash
+                        O'zgartirish
                     </Link>
                     <Link
                         :href="route('clients.show', vehicle.client.id)"

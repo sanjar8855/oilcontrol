@@ -86,7 +86,7 @@ const deleteCategory = (category) => {
                                                 :href="route('categories.edit', category.id)"
                                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
-                                                Tahrirlash
+                                                O'zgartirish
                                             </Link>
                                             <button
                                                 @click="deleteCategory(category)"

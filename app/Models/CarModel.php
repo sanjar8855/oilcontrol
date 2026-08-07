@@ -42,6 +42,7 @@ class CarModel extends Model
     {
         return CarMake::query()
             ->with(['carModels' => fn ($query) => $query->orderBy('name')])
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
             ->map(fn (CarMake $make) => [

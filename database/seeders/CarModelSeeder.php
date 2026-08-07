@@ -86,8 +86,13 @@ class CarModelSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ro'yxatdagi tartib O'zbekiston bozoridagi ommabopligiga mos
+        // (Chevrolet eng ko'p sotiladigan marka, keyin BYD, Kia va h.k.)
+        $order = 0;
+
         foreach (self::CAR_MODELS_BY_MAKE as $makeName => $models) {
-            $make = CarMake::firstOrCreate(['name' => $makeName]);
+            $order += 10;
+            $make = CarMake::firstOrCreate(['name' => $makeName], ['sort_order' => $order]);
 
             foreach ($models as $modelName => [$oil, $antifreezeMin, $antifreezeMax]) {
                 $make->carModels()->updateOrCreate(

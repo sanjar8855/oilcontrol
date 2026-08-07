@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\CarMake;
-use App\Models\CarModel;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Services\StockMovementService;
@@ -246,12 +245,9 @@ class ProductController extends Controller
         $workshop = $user->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
 
-        $product->load('carModels');
-
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
-            'carModelGroups' => CarModel::optionGroupsWithId(),
         ]);
     }
 
@@ -291,24 +287,9 @@ class ProductController extends Controller
             // Eski maydonlar
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
-            // Bog'langan avtomobil turlari
-            'car_models' => 'nullable|array',
-            'car_models.*' => 'integer|exists:car_models,id',
         ]);
 
-        $carModelIds = $validated['car_models'] ?? [];
-        unset($validated['car_models']);
-
         $product->update($validated);
-
-        // Avvaldan bog'langan turlar uchun miqdorni saqlab qolamiz (masalan, "Avto
-        // markalari" sahifasida moy hajmiga moslab qo'yilgan bo'lishi mumkin),
-        // yangi bog'langan turlarga esa boshlang'ich sifatida 1 qo'yiladi.
-        $existingQuantities = $product->carModels()->pluck('car_model_products.quantity', 'car_models.id');
-
-        $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
-            fn ($carModelId) => [$carModelId => ['quantity' => $existingQuantities[$carModelId] ?? 1]]
-        ));
 
         return redirect()->route('products.show', $product)
             ->with('success', 'Mahsulot ma\'lumotlari yangilandi!');

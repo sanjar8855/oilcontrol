@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Modal from '@/Components/Modal.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 
@@ -15,33 +16,75 @@ const productOptions = props.products.map((p) => ({
     label: `${p.name} (${p.unit})`,
 }));
 
-// Yangi marka qo'shish
-const makeForm = useForm({ name: '' });
-const submitNewMake = () => {
-    makeForm.post(route('car-makes.store'), {
-        preserveScroll: true,
-        onSuccess: () => makeForm.reset(),
-    });
+// Marka yoki moshina nomi bo'yicha qidiruv (1s debounce bilan)
+const searchQuery = ref('');
+const debouncedSearch = ref('');
+let searchTimer = null;
+watch(searchQuery, (value) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        debouncedSearch.value = value;
+    }, 1000);
+});
+
+const filteredMakes = computed(() => {
+    const term = debouncedSearch.value.trim().toLowerCase();
+    if (!term) {
+        return props.carMakes;
+    }
+
+    return props.carMakes
+        .map((make) => {
+            if (make.name.toLowerCase().includes(term)) {
+                return make;
+            }
+            const matchingModels = make.car_models.filter((model) => model.name.toLowerCase().includes(term));
+            return matchingModels.length > 0 ? { ...make, car_models: matchingModels } : null;
+        })
+        .filter(Boolean);
+});
+
+// Marka qo'shish/tahrirlash oynasi (modal)
+const showMakeModal = ref(false);
+const makeModalMode = ref('create'); // 'create' | 'edit'
+const editingMake = ref(null);
+const makeForm = useForm({ name: '', sort_order: 100 });
+
+const openCreateMakeModal = () => {
+    makeModalMode.value = 'create';
+    editingMake.value = null;
+    makeForm.reset();
+    makeForm.clearErrors();
+    makeForm.sort_order = 100;
+    showMakeModal.value = true;
+};
+const openEditMakeModal = (make) => {
+    makeModalMode.value = 'edit';
+    editingMake.value = make;
+    makeForm.clearErrors();
+    makeForm.name = make.name;
+    makeForm.sort_order = make.sort_order;
+    showMakeModal.value = true;
+};
+const closeMakeModal = () => {
+    showMakeModal.value = false;
+    makeForm.reset();
+    makeForm.clearErrors();
+};
+const submitMakeModal = () => {
+    if (makeModalMode.value === 'create') {
+        makeForm.post(route('car-makes.store'), {
+            preserveScroll: true,
+            onSuccess: closeMakeModal,
+        });
+    } else {
+        makeForm.put(route('car-makes.update', editingMake.value.id), {
+            preserveScroll: true,
+            onSuccess: closeMakeModal,
+        });
+    }
 };
 
-// Marka nomini tahrirlash
-const editingMakeId = ref(null);
-const editMakeForm = useForm({ name: '' });
-const startEditMake = (make) => {
-    editingMakeId.value = make.id;
-    editMakeForm.name = make.name;
-};
-const cancelEditMake = () => {
-    editingMakeId.value = null;
-};
-const submitEditMake = (make) => {
-    editMakeForm.put(route('car-makes.update', make.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            editingMakeId.value = null;
-        },
-    });
-};
 const deleteMake = (make) => {
     if (confirm(`Haqiqatan ham "${make.name}" markasini va uning barcha turlarini o'chirmoqchimisiz?`)) {
         router.delete(route('car-makes.destroy', make.id), { preserveScroll: true });
@@ -157,95 +200,65 @@ const submitEditProductQty = (modelId, product) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                Avtomobil markalari va turlari
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    Avtomobil markalari va turlari
+                </h2>
+                <button
+                    type="button"
+                    @click="openCreateMakeModal"
+                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                >
+                    + Yangi moshina markasi qo'shish
+                </button>
+            </div>
         </template>
 
         <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-4xl px-3 sm:px-6 lg:px-8">
-                <!-- Yangi marka qo'shish -->
-                <div class="mb-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-                    <div class="p-4 sm:p-6">
-                        <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-                            Yangi marka qo'shish
-                        </h3>
-                        <form @submit.prevent="submitNewMake" class="flex gap-2">
-                            <input
-                                v-model="makeForm.name"
-                                type="text"
-                                required
-                                placeholder="Masalan: Chevrolet"
-                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            />
-                            <button
-                                type="submit"
-                                :disabled="makeForm.processing"
-                                class="shrink-0 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
-                            >
-                                Qo'shish
-                            </button>
-                        </form>
-                        <div v-if="makeForm.errors.name" class="mt-1 text-sm text-red-600">
-                            {{ makeForm.errors.name }}
-                        </div>
+                <!-- Qidiruv -->
+                <div class="mb-6 rounded-lg bg-white shadow dark:bg-gray-800">
+                    <div class="p-4">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Marka yoki moshina turi nomi bo'yicha qidirish..."
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
                     </div>
                 </div>
 
                 <!-- Markalar ro'yxati -->
                 <div class="space-y-4">
                     <div
-                        v-for="make in carMakes"
+                        v-for="make in filteredMakes"
                         :key="make.id"
                         class="rounded-lg bg-white shadow dark:bg-gray-800"
                     >
                         <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-                            <template v-if="editingMakeId === make.id">
-                                <form @submit.prevent="submitEditMake(make)" class="flex flex-1 gap-2">
-                                    <input
-                                        v-model="editMakeForm.name"
-                                        type="text"
-                                        required
-                                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    />
-                                    <button
-                                        type="submit"
-                                        :disabled="editMakeForm.processing"
-                                        class="shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-                                    >
-                                        Saqlash
-                                    </button>
-                                    <button
-                                        type="button"
-                                        @click="cancelEditMake"
-                                        class="shrink-0 rounded-md bg-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
-                                    >
-                                        Bekor qilish
-                                    </button>
-                                </form>
-                            </template>
-                            <template v-else>
-                                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-                                    {{ make.name }}
-                                    <span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                                        ({{ make.car_models.length }} ta tur)
-                                    </span>
-                                </h3>
-                                <div class="flex gap-3 text-sm font-medium">
-                                    <button
-                                        @click="startEditMake(make)"
-                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                    >
-                                        Tahrirlash
-                                    </button>
-                                    <button
-                                        @click="deleteMake(make)"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        O'chirish
-                                    </button>
-                                </div>
-                            </template>
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                                <span class="mr-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                    #{{ make.sort_order }}
+                                </span>
+                                {{ make.name }}
+                                <span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                    ({{ make.car_models.length }} ta tur)
+                                </span>
+                            </h3>
+                            <div class="flex gap-3 text-sm font-medium">
+                                <button
+                                    @click="openEditMakeModal(make)"
+                                    class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                >
+                                    O'zgartirish
+                                </button>
+                                <button
+                                    @click="deleteMake(make)"
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                    O'chirish
+                                </button>
+                            </div>
                         </div>
 
                         <div class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -340,7 +353,7 @@ const submitEditProductQty = (modelId, product) => {
                                                 @click="startEditModel(model)"
                                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
-                                                Tahrirlash
+                                                O'zgartirish
                                             </button>
                                             <button
                                                 @click="deleteModel(model)"
@@ -506,10 +519,76 @@ const submitEditProductQty = (modelId, product) => {
                     </div>
 
                     <div v-if="carMakes.length === 0" class="rounded-lg bg-white p-6 text-center shadow dark:bg-gray-800">
-                        <p class="text-gray-500 dark:text-gray-400">Hali markalar yo'q. Yuqoridan birinchi markani qo'shing.</p>
+                        <p class="text-gray-500 dark:text-gray-400">Hali markalar yo'q. Yuqoridagi tugma orqali birinchi markani qo'shing.</p>
+                    </div>
+                    <div v-else-if="filteredMakes.length === 0" class="rounded-lg bg-white p-6 text-center shadow dark:bg-gray-800">
+                        <p class="text-gray-500 dark:text-gray-400">"{{ searchQuery }}" bo'yicha hech narsa topilmadi.</p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Marka qo'shish/tahrirlash oynasi -->
+        <Modal :show="showMakeModal" @close="closeMakeModal" max-width="sm">
+            <div class="p-6">
+                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ makeModalMode === 'create' ? 'Yangi moshina markasi qo\'shish' : 'Markani o\'zgartirish' }}
+                </h2>
+                <form @submit.prevent="submitMakeModal" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Marka nomi
+                        </label>
+                        <input
+                            v-model="makeForm.name"
+                            type="text"
+                            required
+                            autofocus
+                            placeholder="Masalan: Chevrolet"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+                        <div v-if="makeForm.errors.name" class="mt-1 text-sm text-red-600">
+                            {{ makeForm.errors.name }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Tartib raqami
+                        </label>
+                        <input
+                            v-model="makeForm.sort_order"
+                            type="number"
+                            min="0"
+                            max="9999"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Kichikroq raqam — ro'yxatda yuqoriroqda chiqadi. Ommabop markalarga kichikroq raqam bering.
+                        </p>
+                        <div v-if="makeForm.errors.sort_order" class="mt-1 text-sm text-red-600">
+                            {{ makeForm.errors.sort_order }}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            @click="closeMakeModal"
+                            class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
+                        >
+                            Bekor qilish
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="makeForm.processing"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                            Saqlash
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>

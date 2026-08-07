@@ -159,7 +159,7 @@ const formatDate = (date) => {
                                                 :href="route('expenses.edit', expense.id)"
                                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
-                                                Tahrirlash
+                                                O'zgartirish
                                             </Link>
                                             <button
                                                 @click="deleteExpense(expense)"

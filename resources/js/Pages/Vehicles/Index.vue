@@ -98,7 +98,7 @@ const deleteVehicle = (vehicle) => {
                                                 :href="route('vehicles.edit', vehicle.id)"
                                                 class="mr-3 text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
                                             >
-                                                Tahrirlash
+                                                O'zgartirish
                                             </Link>
                                             <button
                                                 @click="deleteVehicle(vehicle)"

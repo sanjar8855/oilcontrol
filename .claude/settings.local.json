@@ -45,7 +45,10 @@
       "Bash(node test12.js)",
       "Bash(node test13.js)",
       "Bash(node test14.js)",
-      "Bash(node test15.js)"
+      "Bash(node test15.js)",
+      "Bash(node test16.js)",
+      "Bash(node test17.js)",
+      "Bash(node test18.js)"
     ]
   }
 }

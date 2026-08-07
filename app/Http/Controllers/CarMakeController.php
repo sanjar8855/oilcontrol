@@ -24,6 +24,7 @@ class CarMakeController extends Controller
                 $query->when($workshop, fn ($q) => $q->where('products.workshop_id', $workshop->id));
             }]);
         }])
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
 
@@ -44,6 +45,7 @@ class CarMakeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:car_makes,name',
+            'sort_order' => 'nullable|integer|min:0|max:9999',
         ]);
 
         CarMake::create($validated);
@@ -59,6 +61,7 @@ class CarMakeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:car_makes,name,' . $carMake->id,
+            'sort_order' => 'nullable|integer|min:0|max:9999',
         ]);
 
         $carMake->update($validated);

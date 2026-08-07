@@ -9,6 +9,7 @@ class CarMake extends Model
 {
     protected $fillable = [
         'name',
+        'sort_order',
     ];
 
     public function carModels(): HasMany
@@ -23,6 +24,7 @@ class CarMake extends Model
     {
         return static::query()
             ->with(['carModels' => fn ($query) => $query->orderBy('name')])
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
             ->map(fn (CarMake $make) => [
