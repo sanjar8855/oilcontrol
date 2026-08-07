@@ -70,7 +70,11 @@
       "Bash(curl -s -4 ifconfig.me)",
       "Bash(find / -maxdepth 6 -iname \"*oilcontrol*\" -not -path \"/www/wwwroot/*\")",
       "Bash(crontab -l)",
-      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" -X POST https://oilcontrol.uz/telegram/webhook -H \"Content-Type: application/json\" -d '{\"update_id\":1}')"
+      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" -X POST https://oilcontrol.uz/telegram/webhook -H \"Content-Type: application/json\" -d '{\"update_id\":1}')",
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(curl *)"
     ]
   }
 }
