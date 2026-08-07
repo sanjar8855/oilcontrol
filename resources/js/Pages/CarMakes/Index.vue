@@ -434,17 +434,17 @@ const submitEditProductQty = (modelId, product) => {
                                         </label>
 
                                         <template v-if="editingProductQty === `${model.id}-${product.id}`">
-                                            <form @submit.prevent="submitEditProductQty(model.id, product)" class="flex shrink-0 items-center gap-1">
+                                            <form @submit.prevent="submitEditProductQty(model.id, product)" class="flex shrink-0 items-center gap-1.5">
                                                 <input
                                                     v-model="editProductQtyForm.quantity"
                                                     type="number"
                                                     step="any"
                                                     min="0.01"
                                                     autofocus
-                                                    class="w-14 rounded border-gray-300 py-0 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                                    class="w-24 rounded border-gray-300 py-1 text-base dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                                 />
-                                                <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">✓</button>
-                                                <button type="button" @click="cancelEditProductQty" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">✕</button>
+                                                <button type="submit" class="text-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">✓</button>
+                                                <button type="button" @click="cancelEditProductQty" class="text-lg text-gray-500 hover:text-gray-700 dark:text-gray-400">✕</button>
                                             </form>
                                         </template>
                                         <button
@@ -452,7 +452,7 @@ const submitEditProductQty = (modelId, product) => {
                                             type="button"
                                             @click="startEditProductQty(model.id, product)"
                                             title="Miqdorni tahrirlash"
-                                            class="shrink-0 text-xs font-semibold text-gray-500 underline decoration-dotted hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+                                            class="shrink-0 text-base font-semibold text-gray-500 underline decoration-dotted hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
                                         >
                                             ×{{ product.pivot.quantity }}
                                         </button>
