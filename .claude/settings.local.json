@@ -53,7 +53,11 @@
       "Bash(node test20.js)",
       "Bash(node test_workshops.js)",
       "Bash(node test_workshops_debug.js)",
-      "Bash(taskkill *)"
+      "Bash(taskkill *)",
+      "Bash(curl -s -4 ifconfig.me)",
+      "Bash(find / -maxdepth 6 -iname \"*oilcontrol*\" -not -path \"/www/wwwroot/*\")",
+      "Bash(crontab -l)",
+      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" -X POST https://oilcontrol.uz/telegram/webhook -H \"Content-Type: application/json\" -d '{\"update_id\":1}')"
     ]
   }
 }
