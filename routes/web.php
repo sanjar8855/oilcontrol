@@ -81,7 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('service-logs', ServiceLogController::class)->middleware('can:service-logs.manage');
 
     // Kategoriyalar (Categories) CRUD - faqat superadmin/director/menejer
-    Route::resource('categories', CategoryController::class)->except(['show'])->middleware('can:categories.manage');
+    Route::resource('categories', CategoryController::class)->middleware('can:categories.manage');
 
     // Mahsulotlar (Products) CRUD - faqat superadmin/director/menejer
     Route::middleware('can:products.manage')->group(function () {

@@ -69,9 +69,12 @@ const deleteCategory = (category) => {
                                             </div>
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4">
-                                            <span class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                            <Link
+                                                :href="route('categories.show', category.id)"
+                                                class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 hover:bg-blue-200 dark:bg-blue-800 dark:text-blue-100 dark:hover:bg-blue-700"
+                                            >
                                                 {{ category.products_count || 0 }} ta
-                                            </span>
+                                            </Link>
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4">
                                             <span v-if="category.is_active" class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800 dark:bg-green-800 dark:text-green-100">
@@ -83,8 +86,14 @@ const deleteCategory = (category) => {
                                         </td>
                                         <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                             <Link
+                                                :href="route('categories.show', category.id)"
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                            >
+                                                Ko'rish
+                                            </Link>
+                                            <Link
                                                 :href="route('categories.edit', category.id)"
-                                                class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                class="ml-4 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
                                                 O'zgartirish
                                             </Link>

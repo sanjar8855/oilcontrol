@@ -11,6 +11,13 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    /**
+     * Jadval sarlavhasi orqali saralash mumkin bo'lgan ustunlar (SQL injection'dan himoya).
+     */
+    private const SORTABLE_COLUMNS = [
+        'name', 'stock_quantity', 'purchase_price', 'selling_price', 'created_at',
+    ];
+
     public function index(Request $request): Response
     {
         $workshop = $request->user()->currentWorkshop();
@@ -45,6 +52,61 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')
             ->with('success', 'Kategoriya muvaffaqiyatli qo\'shildi!');
+    }
+
+    /**
+     * Kategoriyaning batafsil sahifasi — shu kategoriyadagi mahsulotlar
+     * ro'yxati (filtr, saralash va sahifalash imkoniyatlari bilan).
+     */
+    public function show(Request $request, Category $category): Response
+    {
+        $user = $request->user();
+
+        if ($category->workshop_id !== $user->currentWorkshop()->id) {
+            abort(403);
+        }
+
+        $query = $category->products();
+
+        // Branch filtering based on user role
+        if (!$user->canAccessAllBranches()) {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        if ($request->filled('stock_status')) {
+            match ($request->string('stock_status')->toString()) {
+                'out' => $query->where('stock_quantity', '<=', 0),
+                'low' => $query->whereColumn('stock_quantity', '>', 0)->whereColumn('stock_quantity', '<=', 'min_stock_level'),
+                'in_stock' => $query->whereColumn('stock_quantity', '>', 'min_stock_level'),
+                default => null,
+            };
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $sortBy = in_array($request->string('sort_by')->toString(), self::SORTABLE_COLUMNS, true)
+            ? $request->string('sort_by')->toString()
+            : 'created_at';
+        $sortDir = $request->string('sort_dir')->toString() === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage = in_array((int) $request->input('per_page'), [10, 25, 30, 50, 100], true)
+            ? (int) $request->input('per_page')
+            : 30;
+
+        $products = $query->paginate($perPage)->withQueryString();
+
+        return Inertia::render('Categories/Show', [
+            'category' => $category,
+            'products' => $products,
+            'filters' => $request->only(['stock_status', 'search', 'sort_by', 'sort_dir', 'per_page']),
+        ]);
     }
 
     public function edit(Request $request, Category $category): Response
