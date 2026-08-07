@@ -5,12 +5,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import Multiselect from '@vueform/multiselect';
-import '@vueform/multiselect/themes/default.css';
 
 const props = defineProps({
     categories: Array,
-    carModelGroups: Array,
 });
 
 const form = useForm({
@@ -26,7 +23,6 @@ const form = useForm({
     barcode: '',
     is_active: true,
     track_inventory: true,
-    car_models: [],
 });
 
 const submit = () => {
@@ -223,25 +219,6 @@ const submit = () => {
                                         Omborda kuzatilsin
                                     </label>
                                 </div>
-                            </div>
-
-                            <!-- Bog'langan avtomobil turlari -->
-                            <div>
-                                <InputLabel value="Qaysi avtomobil turlariga mos (ixtiyoriy)" />
-                                <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                                    Tanlangan turlarga bu mahsulot savdo ekranida tezkor tavsiya sifatida chiqadi.
-                                </p>
-                                <Multiselect
-                                    v-model="form.car_models"
-                                    mode="multiple"
-                                    :options="carModelGroups"
-                                    :groups="true"
-                                    :searchable="true"
-                                    placeholder="Avtomobil turlarini tanlang"
-                                    noOptionsText="Topilmadi"
-                                    noResultsText="Natija topilmadi"
-                                />
-                                <InputError :message="form.errors.car_models" class="mt-2" />
                             </div>
 
                             <!-- Actions -->

@@ -48,6 +48,9 @@ class StockMovementService
         // Mahsulot stock miqdorini yangilash
         $product->increment('stock_quantity', $quantity);
 
+        // Tan narxni qolgan partiyalar bo'yicha og'irlikli o'rtachaga moslash
+        $this->refreshPurchasePrice($productId);
+
         return $movement;
     }
 
@@ -132,6 +135,9 @@ class StockMovementService
             // Mahsulot stock miqdorini kamaytirish
             $product->decrement('stock_quantity', $quantity);
 
+            // Sotilgandan keyin qolgan partiyalar og'irligi o'zgargani uchun tan narxni qayta hisoblaymiz
+            $this->refreshPurchasePrice($productId);
+
             DB::commit();
 
             return [
@@ -181,6 +187,9 @@ class StockMovementService
         $product->stock_quantity = $newQuantity;
         $product->save();
 
+        // Qolgan partiyalar og'irligi o'zgargani uchun tan narxni qayta hisoblaymiz
+        $this->refreshPurchasePrice($productId);
+
         return $movement;
     }
 
@@ -213,6 +222,34 @@ class StockMovementService
         }
 
         return $totalQuantity > 0 ? $totalCost / $totalQuantity : 0;
+    }
+
+    /**
+     * Mahsulotning tan narxini qolgan partiyalar bo'yicha og'irlikli o'rtacha
+     * narxga moslab, Product jadvalida saqlab qo'yish (ko'rsatish uchun).
+     *
+     * Masalan: 10 dona 10 000 dan, keyin 10 dona 11 000 dan kirim bo'lsa va
+     * eski partiyadan 5 dona sotilgan bo'lsa — qolgan 5 dona (10 000) va
+     * 10 dona (11 000) og'irligiga qarab o'rtacha ~10 667 bo'ladi, oddiy
+     * (10000+11000)/2=10500 emas — og'irroq (ko'proq qolgan) tomon narxga
+     * yaqinroq bo'ladi.
+     */
+    private function refreshPurchasePrice(int $productId): void
+    {
+        $product = Product::findOrFail($productId);
+        $averageCost = $this->getAverageCost($productId);
+
+        if ($averageCost <= 0) {
+            return;
+        }
+
+        if ($product->currency === 'USD') {
+            $product->purchase_price_usd = $averageCost;
+        } else {
+            $product->purchase_price_uzs = $averageCost;
+        }
+        $product->purchase_price = $averageCost;
+        $product->save();
     }
 
     /**

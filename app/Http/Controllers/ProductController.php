@@ -84,7 +84,6 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Create', [
             'categories' => $categories,
-            'carModelGroups' => CarModel::optionGroupsWithId(),
         ]);
     }
 
