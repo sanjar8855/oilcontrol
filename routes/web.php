@@ -15,6 +15,7 @@ use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\WorkshopController;
 use App\Http\Controllers\WorkshopSwitchController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/workshops/switch', [WorkshopSwitchController::class, 'index'])->name('workshops.switch.index');
     Route::post('/workshops/switch/{workshop}', [WorkshopSwitchController::class, 'switch'])->name('workshops.switch');
     Route::post('/workshops/switch-exit', [WorkshopSwitchController::class, 'exit'])->name('workshops.switch.exit');
+
+    // Kompaniyalar (Workshops) CRUD - Faqat superadmin
+    Route::resource('workshops', WorkshopController::class)->middleware('can:workshops.manage');
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
     Route::resource('users', UserController::class)->middleware('can:users.manage');

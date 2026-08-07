@@ -50,7 +50,10 @@
       "Bash(node test17.js)",
       "Bash(node test18.js)",
       "Bash(node test19.js)",
-      "Bash(node test20.js)"
+      "Bash(node test20.js)",
+      "Bash(node test_workshops.js)",
+      "Bash(node test_workshops_debug.js)",
+      "Bash(taskkill *)"
     ]
   }
 }
