@@ -19,7 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureActiveWorkshop::class,
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'telegram/webhook',
+        ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
         // Har kuni ertalab soat 9:00 da eslatmalarni yuborish
