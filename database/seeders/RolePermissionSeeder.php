@@ -22,6 +22,7 @@ class RolePermissionSeeder extends Seeder
     private const ADMIN_PERMISSIONS = [
         'users.manage',
         'car-makes.manage',
+        'branches.manage',
     ];
 
     /**

@@ -35,6 +35,7 @@ const navItems = computed(() => {
         { label: 'Xarajatlar', route: 'expenses.index', active: 'expenses.*', permission: 'expenses.manage' },
         { label: 'Hisobotlar', route: 'reports.index', active: 'reports.*', permission: 'reports.view' },
         { label: 'Xodimlar', route: 'users.index', active: 'users.*', permission: 'users.manage' },
+        { label: 'Filiallar', route: 'branches.index', active: 'branches.*', permission: 'branches.manage' },
         { label: 'Avto markalari', route: 'car-makes.index', active: 'car-makes.*', permission: 'car-makes.manage' },
         { label: 'Kompaniyalar', route: 'workshops.index', active: 'workshops.*', permission: 'workshops.manage' },
     ].filter((item) => !item.permission || permissions.includes(item.permission));

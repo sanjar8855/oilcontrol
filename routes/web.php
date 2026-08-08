@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CarMakeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
@@ -56,6 +57,9 @@ Route::middleware('auth')->group(function () {
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
     Route::resource('users', UserController::class)->middleware('can:users.manage');
+
+    // Filiallar (Branches) CRUD - Faqat superadmin va director
+    Route::resource('branches', BranchController::class)->except(['show'])->middleware('can:branches.manage');
 
     // Avtomobil markalari va turlari CRUD - Faqat superadmin va director
     Route::middleware('can:car-makes.manage')->group(function () {
