@@ -245,12 +245,6 @@ defineProps({
                                 </svg>
                                 <span class="text-gray-300">Asosiy hisobotlar</span>
                             </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-300">Email qo'llab-quvvatlash</span>
-                            </li>
                         </ul>
                         <Link
                             v-if="canRegister"
@@ -269,8 +263,8 @@ defineProps({
                         <h3 class="text-2xl font-bold text-white mb-2">Professional</h3>
                         <p class="text-blue-100 mb-6">Kichik va o'rta biznes uchun</p>
                         <div class="mb-6">
-                            <span class="text-5xl font-bold text-white">$49</span>
-                            <span class="text-blue-100">/oy</span>
+                            <span class="text-5xl font-bold text-white">500 000</span>
+                            <span class="text-blue-100">so'm/oy</span>
                         </div>
                         <ul class="space-y-4 mb-8">
                             <li class="flex items-start">
@@ -290,12 +284,6 @@ defineProps({
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                                 <span class="text-white">Telegram bot integratsiyasi</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-white">Vaqt bron qilish</span>
                             </li>
                             <li class="flex items-start">
                                 <svg class="w-6 h-6 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +313,7 @@ defineProps({
                                 <svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span class="text-gray-300">Professional rejaadagi hammasi</span>
+                                <span class="text-gray-300">Professional rejadagi hammasi</span>
                             </li>
                             <li class="flex items-start">
                                 <svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,7 +358,7 @@ defineProps({
                     Bugun Boshlab Ko'ring
                 </h2>
                 <p class="text-xl text-blue-100 mb-8">
-                    30 kun bepul sinab ko'ring. Kredit karta talab qilinmaydi. Istalgan vaqt bekor qilish.
+                    30 kun bepul sinab ko'ring. Istalgan vaqt bekor qilish.
                 </p>
                 <Link
                     v-if="canRegister"
