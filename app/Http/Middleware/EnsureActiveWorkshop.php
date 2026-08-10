@@ -18,7 +18,7 @@ class EnsureActiveWorkshop
         $user = $request->user();
 
         if ($user && $user->isSuperAdmin() && !session('active_workshop_id')) {
-            if (!$request->routeIs('workshops.switch*') && !$request->routeIs('workshops.*') && !$request->routeIs('logout') && !$request->routeIs('profile.*')) {
+            if (!$request->routeIs('workshops.switch*') && !$request->routeIs('workshops.*') && !$request->routeIs('logout') && !$request->routeIs('profile.*') && !$request->routeIs('global-products.*')) {
                 return redirect()->route('workshops.switch.index');
             }
         }
