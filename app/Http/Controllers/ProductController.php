@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductsExport;
 use App\Models\CarMake;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Services\StockMovementService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProductController extends Controller
 {
@@ -21,7 +26,11 @@ class ProductController extends Controller
         'name', 'stock_quantity', 'purchase_price', 'selling_price', 'created_at',
     ];
 
-    public function index(Request $request): Response
+    /**
+     * Index sahifasidagi filtrlarga mos ravishda mahsulotlar so'rovini quradi.
+     * Excel/PDF eksport ham shu bilan bir xil filtr va scoping'dan foydalanadi.
+     */
+    private function filteredProductsQuery(Request $request): Builder
     {
         $user = $request->user();
         $workshop = $user->currentWorkshop();
@@ -61,11 +70,18 @@ class ProductController extends Controller
         $sortDir = $request->string('sort_dir')->toString() === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
+        return $query;
+    }
+
+    public function index(Request $request): Response
+    {
+        $workshop = $request->user()->currentWorkshop();
+
         $perPage = in_array((int) $request->input('per_page'), [10, 25, 30, 50, 100], true)
             ? (int) $request->input('per_page')
             : 30;
 
-        $products = $query->paginate($perPage)->withQueryString();
+        $products = $this->filteredProductsQuery($request)->paginate($perPage)->withQueryString();
 
         $categories = $workshop->categories()->where('is_active', true)->get();
 
@@ -74,6 +90,29 @@ class ProductController extends Controller
             'categories' => $categories,
             'filters' => $request->only(['category_id', 'stock_status', 'search', 'sort_by', 'sort_dir', 'per_page']),
         ]);
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $products = $this->filteredProductsQuery($request)->get();
+
+        return Excel::download(new ProductsExport($products), 'mahsulotlar.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $products = $this->filteredProductsQuery($request)->get();
+        $export = new ProductsExport($products);
+
+        $pdf = Pdf::loadView('exports.table', [
+            'title' => 'Mahsulotlar',
+            'headers' => $export->headings(),
+            'rows' => $products->map(fn ($product) => $export->map($product))->all(),
+            'workshopName' => $request->user()->currentWorkshop()->name,
+            'generatedAt' => now()->format('d.m.Y H:i'),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('mahsulotlar.pdf');
     }
 
     public function create(Request $request): Response

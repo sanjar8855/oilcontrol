@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\InventoriesExport;
 use App\Models\Inventory;
 use App\Models\InventoryItem;
 use App\Services\StockMovementService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InventoryController extends Controller
 {
-    public function index(Request $request): Response
+    private function scopedInventoriesQuery(Request $request): Builder
     {
         $user = $request->user();
         $workshop = $user->currentWorkshop();
@@ -28,11 +33,39 @@ class InventoryController extends Controller
             $query->where('branch_id', $user->branch_id);
         }
 
-        $inventories = $query->latest('started_at')->paginate(15);
+        return $query->latest('started_at');
+    }
+
+    public function index(Request $request): Response
+    {
+        $inventories = $this->scopedInventoriesQuery($request)->paginate(15);
 
         return Inertia::render('Inventories/Index', [
             'inventories' => $inventories,
         ]);
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $inventories = $this->scopedInventoriesQuery($request)->get();
+
+        return Excel::download(new InventoriesExport($inventories), 'inventarizatsiya.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $inventories = $this->scopedInventoriesQuery($request)->get();
+        $export = new InventoriesExport($inventories);
+
+        $pdf = Pdf::loadView('exports.table', [
+            'title' => 'Inventarizatsiya',
+            'headers' => $export->headings(),
+            'rows' => $inventories->map(fn ($inventory) => $export->map($inventory))->all(),
+            'workshopName' => $request->user()->currentWorkshop()->name,
+            'generatedAt' => now()->format('d.m.Y H:i'),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('inventarizatsiya.pdf');
     }
 
     public function create(Request $request): Response

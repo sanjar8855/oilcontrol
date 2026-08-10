@@ -89,15 +89,23 @@ Route::middleware('auth')->group(function () {
     Route::resource('service-logs', ServiceLogController::class)->middleware('can:service-logs.manage');
 
     // Kategoriyalar (Categories) CRUD - faqat superadmin/director/menejer
-    Route::resource('categories', CategoryController::class)->middleware('can:categories.manage');
+    Route::middleware('can:categories.manage')->group(function () {
+        Route::get('/categories/export/excel', [CategoryController::class, 'exportExcel'])->name('categories.export.excel');
+        Route::get('/categories/export/pdf', [CategoryController::class, 'exportPdf'])->name('categories.export.pdf');
+        Route::resource('categories', CategoryController::class);
+    });
 
     // Mahsulotlar (Products) CRUD - faqat superadmin/director/menejer
     Route::middleware('can:products.manage')->group(function () {
+        Route::get('/products/export/excel', [ProductController::class, 'exportExcel'])->name('products.export.excel');
+        Route::get('/products/export/pdf', [ProductController::class, 'exportPdf'])->name('products.export.pdf');
         Route::resource('products', ProductController::class);
         Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
         Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');
 
         // Inventarizatsiya (ombor sanog'i) - faqat superadmin/director/menejer
+        Route::get('/inventories/export/excel', [InventoryController::class, 'exportExcel'])->name('inventories.export.excel');
+        Route::get('/inventories/export/pdf', [InventoryController::class, 'exportPdf'])->name('inventories.export.pdf');
         Route::post('/inventories/{inventory}/complete', [InventoryController::class, 'complete'])->name('inventories.complete');
         Route::resource('inventories', InventoryController::class)->except(['edit']);
     });

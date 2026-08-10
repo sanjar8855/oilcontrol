@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CategoriesExport;
 use App\Models\Category;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CategoryController extends Controller
 {
@@ -30,6 +34,31 @@ class CategoryController extends Controller
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
         ]);
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $categories = $request->user()->currentWorkshop()
+            ->categories()->withCount('products')->latest()->get();
+
+        return Excel::download(new CategoriesExport($categories), 'kategoriyalar.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $categories = $request->user()->currentWorkshop()
+            ->categories()->withCount('products')->latest()->get();
+        $export = new CategoriesExport($categories);
+
+        $pdf = Pdf::loadView('exports.table', [
+            'title' => 'Kategoriyalar',
+            'headers' => $export->headings(),
+            'rows' => $categories->map(fn ($category) => $export->map($category))->all(),
+            'workshopName' => $request->user()->currentWorkshop()->name,
+            'generatedAt' => now()->format('d.m.Y H:i'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('kategoriyalar.pdf');
     }
 
     public function create(): Response

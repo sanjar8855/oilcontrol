@@ -74,7 +74,11 @@
       "Bash(git stash *)",
       "Bash(git fetch *)",
       "Bash(git pull *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Read(//c/xampp/htdocs/**)",
+      "Read(//c/xampp/apache/conf/extra/**)",
+      "Bash(composer require *)",
+      "Bash(composer audit *)"
     ]
   }
 }

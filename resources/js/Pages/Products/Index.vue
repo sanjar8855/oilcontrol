@@ -70,6 +70,14 @@ const deleteProduct = (product) => {
 const formatMoney = (amount) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
 };
+
+const exportUrl = (type) => {
+    return route(`products.export.${type}`, {
+        category_id: filters.category_id || undefined,
+        stock_status: filters.stock_status || undefined,
+        search: filters.search || undefined,
+    });
+};
 </script>
 
 <template>
@@ -81,12 +89,26 @@ const formatMoney = (amount) => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Mahsulotlar
                 </h2>
-                <Link
-                    :href="route('products.create')"
-                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                >
-                    + Yangi Mahsulot
-                </Link>
+                <div class="flex items-center gap-2">
+                    <a
+                        :href="exportUrl('excel')"
+                        class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
+                    >
+                        Excel
+                    </a>
+                    <a
+                        :href="exportUrl('pdf')"
+                        class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+                    >
+                        PDF
+                    </a>
+                    <Link
+                        :href="route('products.create')"
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                    >
+                        + Yangi Mahsulot
+                    </Link>
+                </div>
             </div>
         </template>
 

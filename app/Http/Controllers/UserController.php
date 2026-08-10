@@ -93,13 +93,15 @@ class UserController extends Controller
             'phone' => 'required|string|max:20|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
-            'branch_id' => 'nullable|exists:branches,id',
+            'branch_id' => ['required_unless:role,superadmin,director', 'nullable', 'exists:branches,id'],
             'salary' => 'nullable|numeric|min:0',
             'hire_date' => 'nullable|date',
             'position' => 'nullable|string|max:255',
             'employment_status' => 'nullable|in:active,on_leave,terminated',
             'phone_secondary' => 'nullable|string|max:20',
             'address' => 'nullable|string',
+        ], [
+            'branch_id.required_unless' => 'Menejer va xodim uchun filial tanlash majburiy',
         ]);
 
         // Superadmin emas bo'lsa, superadmin yarata olmaydi
@@ -218,13 +220,15 @@ class UserController extends Controller
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => 'required|string|in:superadmin,director,manager,employee',
-            'branch_id' => 'nullable|exists:branches,id',
+            'branch_id' => ['required_unless:role,superadmin,director', 'nullable', 'exists:branches,id'],
             'salary' => 'nullable|numeric|min:0',
             'hire_date' => 'nullable|date',
             'position' => 'nullable|string|max:255',
             'employment_status' => 'nullable|in:active,on_leave,terminated',
             'phone_secondary' => 'nullable|string|max:20',
             'address' => 'nullable|string',
+        ], [
+            'branch_id.required_unless' => 'Menejer va xodim uchun filial tanlash majburiy',
         ]);
 
         // Superadmin emas bo'lsa, role'ni superadmin qila olmaydi

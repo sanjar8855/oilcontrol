@@ -20,12 +20,26 @@ const formatDateTime = (date) => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Inventarizatsiya
                 </h2>
-                <Link
-                    :href="route('inventories.create')"
-                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                >
-                    + Yangi inventarizatsiya
-                </Link>
+                <div class="flex items-center gap-2">
+                    <a
+                        :href="route('inventories.export.excel')"
+                        class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
+                    >
+                        Excel
+                    </a>
+                    <a
+                        :href="route('inventories.export.pdf')"
+                        class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+                    >
+                        PDF
+                    </a>
+                    <Link
+                        :href="route('inventories.create')"
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                    >
+                        + Yangi inventarizatsiya
+                    </Link>
+                </div>
             </div>
         </template>
 

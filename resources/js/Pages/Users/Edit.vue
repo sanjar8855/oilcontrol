@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     user: Object,
@@ -22,6 +23,8 @@ const form = useForm({
     employment_status: props.user.employment_status || 'active',
     address: props.user.address || '',
 });
+
+const isBranchRequired = computed(() => !['superadmin', 'director'].includes(form.role));
 
 const submit = () => {
     form.put(route('users.update', props.user.id));
@@ -156,11 +159,12 @@ const submit = () => {
                                 <!-- Branch -->
                                 <div>
                                     <label for="branch_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Filial
+                                        Filial <span v-if="isBranchRequired" class="text-red-500">*</span>
                                     </label>
                                     <select
                                         id="branch_id"
                                         v-model="form.branch_id"
+                                        :required="isBranchRequired"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                     >
                                         <option value="">Filial tanlang</option>
@@ -168,6 +172,9 @@ const submit = () => {
                                             {{ branch.name }} ({{ branch.code }})
                                         </option>
                                     </select>
+                                    <div v-if="!isBranchRequired" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Direktor va super admin uchun filial shart emas.
+                                    </div>
                                     <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.branch_id }}
                                     </div>
