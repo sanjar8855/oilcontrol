@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ServiceLogController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
@@ -95,10 +96,18 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class);
     });
 
+    // Ta'minotchilar (Suppliers) CRUD - faqat superadmin/director/menejer
+    Route::middleware('can:suppliers.manage')->group(function () {
+        Route::post('/suppliers/{supplier}/payments', [SupplierController::class, 'storePayment'])->name('suppliers.payments.store');
+        Route::resource('suppliers', SupplierController::class);
+    });
+
     // Mahsulotlar (Products) CRUD - faqat superadmin/director/menejer
     Route::middleware('can:products.manage')->group(function () {
         Route::get('/products/export/excel', [ProductController::class, 'exportExcel'])->name('products.export.excel');
         Route::get('/products/export/pdf', [ProductController::class, 'exportPdf'])->name('products.export.pdf');
+        Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
+        Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
         Route::resource('products', ProductController::class);
         Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
         Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');

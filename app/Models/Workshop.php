@@ -60,4 +60,9 @@ class Workshop extends Model
     {
         return $this->hasMany(Inventory::class);
     }
+
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(Supplier::class);
+    }
 }

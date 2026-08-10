@@ -80,6 +80,19 @@ const toggleModel = (model, checked) => {
                                 </dd>
                             </div>
                             <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Ta'minotchi</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <Link
+                                        v-if="product.supplier"
+                                        :href="route('suppliers.show', product.supplier.id)"
+                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    >
+                                        {{ product.supplier.name }}
+                                    </Link>
+                                    <span v-else>-</span>
+                                </dd>
+                            </div>
+                            <div>
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">SKU</dt>
                                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                                     {{ product.sku || '-' }}

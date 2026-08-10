@@ -9,10 +9,12 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 const props = defineProps({
     product: Object,
     categories: Array,
+    suppliers: Array,
 });
 
 const form = useForm({
     category_id: props.product.category_id,
+    supplier_id: props.product.supplier_id,
     name: props.product.name,
     sku: props.product.sku,
     description: props.product.description,
@@ -94,6 +96,21 @@ const submit = () => {
                                     />
                                     <InputError :message="form.errors.sku" class="mt-2" />
                                 </div>
+                            </div>
+
+                            <div>
+                                <InputLabel for="supplier_id" value="Ta'minotchi" />
+                                <select
+                                    id="supplier_id"
+                                    v-model="form.supplier_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                >
+                                    <option :value="null">Tanlanmagan</option>
+                                    <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                        {{ supplier.name }}
+                                    </option>
+                                </select>
+                                <InputError :message="form.errors.supplier_id" class="mt-2" />
                             </div>
 
                             <div>

@@ -41,6 +41,7 @@ class RolePermissionSeeder extends Seeder
     private const BACK_OFFICE_PERMISSIONS = [
         'categories.manage',
         'products.manage',
+        'suppliers.manage',
         'expenses.manage',
         'salaries.manage',
         'reports.view',

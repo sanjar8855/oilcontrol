@@ -103,6 +103,12 @@ const exportUrl = (type) => {
                         PDF
                     </a>
                     <Link
+                        :href="route('products.bulk-create')"
+                        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                    >
+                        Ommaviy kiritish
+                    </Link>
+                    <Link
                         :href="route('products.create')"
                         class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                     >
@@ -196,6 +202,9 @@ const exportUrl = (type) => {
                                         <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                             Kategoriya
                                         </th>
+                                        <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                            Ta'minotchi
+                                        </th>
                                         <th scope="col" class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                             Amallar
                                         </th>
@@ -230,6 +239,9 @@ const exportUrl = (type) => {
                                                 {{ product.category.name }}
                                             </span>
                                             <span v-else class="text-sm text-gray-500 dark:text-gray-400">-</span>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-1.5 text-sm text-gray-900 dark:text-gray-300">
+                                            {{ product.supplier?.name || '-' }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-1.5 text-right text-sm font-medium">
                                             <Link

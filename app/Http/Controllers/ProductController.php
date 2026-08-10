@@ -6,7 +6,10 @@ use App\Exports\ProductsExport;
 use App\Models\CarMake;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
+use App\Models\User;
+use App\Models\Workshop;
 use App\Services\StockMovementService;
+use App\Services\SupplierLedgerService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,7 +39,7 @@ class ProductController extends Controller
         $user = $request->user();
         $workshop = $user->currentWorkshop();
 
-        $query = $workshop->products()->with('category');
+        $query = $workshop->products()->with(['category', 'supplier']);
 
         // Branch filtering based on user role
         if (!$user->canAccessAllBranches()) {
@@ -85,10 +88,12 @@ class ProductController extends Controller
         $products = $this->filteredProductsQuery($request)->paginate($perPage)->withQueryString();
 
         $categories = $workshop->categories()->where('is_active', true)->get();
+        $suppliers = $workshop->suppliers()->where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Products/Index', [
             'products' => $products,
             'categories' => $categories,
+            'suppliers' => $suppliers,
             'filters' => $request->only(['category_id', 'stock_status', 'search', 'sort_by', 'sort_dir', 'per_page']),
         ]);
     }
@@ -120,16 +125,23 @@ class ProductController extends Controller
     {
         $workshop = $request->user()->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
+        $suppliers = $workshop->suppliers()->where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Products/Create', [
             'categories' => $categories,
+            'suppliers' => $suppliers,
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Yangi mahsulot yaratish uchun validatsiya qoidalari (store va bulkStore
+     * o'rtasida umumiy).
+     */
+    private function productValidationRules(): array
     {
-        $validated = $request->validate([
+        return [
             'category_id' => 'nullable|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -154,7 +166,92 @@ class ProductController extends Controller
             // Bog'langan avtomobil turlari
             'car_models' => 'nullable|array',
             'car_models.*' => 'integer|exists:car_models,id',
-        ]);
+        ];
+    }
+
+    /**
+     * Mahsulotni (kerak bo'lsa boshlang'ich qoldiq bilan) yaratadi. Boshlang'ich
+     * qoldiq uchun ta'minotchi tanlangan bo'lsa — Xarajat o'rniga o'sha
+     * ta'minotchiga qarz yoziladi (SupplierLedgerService orqali), tanlanmagan
+     * bo'lsa eski xatti-harakat (naqd xarid, Xarajat yozuvi) saqlanadi.
+     */
+    private function createProductWithInitialStock(Workshop $workshop, User $user, array $validated, array $carModelIds = []): Product
+    {
+        unset($validated['car_models']);
+
+        $product = $workshop->products()->create($validated);
+
+        if (!empty($carModelIds)) {
+            // Miqdor keyinchalik "Avto markalari" sahifasida aniqlashtiriladi, hozircha 1
+            $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
+                fn ($carModelId) => [$carModelId => ['quantity' => 1]]
+            ));
+        }
+
+        // StockMovementService orqali boshlang'ich qoldiqni qo'shish
+        if ($product->stock_quantity > 0 && $product->track_inventory) {
+            $stockService = new StockMovementService();
+
+            $stockService->recordIncoming(
+                productId: $product->id,
+                quantity: $product->stock_quantity,
+                unitCostUsd: $product->purchase_price_usd,
+                unitCostUzs: $product->purchase_price_uzs,
+                currency: $product->currency,
+                referenceType: 'InitialStock',
+                referenceId: null,
+                notes: "Boshlang'ich qoldiq"
+            );
+
+            // Eski InventoryTransaction (backward compatibility)
+            InventoryTransaction::create([
+                'workshop_id' => $workshop->id,
+                'branch_id' => $product->branch_id,
+                'product_id' => $product->id,
+                'type' => 'in',
+                'quantity' => $product->stock_quantity,
+                'quantity_before' => 0,
+                'quantity_after' => $product->stock_quantity,
+                'unit_price' => $product->getPurchasePrice(),
+                'total_price' => $product->stock_quantity * $product->getPurchasePrice(),
+                'reason' => 'Boshlang\'ich qoldiq',
+                'transaction_date' => now(),
+            ]);
+
+            $totalCost = $product->stock_quantity * $product->getPurchasePrice();
+
+            if ($product->supplier_id) {
+                // Ta'minotchidan qarzga olingan — Xarajat emas, qarz sifatida yoziladi
+                (new SupplierLedgerService())->recordPurchase(
+                    workshopId: $workshop->id,
+                    supplierId: $product->supplier_id,
+                    amount: $totalCost,
+                    currency: $product->currency,
+                    description: "Mahsulot sotib olish: {$product->name} ({$product->stock_quantity} {$product->unit})",
+                    referenceType: 'Product',
+                    referenceId: $product->id,
+                    userId: $user->id,
+                );
+            } else {
+                // Xarajat yaratish
+                $workshop->expenses()->create([
+                    'branch_id' => $product->branch_id,
+                    'category' => 'Boshqa',
+                    'title' => "Mahsulot sotib olish: {$product->name}",
+                    'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
+                    'amount' => $totalCost,
+                    'expense_date' => now(),
+                    'payment_method' => null,
+                ]);
+            }
+        }
+
+        return $product;
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate($this->productValidationRules());
 
         $user = $request->user();
         $workshop = $user->currentWorkshop();
@@ -166,71 +263,104 @@ class ProductController extends Controller
             }
         }
 
+        if (isset($validated['supplier_id']) && !$workshop->suppliers()->where('id', $validated['supplier_id'])->exists()) {
+            return back()->withErrors(['supplier_id' => 'Ta\'minotchi topilmadi']);
+        }
+
         // Set branch_id: Directors can choose, but managers/employees use their own branch
         $validated['branch_id'] = $user->canAccessAllBranches()
             ? ($request->input('branch_id') ?? $user->branch_id)
             : $user->branch_id;
 
         $carModelIds = $validated['car_models'] ?? [];
-        unset($validated['car_models']);
 
         DB::beginTransaction();
         try {
-            $product = $workshop->products()->create($validated);
-
-            if (!empty($carModelIds)) {
-                // Miqdor keyinchalik "Avto markalari" sahifasida aniqlashtiriladi, hozircha 1
-                $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
-                    fn ($carModelId) => [$carModelId => ['quantity' => 1]]
-                ));
-            }
-
-            // StockMovementService orqali boshlang'ich qoldiqni qo'shish
-            if ($product->stock_quantity > 0 && $product->track_inventory) {
-                $stockService = new StockMovementService();
-
-                $stockService->recordIncoming(
-                    productId: $product->id,
-                    quantity: $product->stock_quantity,
-                    unitCostUsd: $product->purchase_price_usd,
-                    unitCostUzs: $product->purchase_price_uzs,
-                    currency: $product->currency,
-                    referenceType: 'InitialStock',
-                    referenceId: null,
-                    notes: "Boshlang'ich qoldiq"
-                );
-
-                // Eski InventoryTransaction (backward compatibility)
-                InventoryTransaction::create([
-                    'workshop_id' => $workshop->id,
-                    'branch_id' => $product->branch_id,
-                    'product_id' => $product->id,
-                    'type' => 'in',
-                    'quantity' => $product->stock_quantity,
-                    'quantity_before' => 0,
-                    'quantity_after' => $product->stock_quantity,
-                    'unit_price' => $product->getPurchasePrice(),
-                    'total_price' => $product->stock_quantity * $product->getPurchasePrice(),
-                    'reason' => 'Boshlang\'ich qoldiq',
-                    'transaction_date' => now(),
-                ]);
-
-                // Xarajat yaratish
-                $workshop->expenses()->create([
-                    'branch_id' => $product->branch_id,
-                    'category' => 'Boshqa',
-                    'title' => "Mahsulot sotib olish: {$product->name}",
-                    'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
-                    'amount' => $product->stock_quantity * $product->getPurchasePrice(),
-                    'expense_date' => now(),
-                    'payment_method' => null,
-                ]);
-            }
+            $this->createProductWithInitialStock($workshop, $user, $validated, $carModelIds);
 
             DB::commit();
 
             return redirect()->route('products.index')
                 ->with('success', 'Mahsulot muvaffaqiyatli qo\'shildi!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function bulkCreate(Request $request): Response
+    {
+        $workshop = $request->user()->currentWorkshop();
+        $categories = $workshop->categories()->where('is_active', true)->get();
+        $suppliers = $workshop->suppliers()->where('is_active', true)->get(['id', 'name']);
+
+        return Inertia::render('Products/BulkCreate', [
+            'categories' => $categories,
+            'suppliers' => $suppliers,
+        ]);
+    }
+
+    public function bulkStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.category_id' => 'nullable|exists:categories,id',
+            'items.*.supplier_id' => 'nullable|exists:suppliers,id',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.sku' => 'nullable|string|max:255',
+            'items.*.unit' => 'required|string|max:50',
+            'items.*.purchase_price' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
+            'items.*.stock_quantity' => 'nullable|integer|min:0',
+            'items.*.min_stock_level' => 'nullable|integer|min:0',
+        ]);
+
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+        $branchId = $user->canAccessAllBranches() ? ($request->input('branch_id') ?? $user->branch_id) : $user->branch_id;
+
+        DB::beginTransaction();
+        try {
+            $created = 0;
+
+            foreach ($validated['items'] as $item) {
+                if (isset($item['category_id'])) {
+                    $category = $workshop->categories()->find($item['category_id']);
+                    if (!$category) {
+                        throw new \Exception("Kategoriya topilmadi: {$item['name']}");
+                    }
+                }
+
+                if (isset($item['supplier_id']) && !$workshop->suppliers()->where('id', $item['supplier_id'])->exists()) {
+                    throw new \Exception("Ta'minotchi topilmadi: {$item['name']}");
+                }
+
+                $productData = [
+                    'category_id' => $item['category_id'] ?? null,
+                    'supplier_id' => $item['supplier_id'] ?? null,
+                    'name' => $item['name'],
+                    'sku' => $item['sku'] ?? null,
+                    'unit' => $item['unit'],
+                    'currency' => 'UZS',
+                    'purchase_price_uzs' => $item['purchase_price'],
+                    'selling_price_uzs' => $item['selling_price'],
+                    'purchase_price' => $item['purchase_price'],
+                    'selling_price' => $item['selling_price'],
+                    'stock_quantity' => $item['stock_quantity'] ?? 0,
+                    'min_stock_level' => $item['min_stock_level'] ?? 0,
+                    'is_active' => true,
+                    'track_inventory' => true,
+                    'branch_id' => $branchId,
+                ];
+
+                $this->createProductWithInitialStock($workshop, $user, $productData);
+                $created++;
+            }
+
+            DB::commit();
+
+            return redirect()->route('products.index')
+                ->with('success', "{$created} ta mahsulot muvaffaqiyatli qo'shildi!");
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
@@ -253,6 +383,7 @@ class ProductController extends Controller
 
         $product->load([
             'category',
+            'supplier',
             'carModels',
             'inventoryTransactions' => function($query) {
                 $query->latest()->limit(20);
@@ -284,10 +415,12 @@ class ProductController extends Controller
 
         $workshop = $user->currentWorkshop();
         $categories = $workshop->categories()->where('is_active', true)->get();
+        $suppliers = $workshop->suppliers()->where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -307,6 +440,7 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'category_id' => 'nullable|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -328,6 +462,10 @@ class ProductController extends Controller
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
         ]);
+
+        if (isset($validated['supplier_id']) && !$product->workshop->suppliers()->where('id', $validated['supplier_id'])->exists()) {
+            return back()->withErrors(['supplier_id' => 'Ta\'minotchi topilmadi']);
+        }
 
         $product->update($validated);
 
@@ -370,7 +508,8 @@ class ProductController extends Controller
         }
 
         return Inertia::render('Products/AdjustStock', [
-            'product' => $product->load('category'),
+            'product' => $product->load(['category', 'supplier']),
+            'suppliers' => $user->currentWorkshop()->suppliers()->where('is_active', true)->get(['id', 'name']),
         ]);
     }
 
@@ -395,9 +534,14 @@ class ProductController extends Controller
             'unit_price_uzs' => 'nullable|numeric|min:0',
             'currency' => 'nullable|in:USD,UZS',
             'unit_price' => 'nullable|numeric|min:0', // Backward compatibility
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        if (isset($validated['supplier_id']) && !$user->currentWorkshop()->suppliers()->where('id', $validated['supplier_id'])->exists()) {
+            return back()->withErrors(['supplier_id' => 'Ta\'minotchi topilmadi']);
+        }
 
         DB::beginTransaction();
         try {
@@ -431,17 +575,32 @@ class ProductController extends Controller
                 );
 
                 $unitPrice = $currency === 'USD' ? $unitPriceUsd : $unitPriceUzs;
+                $supplierId = $validated['supplier_id'] ?? $product->supplier_id;
 
-                // Xarajat yaratish
-                $user->currentWorkshop()->expenses()->create([
-                    'branch_id' => $product->branch_id,
-                    'category' => 'Boshqa',
-                    'title' => "Mahsulot sotib olish: {$product->name}",
-                    'description' => $validated['notes'] ?? "Ombor kirim: {$validated['quantity']} {$product->unit}",
-                    'amount' => $validated['quantity'] * $unitPrice,
-                    'expense_date' => now(),
-                    'payment_method' => null,
-                ]);
+                if ($supplierId) {
+                    // Ta'minotchidan qarzga olingan — Xarajat emas, qarz sifatida yoziladi
+                    (new SupplierLedgerService())->recordPurchase(
+                        workshopId: $user->currentWorkshop()->id,
+                        supplierId: $supplierId,
+                        amount: $validated['quantity'] * $unitPrice,
+                        currency: $currency,
+                        description: $validated['notes'] ?? "Ombor kirim: {$product->name} ({$validated['quantity']} {$product->unit})",
+                        referenceType: 'Product',
+                        referenceId: $product->id,
+                        userId: $user->id,
+                    );
+                } else {
+                    // Xarajat yaratish
+                    $user->currentWorkshop()->expenses()->create([
+                        'branch_id' => $product->branch_id,
+                        'category' => 'Boshqa',
+                        'title' => "Mahsulot sotib olish: {$product->name}",
+                        'description' => $validated['notes'] ?? "Ombor kirim: {$validated['quantity']} {$product->unit}",
+                        'amount' => $validated['quantity'] * $unitPrice,
+                        'expense_date' => now(),
+                        'payment_method' => null,
+                    ]);
+                }
             } elseif ($validated['type'] === 'out') {
                 // Chiqim
                 $stockService->recordOutgoing(

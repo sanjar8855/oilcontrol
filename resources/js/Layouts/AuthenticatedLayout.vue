@@ -30,6 +30,7 @@ const navItems = computed(() => {
         { label: 'Avtomobillar', route: 'vehicles.index', active: 'vehicles.*', permission: 'vehicles.manage' },
         { label: 'Servis Yozuvlari', route: 'service-logs.index', active: 'service-logs.*', permission: 'service-logs.manage' },
         { label: 'Kategoriyalar', route: 'categories.index', active: 'categories.*', permission: 'categories.manage' },
+        { label: 'Ta\'minotchilar', route: 'suppliers.index', active: 'suppliers.*', permission: 'suppliers.manage' },
         { label: 'Mahsulotlar', route: 'products.index', active: 'products.*', permission: 'products.manage' },
         { label: 'Inventarizatsiya', route: 'inventories.index', active: 'inventories.*', permission: 'products.manage' },
         { label: 'Xarajatlar', route: 'expenses.index', active: 'expenses.*', permission: 'expenses.manage' },

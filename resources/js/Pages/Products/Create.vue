@@ -8,10 +8,12 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     categories: Array,
+    suppliers: Array,
 });
 
 const form = useForm({
     category_id: null,
+    supplier_id: null,
     name: '',
     sku: '',
     description: '',
@@ -92,6 +94,25 @@ const submit = () => {
                                     />
                                     <InputError :message="form.errors.sku" class="mt-2" />
                                 </div>
+                            </div>
+
+                            <!-- Supplier -->
+                            <div>
+                                <InputLabel for="supplier_id" value="Ta'minotchi" />
+                                <select
+                                    id="supplier_id"
+                                    v-model="form.supplier_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                >
+                                    <option :value="null">Tanlanmagan</option>
+                                    <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                        {{ supplier.name }}
+                                    </option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Agar boshlang'ich qoldiq bilan ta'minotchi tanlansa, summasi ta'minotchiga qarz sifatida yoziladi (naqd xarajat o'rniga)
+                                </p>
+                                <InputError :message="form.errors.supplier_id" class="mt-2" />
                             </div>
 
                             <!-- Description -->

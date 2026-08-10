@@ -9,12 +9,14 @@ import { computed } from 'vue';
 
 const props = defineProps({
     product: Object,
+    suppliers: Array,
 });
 
 const form = useForm({
     type: 'in',
     quantity: 1,
     unit_price: props.product.purchase_price,
+    supplier_id: props.product.supplier_id ?? null,
     reason: '',
     notes: '',
 });
@@ -153,6 +155,25 @@ const submit = () => {
                                     Birlik narxi (ixtiyoriy, avtomatik tan narxidan olinadi)
                                 </p>
                                 <InputError :message="form.errors.unit_price" class="mt-2" />
+                            </div>
+
+                            <!-- Supplier (faqat kirim uchun) -->
+                            <div v-if="form.type === 'in'">
+                                <InputLabel for="supplier_id" value="Ta'minotchi" />
+                                <select
+                                    id="supplier_id"
+                                    v-model="form.supplier_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                >
+                                    <option :value="null">Tanlanmagan (naqd xarid)</option>
+                                    <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                        {{ supplier.name }}
+                                    </option>
+                                </select>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Ta'minotchi tanlansa, summasi Xarajat o'rniga o'sha ta'minotchiga qarz sifatida yoziladi
+                                </p>
+                                <InputError :message="form.errors.supplier_id" class="mt-2" />
                             </div>
 
                             <!-- Reason -->

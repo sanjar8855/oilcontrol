@@ -114,9 +114,13 @@ class InventoryController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            // Mahsulotlar hozircha filialga bog'lanmagan (global) bo'lishi mumkin —
+            // shunday mahsulotlar har qanday filial inventarizatsiyasiga ham kiritiladi.
             $products = $workshop->products()
                 ->where('track_inventory', true)
-                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where(function ($qq) use ($branchId) {
+                    $qq->whereNull('branch_id')->orWhere('branch_id', $branchId);
+                }))
                 ->get(['id', 'stock_quantity']);
 
             foreach ($products as $product) {
