@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Services\StockMovementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InventoryController extends Controller
 {
-    private function scopedInventoriesQuery(Request $request): Builder
+    private function scopedInventoriesQuery(Request $request): Builder|HasMany
     {
         $user = $request->user();
         $workshop = $user->currentWorkshop();

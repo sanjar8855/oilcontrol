@@ -9,6 +9,7 @@ use App\Models\InventoryTransaction;
 use App\Services\StockMovementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ class ProductController extends Controller
      * Index sahifasidagi filtrlarga mos ravishda mahsulotlar so'rovini quradi.
      * Excel/PDF eksport ham shu bilan bir xil filtr va scoping'dan foydalanadi.
      */
-    private function filteredProductsQuery(Request $request): Builder
+    private function filteredProductsQuery(Request $request): Builder|HasMany
     {
         $user = $request->user();
         $workshop = $user->currentWorkshop();
