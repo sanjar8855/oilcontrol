@@ -14,6 +14,7 @@ class RolePermissionSeeder extends Seeder
      */
     private const SUPERADMIN_PERMISSIONS = [
         'workshops.manage',
+        'global-products.manage',
     ];
 
     /**

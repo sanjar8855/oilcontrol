@@ -103,6 +103,12 @@ const exportUrl = (type) => {
                         PDF
                     </a>
                     <Link
+                        :href="route('products.catalog')"
+                        class="rounded-md bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500"
+                    >
+                        Katalogdan tanlash
+                    </Link>
+                    <Link
                         :href="route('products.bulk-create')"
                         class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
                     >

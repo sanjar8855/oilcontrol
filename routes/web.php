@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\GlobalProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -55,6 +56,13 @@ Route::middleware('auth')->group(function () {
 
     // Kompaniyalar (Workshops) CRUD - Faqat superadmin
     Route::resource('workshops', WorkshopController::class)->middleware('can:workshops.manage');
+
+    // Global mahsulotlar katalogi (barcha kompaniyalar uchun umumiy namuna) - Faqat superadmin
+    Route::middleware('can:global-products.manage')->group(function () {
+        Route::get('/global-products/bulk-create', [GlobalProductController::class, 'bulkCreate'])->name('global-products.bulk-create');
+        Route::post('/global-products/bulk-store', [GlobalProductController::class, 'bulkStore'])->name('global-products.bulk-store');
+        Route::resource('global-products', GlobalProductController::class)->except(['show']);
+    });
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director
     Route::resource('users', UserController::class)->middleware('can:users.manage');
@@ -108,6 +116,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/products/export/pdf', [ProductController::class, 'exportPdf'])->name('products.export.pdf');
         Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
         Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
+        Route::get('/products/catalog', [ProductController::class, 'catalog'])->name('products.catalog');
+        Route::post('/products/copy-from-catalog', [ProductController::class, 'copyFromCatalog'])->name('products.copy-from-catalog');
         Route::resource('products', ProductController::class);
         Route::get('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
         Route::post('/products/{product}/adjust-stock', [ProductController::class, 'processStockAdjustment'])->name('products.process-stock-adjustment');

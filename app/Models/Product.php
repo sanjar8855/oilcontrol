@@ -14,6 +14,7 @@ class Product extends Model
         'branch_id',
         'category_id',
         'supplier_id',
+        'global_product_id',
         'name',
         'sku',
         'description',
@@ -91,6 +92,11 @@ class Product extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function globalProduct(): BelongsTo
+    {
+        return $this->belongsTo(GlobalProduct::class);
     }
 
     public function inventoryTransactions(): HasMany

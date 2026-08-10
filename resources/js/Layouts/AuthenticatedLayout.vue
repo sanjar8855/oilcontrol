@@ -38,6 +38,7 @@ const navItems = computed(() => {
         { label: 'Xodimlar', route: 'users.index', active: 'users.*', permission: 'users.manage' },
         { label: 'Filiallar', route: 'branches.index', active: 'branches.*', permission: 'branches.manage' },
         { label: 'Avto markalari', route: 'car-makes.index', active: 'car-makes.*', permission: 'car-makes.manage' },
+        { label: 'Global katalog', route: 'global-products.index', active: 'global-products.*', permission: 'global-products.manage' },
         { label: 'Kompaniyalar', route: 'workshops.index', active: 'workshops.*', permission: 'workshops.manage' },
     ].filter((item) => !item.permission || permissions.includes(item.permission));
 });

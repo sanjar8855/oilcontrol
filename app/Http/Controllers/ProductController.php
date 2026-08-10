@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exports\ProductsExport;
 use App\Models\CarMake;
+use App\Models\GlobalCategory;
+use App\Models\GlobalProduct;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Models\User;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -361,6 +364,138 @@ class ProductController extends Controller
 
             return redirect()->route('products.index')
                 ->with('success', "{$created} ta mahsulot muvaffaqiyatli qo'shildi!");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Umumiy katalogdan tadbirkor o'ziga mahsulot tanlab olishi uchun
+     * ro'yxat: qaysi katalog mahsulotlari allaqachon nusxa olinganini ham
+     * belgilab beradi.
+     */
+    public function catalog(Request $request): Response
+    {
+        $workshop = $request->user()->currentWorkshop();
+
+        $query = GlobalProduct::with('globalCategory')->where('is_active', true);
+
+        if ($request->filled('category_id')) {
+            $query->where('global_category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->orderBy('name')->paginate(30)->withQueryString();
+
+        $copiedGlobalProductIds = $workshop->products()
+            ->whereNotNull('global_product_id')
+            ->pluck('global_product_id');
+
+        return Inertia::render('Products/Catalog', [
+            'products' => $products,
+            'categories' => GlobalCategory::orderBy('name')->get(['id', 'name']),
+            'copiedGlobalProductIds' => $copiedGlobalProductIds,
+            'filters' => $request->only(['category_id', 'search']),
+        ]);
+    }
+
+    /**
+     * Katalogdan tanlangan mahsulotlarni tadbirkorning o'z workshop'iga
+     * nusxa ko'chiradi — narx va boshlang'ich qoldiqni tadbirkor o'zi
+     * kiritadi, kategoriya esa katalogdagi kategoriya nomi bo'yicha
+     * avtomatik topiladi yoki yaratiladi.
+     */
+    public function copyFromCatalog(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.global_product_id' => 'required|integer|exists:global_products,id',
+            'items.*.purchase_price' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
+            'items.*.stock_quantity' => 'nullable|integer|min:0',
+            'items.*.min_stock_level' => 'nullable|integer|min:0',
+        ]);
+
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+        $branchId = $user->canAccessAllBranches() ? ($request->input('branch_id') ?? $user->branch_id) : $user->branch_id;
+
+        $alreadyCopied = $workshop->products()
+            ->whereNotNull('global_product_id')
+            ->pluck('global_product_id')
+            ->all();
+
+        DB::beginTransaction();
+        try {
+            $created = 0;
+            $skipped = 0;
+
+            $globalProducts = GlobalProduct::with('globalCategory')
+                ->whereIn('id', collect($validated['items'])->pluck('global_product_id'))
+                ->get()
+                ->keyBy('id');
+
+            foreach ($validated['items'] as $item) {
+                if (in_array($item['global_product_id'], $alreadyCopied, true)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $globalProduct = $globalProducts->get($item['global_product_id']);
+                if (!$globalProduct) {
+                    continue;
+                }
+
+                $categoryId = null;
+                if ($globalProduct->globalCategory) {
+                    $categoryName = $globalProduct->globalCategory->name;
+                    $categoryId = $workshop->categories()->firstOrCreate(
+                        ['name' => $categoryName],
+                        ['slug' => Str::slug($categoryName), 'is_active' => true]
+                    )->id;
+                }
+
+                $productData = [
+                    'global_product_id' => $globalProduct->id,
+                    'category_id' => $categoryId,
+                    'name' => $globalProduct->name,
+                    'sku' => $globalProduct->sku,
+                    'description' => $globalProduct->description,
+                    'unit' => $globalProduct->unit,
+                    'barcode' => $globalProduct->barcode,
+                    'currency' => 'UZS',
+                    'purchase_price_uzs' => $item['purchase_price'],
+                    'selling_price_uzs' => $item['selling_price'],
+                    'purchase_price' => $item['purchase_price'],
+                    'selling_price' => $item['selling_price'],
+                    'stock_quantity' => $item['stock_quantity'] ?? 0,
+                    'min_stock_level' => $item['min_stock_level'] ?? 0,
+                    'is_active' => true,
+                    'track_inventory' => true,
+                    'branch_id' => $branchId,
+                ];
+
+                $this->createProductWithInitialStock($workshop, $user, $productData);
+                $alreadyCopied[] = $globalProduct->id;
+                $created++;
+            }
+
+            DB::commit();
+
+            $message = "{$created} ta mahsulot qo'shildi!";
+            if ($skipped > 0) {
+                $message .= " ({$skipped} tasi allaqachon qo'shilgan edi)";
+            }
+
+            return redirect()->route('products.index')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
