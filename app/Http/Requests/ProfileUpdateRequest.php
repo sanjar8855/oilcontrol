@@ -24,6 +24,13 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'phone_secondary' => ['nullable', 'string', 'max:20'],
+            'telegram_chat_id' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique(User::class)->ignore($this->user()->id),
+            ],
+            'locale' => ['nullable', 'string', 'in:uz,ru'],
             'email' => [
                 'nullable',
                 'string',

@@ -8,7 +8,7 @@ const form = useForm({
     phone: '',
     email: '',
     address: '',
-    subscription_plan: 'free',
+    subscription_plan: 'trial',
     subscription_expires_at: '',
     is_active: true,
     director_name: '',
@@ -110,10 +110,10 @@ const submit = () => {
                                         v-model="form.subscription_plan"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                     >
-                                        <option value="free">Bepul</option>
+                                        <option value="trial">Sinov (30 kun)</option>
                                         <option value="start">Start</option>
                                         <option value="pro">Pro</option>
-                                        <option value="business">Biznes</option>
+                                        <option value="maxsus">Maxsus</option>
                                     </select>
                                     <div v-if="form.errors.subscription_plan" class="mt-1 text-sm text-red-600">{{ form.errors.subscription_plan }}</div>
                                 </div>

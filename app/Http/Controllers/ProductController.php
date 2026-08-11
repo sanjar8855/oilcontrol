@@ -114,7 +114,7 @@ class ProductController extends Controller
         $export = new ProductsExport($products);
 
         $pdf = Pdf::loadView('exports.table', [
-            'title' => 'Mahsulotlar',
+            'title' => trans('export.products.title'),
             'headers' => $export->headings(),
             'rows' => $products->map(fn ($product) => $export->map($product))->all(),
             'workshopName' => $request->user()->currentWorkshop()->name,

@@ -5,6 +5,7 @@ import { ref } from 'vue';
 
 const props = defineProps({
     clients: Object,
+    telegramStats: Object,
 });
 
 const deleteClient = (client) => {
@@ -34,6 +35,18 @@ const deleteClient = (client) => {
 
         <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+                <div v-if="telegramStats && telegramStats.total > 0" class="mb-4 flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+                    <span class="text-2xl">📱</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            Botga ulangan mijozlar: {{ telegramStats.linked }}/{{ telegramStats.total }} ({{ telegramStats.percent }}%)
+                        </div>
+                        <div class="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                            <div class="h-2 rounded-full bg-blue-500" :style="{ width: telegramStats.percent + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                     <div class="p-6">
                         <div v-if="clients.data.length > 0" class="overflow-x-auto">

@@ -51,7 +51,7 @@ class CategoryController extends Controller
         $export = new CategoriesExport($categories);
 
         $pdf = Pdf::loadView('exports.table', [
-            'title' => 'Kategoriyalar',
+            'title' => trans('export.categories.title'),
             'headers' => $export->headings(),
             'rows' => $categories->map(fn ($category) => $export->map($category))->all(),
             'workshopName' => $request->user()->currentWorkshop()->name,

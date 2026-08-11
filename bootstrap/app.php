@@ -14,9 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\EnsureActiveWorkshop::class,
+            \App\Http\Middleware\CheckSubscription::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -26,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         // Har kuni ertalab soat 9:00 da eslatmalarni yuborish
         $schedule->command('reminders:send')->dailyAt('09:00');
+
+        // Har kuni ertalab soat 8:00 da obuna tugash ogohlantirishlarini yuborish
+        $schedule->command('subscriptions:notify-expiring')->dailyAt('08:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

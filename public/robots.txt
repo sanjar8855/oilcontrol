@@ -1,2 +1,22 @@
 User-agent: *
-Disallow:
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /workshops
+Disallow: /users
+Disallow: /branches
+Disallow: /clients
+Disallow: /vehicles
+Disallow: /service-logs
+Disallow: /categories
+Disallow: /suppliers
+Disallow: /products
+Disallow: /inventories
+Disallow: /expenses
+Disallow: /payments
+Disallow: /salaries
+Disallow: /reports
+Disallow: /car-makes
+Disallow: /global-products
+Disallow: /telegram
+
+Sitemap: https://oilcontrol.uz/sitemap.xml

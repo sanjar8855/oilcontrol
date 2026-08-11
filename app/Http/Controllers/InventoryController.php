@@ -59,7 +59,7 @@ class InventoryController extends Controller
         $export = new InventoriesExport($inventories);
 
         $pdf = Pdf::loadView('exports.table', [
-            'title' => 'Inventarizatsiya',
+            'title' => trans('export.inventories.title'),
             'headers' => $export->headings(),
             'rows' => $inventories->map(fn ($inventory) => $export->map($inventory))->all(),
             'workshopName' => $request->user()->currentWorkshop()->name,

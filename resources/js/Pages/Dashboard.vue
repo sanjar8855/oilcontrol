@@ -103,19 +103,19 @@ const submitClient = () => {
 </script>
 
 <template>
-    <Head title="Boshqaruv Paneli" />
+    <Head :title="$t('dashboard.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Boshqaruv Paneli
+                    {{ $t('dashboard.title') }}
                 </h2>
                 <Link
                     :href="route('clients.create')"
                     class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                 >
-                    + Yangi Mijoz
+                    {{ $t('dashboard.new_client') }}
                 </Link>
             </div>
         </template>
@@ -126,18 +126,18 @@ const submitClient = () => {
                 <div class="relative mb-6 rounded-lg bg-white shadow dark:bg-gray-800">
                     <div class="p-4 sm:p-6">
                         <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                            Avtomobil qidirish
+                            {{ $t('dashboard.vehicle_search_title') }}
                         </h3>
                         <div class="flex gap-4">
                             <input
                                 v-model="searchQuery"
                                 type="text"
-                                placeholder="Avto raqam yoki telefon raqami (masalan: AA yoki 9012)"
+                                :placeholder="$t('dashboard.vehicle_search_placeholder')"
                                 class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 @keyup.enter="clearTimeout(searchDebounceTimer); runSearch(searchQuery)"
                             />
                             <span v-if="searching" class="self-center text-sm text-gray-500 dark:text-gray-400">
-                                Qidirilmoqda...
+                                {{ $t('common.searching') }}
                             </span>
                         </div>
 
@@ -153,7 +153,7 @@ const submitClient = () => {
                                 >
                                     <div>
                                         <span class="font-semibold text-gray-900 dark:text-white">
-                                            {{ vehicle.plate_number || 'Raqamsiz' }}
+                                            {{ vehicle.plate_number || $t('dashboard.no_plate') }}
                                         </span>
                                         <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
                                             {{ vehicle.make }} {{ vehicle.model }}
@@ -165,13 +165,13 @@ const submitClient = () => {
                                 </button>
                             </div>
                             <div v-else class="flex items-center justify-between rounded-md border border-gray-200 p-3 dark:border-gray-700">
-                                <span class="text-sm text-gray-500 dark:text-gray-400">Hech narsa topilmadi</span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">{{ $t('common.not_found') }}</span>
                                 <button
                                     type="button"
                                     @click="openAddClientModal"
                                     class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500"
                                 >
-                                    + Yangi mijoz qo'shish
+                                    {{ $t('dashboard.add_new_client') }}
                                 </button>
                             </div>
                         </div>
@@ -192,7 +192,7 @@ const submitClient = () => {
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            Jami mijozlar
+                                            {{ $t('dashboard.total_clients') }}
                                         </dt>
                                         <dd class="text-lg font-semibold text-gray-900 dark:text-white">
                                             {{ stats.total_clients }}
@@ -215,7 +215,7 @@ const submitClient = () => {
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            Obuna rejasi
+                                            {{ $t('dashboard.subscription_plan') }}
                                         </dt>
                                         <dd class="text-lg font-semibold uppercase text-gray-900 dark:text-white">
                                             {{ stats.subscription_plan }}
@@ -238,10 +238,10 @@ const submitClient = () => {
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            Obuna qolgan kunlar
+                                            {{ $t('dashboard.subscription_days_remaining') }}
                                         </dt>
                                         <dd class="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {{ Math.floor(stats.days_remaining) }} kun
+                                            {{ Math.floor(stats.days_remaining) }} {{ $t('dashboard.days_suffix') }}
                                         </dd>
                                     </dl>
                                 </div>
@@ -252,7 +252,7 @@ const submitClient = () => {
 
                 <!-- Moliyaviy Statistika -->
                 <div class="mb-6">
-                    <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Moliyaviy Hisobotlar (Joriy oy)</h3>
+                    <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ $t('dashboard.financial_reports_current_month') }}</h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                         <!-- Mahsulotlar -->
                         <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
@@ -266,12 +266,12 @@ const submitClient = () => {
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                Mahsulotlar
+                                                {{ $t('dashboard.products') }}
                                             </dt>
                                             <dd class="flex items-baseline text-lg font-semibold text-gray-900 dark:text-white">
                                                 {{ stats.total_products }}
                                                 <span v-if="stats.low_stock_products > 0" class="ml-2 text-xs font-medium text-red-600 dark:text-red-400">
-                                                    ({{ stats.low_stock_products }} kam qolgan)
+                                                    ({{ stats.low_stock_products }} {{ $t('dashboard.low_stock_suffix') }})
                                                 </span>
                                             </dd>
                                         </dl>
@@ -292,7 +292,7 @@ const submitClient = () => {
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                Ombor qiymati
+                                                {{ $t('dashboard.inventory_value') }}
                                             </dt>
                                             <dd class="text-lg font-semibold text-gray-900 dark:text-white">
                                                 {{ formatMoney(stats.inventory_value) }}
@@ -315,7 +315,7 @@ const submitClient = () => {
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                Oylik daromad
+                                                {{ $t('dashboard.monthly_revenue') }}
                                             </dt>
                                             <dd class="text-lg font-semibold text-green-600 dark:text-green-400">
                                                 {{ formatMoney(stats.monthly_revenue) }}
@@ -338,7 +338,7 @@ const submitClient = () => {
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                Oylik xarajatlar
+                                                {{ $t('dashboard.monthly_expenses') }}
                                             </dt>
                                             <dd class="text-lg font-semibold text-red-600 dark:text-red-400">
                                                 {{ formatMoney(stats.monthly_expenses) }}
@@ -361,7 +361,7 @@ const submitClient = () => {
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                {{ stats.profit_loss >= 0 ? 'Foyda' : 'Zarar' }}
+                                                {{ stats.profit_loss >= 0 ? $t('dashboard.profit') : $t('dashboard.loss') }}
                                             </dt>
                                             <dd class="text-lg font-semibold" :class="stats.profit_loss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
                                                 {{ formatMoney(Math.abs(stats.profit_loss)) }}
@@ -379,13 +379,13 @@ const submitClient = () => {
                     <div class="border-b border-gray-200 bg-white px-4 py-5 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                                Oxirgi qo'shilgan mijozlar
+                                {{ $t('dashboard.recent_clients') }}
                             </h3>
                             <Link
                                 :href="route('clients.index')"
                                 class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
                             >
-                                Barchasini ko'rish →
+                                {{ $t('common.view_all') }}
                             </Link>
                         </div>
                     </div>
@@ -408,7 +408,7 @@ const submitClient = () => {
                                     :href="route('clients.show', client.id)"
                                     class="rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                                 >
-                                    Ko'rish
+                                    {{ $t('common.view') }}
                                 </Link>
                             </div>
                         </div>
@@ -417,17 +417,17 @@ const submitClient = () => {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                                Hali mijozlar yo'q
+                                {{ $t('dashboard.no_clients_yet') }}
                             </h3>
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Birinchi mijozingizni qo'shishdan boshlang
+                                {{ $t('dashboard.no_clients_hint') }}
                             </p>
                             <div class="mt-6">
                                 <Link
                                     :href="route('clients.create')"
                                     class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                                 >
-                                    + Mijoz qo'shish
+                                    {{ $t('dashboard.new_client') }}
                                 </Link>
                             </div>
                         </div>
@@ -440,10 +440,10 @@ const submitClient = () => {
         <Modal :show="showAddClientModal" @close="closeModal" max-width="2xl">
             <div class="p-4 sm:p-6">
                 <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Yangi mijoz qo'shish
+                    {{ $t('dashboard.add_client_modal_title') }}
                 </h2>
                 <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
-                    Avto raqam <span class="font-semibold text-indigo-600">{{ clientForm.plate_number }}</span> topilmadi. Yangi mijoz qo'shishingiz mumkin.
+                    {{ $t('dashboard.plate_not_found', { plate: clientForm.plate_number }) }}
                 </p>
 
                 <form @submit.prevent="submitClient">
@@ -451,7 +451,7 @@ const submitClient = () => {
                         <!-- Mijoz ismi -->
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Mijoz ismi <span class="text-red-500">*</span>
+                                {{ $t('dashboard.client_name') }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 id="name"
@@ -468,7 +468,7 @@ const submitClient = () => {
                         <!-- Telefon raqami -->
                         <div>
                             <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Telefon raqami <span class="text-red-500">*</span>
+                                {{ $t('dashboard.phone_number') }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 id="phone"
@@ -486,7 +486,7 @@ const submitClient = () => {
                         <!-- Kunlik km -->
                         <div>
                             <label for="avg_daily_km" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Kuniga taxminan necha km yuradi
+                                {{ $t('dashboard.avg_daily_km') }}
                             </label>
                             <input
                                 id="avg_daily_km"
@@ -504,7 +504,7 @@ const submitClient = () => {
                         <!-- Mashina turi -->
                         <div>
                             <label for="make" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Mashina turi
+                                {{ $t('dashboard.vehicle_make') }}
                             </label>
                             <Multiselect
                                 id="make"
@@ -512,7 +512,7 @@ const submitClient = () => {
                                 :options="carMakeGroups"
                                 :groups="true"
                                 :searchable="true"
-                                placeholder="Mashina turini tanlang"
+                                :placeholder="$t('dashboard.vehicle_make_placeholder')"
                                 noOptionsText="Topilmadi"
                                 noResultsText="Natija topilmadi"
                                 class="mt-1"
@@ -525,7 +525,7 @@ const submitClient = () => {
                         <!-- Avto raqam -->
                         <div class="sm:col-span-2">
                             <label for="plate_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Avto raqam <span class="text-red-500">*</span>
+                                {{ $t('dashboard.plate_number') }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 id="plate_number"
@@ -547,14 +547,14 @@ const submitClient = () => {
                             @click="closeModal"
                             class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                         >
-                            Bekor qilish
+                            {{ $t('common.cancel') }}
                         </button>
                         <button
                             type="submit"
                             :disabled="clientForm.processing"
                             class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
                         >
-                            {{ clientForm.processing ? 'Saqlanmoqda...' : 'Saqlash' }}
+                            {{ clientForm.processing ? $t('common.saving') : $t('common.save') }}
                         </button>
                     </div>
                 </form>

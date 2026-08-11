@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { useTranslation } from '@/i18n';
 
 const page = usePage();
+const { t } = useTranslation();
 
 const SIDEBAR_STORAGE_KEY = 'oilcontrol-sidebar-collapsed';
 
@@ -23,24 +25,73 @@ const toggleCollapsed = () => {
 
 const navItems = computed(() => {
     const permissions = page.props.auth.permissions ?? [];
+    const plan = page.props.subscription?.plan;
+    const canCompareBranches = plan === 'pro' || plan === 'maxsus';
 
     return [
-        { label: 'Boshqaruv', route: 'dashboard', active: 'dashboard', permission: null },
-        { label: 'Mijozlar', route: 'clients.index', active: 'clients.*', permission: 'clients.manage' },
-        { label: 'Avtomobillar', route: 'vehicles.index', active: 'vehicles.*', permission: 'vehicles.manage' },
-        { label: 'Servis Yozuvlari', route: 'service-logs.index', active: 'service-logs.*', permission: 'service-logs.manage' },
-        { label: 'Kategoriyalar', route: 'categories.index', active: 'categories.*', permission: 'categories.manage' },
-        { label: 'Ta\'minotchilar', route: 'suppliers.index', active: 'suppliers.*', permission: 'suppliers.manage' },
-        { label: 'Mahsulotlar', route: 'products.index', active: 'products.*', permission: 'products.manage' },
-        { label: 'Inventarizatsiya', route: 'inventories.index', active: 'inventories.*', permission: 'products.manage' },
-        { label: 'Xarajatlar', route: 'expenses.index', active: 'expenses.*', permission: 'expenses.manage' },
-        { label: 'Hisobotlar', route: 'reports.index', active: 'reports.*', permission: 'reports.view' },
-        { label: 'Xodimlar', route: 'users.index', active: 'users.*', permission: 'users.manage' },
-        { label: 'Filiallar', route: 'branches.index', active: 'branches.*', permission: 'branches.manage' },
-        { label: 'Avto markalari', route: 'car-makes.index', active: 'car-makes.*', permission: 'car-makes.manage' },
-        { label: 'Global katalog', route: 'global-products.index', active: 'global-products.*', permission: 'global-products.manage' },
-        { label: 'Kompaniyalar', route: 'workshops.index', active: 'workshops.*', permission: 'workshops.manage' },
-    ].filter((item) => !item.permission || permissions.includes(item.permission));
+        { labelKey: 'nav.dashboard', route: 'dashboard', active: 'dashboard', permission: null },
+        { labelKey: 'nav.clients', route: 'clients.index', active: 'clients.*', permission: 'clients.manage' },
+        { labelKey: 'nav.vehicles', route: 'vehicles.index', active: 'vehicles.*', permission: 'vehicles.manage' },
+        { labelKey: 'nav.service_logs', route: 'service-logs.index', active: 'service-logs.*', permission: 'service-logs.manage' },
+        { labelKey: 'nav.categories', route: 'categories.index', active: 'categories.*', permission: 'categories.manage' },
+        { labelKey: 'nav.suppliers', route: 'suppliers.index', active: 'suppliers.*', permission: 'suppliers.manage' },
+        { labelKey: 'nav.products', route: 'products.index', active: 'products.*', permission: 'products.manage' },
+        { labelKey: 'nav.inventories', route: 'inventories.index', active: 'inventories.*', permission: 'products.manage' },
+        { labelKey: 'nav.expenses', route: 'expenses.index', active: 'expenses.*', permission: 'expenses.manage' },
+        { labelKey: 'nav.reports', route: 'reports.index', active: 'reports.index', permission: 'reports.view' },
+        { labelKey: 'nav.reminder_effectiveness', route: 'reports.reminders', active: 'reports.reminders', permission: 'reports.view' },
+        { labelKey: 'nav.branch_comparison', route: 'reports.branches', active: 'reports.branches', permission: 'reports.view', hidden: !canCompareBranches },
+        { labelKey: 'nav.users', route: 'users.index', active: 'users.*', permission: 'users.manage' },
+        { labelKey: 'nav.branches', route: 'branches.index', active: 'branches.*', permission: 'branches.manage' },
+        { labelKey: 'nav.car_makes', route: 'car-makes.index', active: 'car-makes.*', permission: 'car-makes.manage' },
+        { labelKey: 'nav.global_products', route: 'global-products.index', active: 'global-products.*', permission: 'global-products.manage' },
+        { labelKey: 'nav.workshops', route: 'workshops.index', active: 'workshops.*', permission: 'workshops.manage' },
+    ].filter((item) => !item.hidden && (!item.permission || permissions.includes(item.permission)));
+});
+
+const flashMessage = ref(null);
+
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash?.success) {
+            flashMessage.value = { level: 'success', text: flash.success };
+        } else if (flash?.error) {
+            flashMessage.value = { level: 'error', text: flash.error };
+        } else {
+            return;
+        }
+
+        setTimeout(() => {
+            flashMessage.value = null;
+        }, 5000);
+    },
+    { immediate: true, deep: true }
+);
+
+const subscriptionBanner = computed(() => {
+    const subscription = page.props.subscription;
+    if (!subscription) return null;
+
+    if (!subscription.active) {
+        return {
+            level: 'error',
+            message: subscription.onTrial === false && subscription.daysRemaining !== null
+                ? t('subscription.subscription_expired')
+                : t('subscription.trial_expired'),
+        };
+    }
+
+    if (subscription.daysRemaining !== null && subscription.daysRemaining <= 7) {
+        return {
+            level: 'warning',
+            message: subscription.onTrial
+                ? t('subscription.trial_ending', { days: subscription.daysRemaining })
+                : t('subscription.subscription_ending', { days: subscription.daysRemaining }),
+        };
+    }
+
+    return null;
 });
 
 const initials = (label) => {
@@ -52,6 +103,25 @@ const initials = (label) => {
 </script>
 
 <template>
+    <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0 -translate-y-2"
+        leave-active-class="transition ease-in duration-150"
+        leave-to-class="opacity-0"
+    >
+        <div
+            v-if="flashMessage"
+            :class="[
+                'fixed right-4 top-4 z-50 max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg',
+                flashMessage.level === 'success'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-red-600 text-white',
+            ]"
+        >
+            {{ flashMessage.text }}
+        </div>
+    </Transition>
+
     <div class="flex min-h-screen bg-gray-100 dark:bg-gray-900">
         <!-- Mobil uchun fon (sidebar ochiq bo'lganda) -->
         <div
@@ -95,7 +165,7 @@ const initials = (label) => {
                     v-for="item in navItems"
                     :key="item.route"
                     :href="route(item.route)"
-                    :title="item.label"
+                    :title="$t(item.labelKey)"
                     :class="[
                         'flex items-center rounded-md px-3 py-2 text-sm font-medium transition duration-150 ease-in-out',
                         route().current(item.active)
@@ -109,9 +179,9 @@ const initials = (label) => {
                             ? 'bg-indigo-200 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200'
                             : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'"
                     >
-                        {{ initials(item.label) }}
+                        {{ initials($t(item.labelKey)) }}
                     </span>
-                    <span v-show="!collapsed" class="ml-3 truncate">{{ item.label }}</span>
+                    <span v-show="!collapsed" class="ml-3 truncate">{{ $t(item.labelKey) }}</span>
                 </Link>
             </nav>
 
@@ -119,12 +189,12 @@ const initials = (label) => {
             <div v-if="$page.props.auth.user.role === 'superadmin'" class="border-t border-gray-100 px-2 py-3 dark:border-gray-700">
                 <Link
                     :href="route('workshops.switch.index')"
-                    :title="$page.props.activeWorkshop ? $page.props.activeWorkshop.name : 'Workshop tanlanmagan'"
+                    :title="$page.props.activeWorkshop ? $page.props.activeWorkshop.name : $t('nav.workshop_not_selected')"
                     class="flex items-center rounded-md bg-indigo-100 px-3 py-2 text-xs font-medium text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800"
                 >
                     <span class="shrink-0">↻</span>
                     <span v-show="!collapsed" class="ml-2 truncate">
-                        {{ $page.props.activeWorkshop ? $page.props.activeWorkshop.name : 'Workshop tanlanmagan' }}
+                        {{ $page.props.activeWorkshop ? $page.props.activeWorkshop.name : $t('nav.workshop_not_selected') }}
                     </span>
                 </Link>
             </div>
@@ -147,9 +217,9 @@ const initials = (label) => {
                     </template>
 
                     <template #content>
-                        <DropdownLink :href="route('profile.edit')">Profil</DropdownLink>
+                        <DropdownLink :href="route('profile.edit')">{{ $t('nav.profile') }}</DropdownLink>
                         <DropdownLink :href="route('logout')" method="post" as="button">
-                            Chiqish
+                            {{ $t('nav.logout') }}
                         </DropdownLink>
                     </template>
                 </Dropdown>
@@ -174,6 +244,25 @@ const initials = (label) => {
 
             <!-- Page Content -->
             <main class="flex-1">
+                <div
+                    v-if="subscriptionBanner"
+                    :class="[
+                        'px-4 py-2 text-center text-sm font-medium',
+                        subscriptionBanner.level === 'error'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-yellow-400 text-yellow-950',
+                    ]"
+                >
+                    {{ subscriptionBanner.message }}
+                    <Link
+                        v-if="$page.props.auth.user.role === 'director'"
+                        :href="route('profile.edit')"
+                        class="underline"
+                    >
+                        {{ $t('subscription.details') }}
+                    </Link>
+                </div>
+
                 <div v-if="$slots.header" class="mx-auto max-w-7xl px-3 pt-6 sm:px-6 sm:pt-8 lg:px-8">
                     <slot name="header" />
                 </div>

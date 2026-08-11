@@ -1,0 +1,97 @@
+<?php
+
+return [
+    'meta' => [
+        'title' => 'Moy Almashtirish Tizimi',
+        'description' => 'Moyxonangiz uchun 300 000 so\'mdan to\'liq boshqaruv tizimi: ombor, FIFO, mijozlar, Telegram eslatma va hisobotlar. 30 kun bepul sinov, karta kerak emas.',
+    ],
+    'nav' => [
+        'dashboard' => 'Dashboard',
+        'login' => 'Kirish',
+        'register' => 'Bepul Boshlash',
+    ],
+    'hero' => [
+        'title_line1' => 'Moy Almashtirish Biznesingizni',
+        'title_line2' => 'Raqamlashtiring',
+        'subtitle' => 'Inventarizatsiya, sotuv, mijozlar bilan ishlash, ish haqi va Telegram bot orqali avtomatik eslatmalar - hammasi bir tizimda',
+        'cta_trial' => '30 Kun Bepul Sinab Ko\'ring',
+        'cta_more' => 'Ko\'proq Ma\'lumot',
+        'perks' => '✓ Kredit karta kerak emas &nbsp;&nbsp; ✓ Bir daqiqada sozlash &nbsp;&nbsp; ✓ Istalgan vaqt bekor qilish',
+        'stat_value' => '1 ta',
+        'stat_label' => 'faol moyxona bizda ishlaydi',
+    ],
+    'features' => [
+        'title' => 'Kuchli Imkoniyatlar',
+        'subtitle' => 'Biznesingizni boshqarish uchun barcha kerakli vositalar',
+        'items' => [
+            ['title' => 'Inventarizatsiya (FIFO)', 'desc' => 'Mahsulotlar narxini avtomatik hisoblash, multi-valyuta ($ va so\'m), kam qolgan mahsulotlar ogohlantirish'],
+            ['title' => 'Sotuv va To\'lovlar', 'desc' => 'Naqd, nasiya, qarz to\'lovlari. Select2 bilan tez qidiruv. Realizatsiya tizimi bilan dilerlar bilan ishlash'],
+            ['title' => 'Mijozlar Boshqaruvi', 'desc' => 'Mijozlar bazasi, avtomobillar tarixi, moy almashtirish grafigi, keyingi tashrif vaqtini eslatma'],
+            ['title' => 'Hisobotlar va Tahlil', 'desc' => 'Mahsulotlar kesimida, tushum kesimida, mijozlar bo\'yicha batafsil hisobotlar va statistika'],
+            ['title' => 'Telegram Bot', 'desc' => 'Mijozlarga avtomatik xabarlar, sotuv ma\'lumotlari, keyingi tashrif eslatmalari telegram orqali'],
+            ['title' => 'Ish Haqi Hisoblash', 'desc' => 'Xodimlar ish haqini avtomatik hisoblash, oylik hisobotlar, filial va usta kesimida tahlil'],
+        ],
+    ],
+    'pricing' => [
+        'title' => 'Oddiy va Shaffof Narxlar',
+        'subtitle' => 'Biznesingiz o\'lchamiga mos tarif rejasini tanlang',
+        'note' => '30 kun bepul sinov, karta so\'ralmaydi. Eng arzon tarifda ham tizim <span class="text-white font-semibold">to\'liq</span> ishlaydi — faqat hajm cheklanadi.',
+        'per_month' => 'so\'m/oy',
+        'popular' => 'OMMABOP',
+        'start' => [
+            'name' => 'Start',
+            'subtitle' => 'Bitta filial uchun',
+            'features' => [
+                '1 ta filial, 5 ta faol foydalanuvchi',
+                'Cheksiz mijoz, avtomobil, xizmat',
+                'Ombor, FIFO, inventarizatsiya, multi-valyuta',
+                'Nasiya, ish haqi, P&L, Excel/PDF hisobotlar',
+                'Telegram eslatma + Mini App',
+            ],
+            'cta' => 'Boshlash',
+        ],
+        'pro' => [
+            'name' => 'Pro',
+            'subtitle' => 'Bir nechta filial uchun',
+            'features' => [
+                '3 ta filial, 20 ta faol foydalanuvchi',
+                'Start tarifidagi hamma narsa',
+                'Filiallarni solishtirish hisoboti',
+                'Eslatma effektivligi — to\'liq hisobot',
+                'Prioritet qo\'llab-quvvatlash',
+            ],
+            'cta' => 'Hoziroq Boshlash',
+        ],
+        'maxsus' => [
+            'name' => 'Maxsus',
+            'subtitle' => 'Katta tarmoqlar uchun',
+            'price' => 'Kelishuv',
+            'features' => [
+                'Cheksiz filial va foydalanuvchi',
+                'Pro tarifidagi hamma narsa',
+                'Individual limitlar',
+                'Shaxsiy menejer',
+            ],
+            'cta' => 'Aloqa',
+        ],
+    ],
+    'cta_section' => [
+        'title' => 'Bugun Boshlab Ko\'ring',
+        'subtitle' => '30 kun bepul sinab ko\'ring. Istalgan vaqt bekor qilish.',
+        'button' => 'Bepul Boshlash',
+    ],
+    'footer' => [
+        'tagline' => 'Moy almashtirish biznesini boshqarish uchun professional tizim',
+        'product' => 'Mahsulot',
+        'features_link' => 'Imkoniyatlar',
+        'pricing_link' => 'Narxlar',
+        'demo_link' => 'Demo',
+        'support' => 'Qo\'llab-quvvatlash',
+        'help_center' => 'Yordam Markazi',
+        'contact_link' => 'Bog\'lanish',
+        'faq' => 'FAQ',
+        'contact' => 'Aloqa',
+        'city' => 'Toshkent, O\'zbekiston',
+        'copyright' => '© 2026 OilControl. Barcha huquqlar himoyalangan.',
+    ],
+];

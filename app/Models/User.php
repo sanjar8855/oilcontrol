@@ -27,6 +27,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'phone_secondary',
+        'telegram_chat_id',
+        'locale',
         'password',
         'branch_id',
         'salary',

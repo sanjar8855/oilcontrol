@@ -6,6 +6,7 @@ use App\Models\ServiceLog;
 use App\Models\Vehicle;
 use App\Services\ReminderService;
 use App\Services\StockMovementService;
+use App\Services\TelegramBotService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -104,7 +105,7 @@ class ServiceLogController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, ReminderService $reminderService): RedirectResponse
+    public function store(Request $request, ReminderService $reminderService, TelegramBotService $telegramBot): RedirectResponse
     {
         $validated = $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
@@ -239,10 +240,25 @@ class ServiceLogController extends Controller
                 );
             }
 
-            // Avtomatik eslatmalarni yaratish
-            $reminderService->createRemindersForServiceLog($serviceLog);
+            // Avtomatik eslatmalarni probeg asosida (qayta) hisoblash
+            $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
 
             DB::commit();
+
+            // Mijozga avtomatik elektron kvitansiya (agar Telegram ulangan bo'lsa)
+            if ($vehicle->client->telegram_id) {
+                $telegramBot->sendReceipt($vehicle->client->telegram_id, [
+                    'client_name' => $vehicle->client->name,
+                    'vehicle_make' => $vehicle->make,
+                    'vehicle_model' => $vehicle->model,
+                    'service_type' => $serviceLog->service_type,
+                    'odometer_reading' => number_format($serviceLog->odometer_reading),
+                    'total_amount' => number_format($serviceLog->total_amount, 0) . " so'm",
+                    'remaining_amount' => (float) $serviceLog->remaining_amount,
+                    'next_service_km' => number_format($serviceLog->odometer_reading + $serviceLog->next_service_km),
+                    'locale' => $vehicle->client->locale ?? 'uz',
+                ]);
+            }
 
             return redirect()->route('vehicles.show', $vehicle->id)
                 ->with('success', 'Servis yozuvi muvaffaqiyatli qo\'shildi!');
@@ -323,7 +339,7 @@ class ServiceLogController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ServiceLog $serviceLog): RedirectResponse
+    public function update(Request $request, ServiceLog $serviceLog, ReminderService $reminderService): RedirectResponse
     {
         $user = $request->user();
 
@@ -360,6 +376,9 @@ class ServiceLogController extends Controller
         }
 
         $serviceLog->update($validated);
+
+        // Probeg o'zgargan bo'lishi mumkin — eslatmalarni qayta hisoblaymiz
+        $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
 
         return redirect()->route('service-logs.show', $serviceLog)
             ->with('success', 'Servis yozuvi yangilandi!');

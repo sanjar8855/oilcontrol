@@ -1,10 +1,44 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed, watchEffect } from 'vue';
+import QRCode from 'qrcode';
 
-defineProps({
+const props = defineProps({
     client: Object,
+    telegramBotUsername: String,
 });
+
+const showConnectModal = ref(false);
+const qrDataUrl = ref(null);
+const copied = ref(false);
+
+const deepLink = computed(() => {
+    if (!props.telegramBotUsername || !props.client.telegram_link_token) return null;
+    return `https://t.me/${props.telegramBotUsername}?start=${props.client.telegram_link_token}`;
+});
+
+watchEffect(async () => {
+    if (deepLink.value && showConnectModal.value) {
+        qrDataUrl.value = await QRCode.toDataURL(deepLink.value, { width: 240, margin: 1 });
+    }
+});
+
+const copyLink = async () => {
+    if (!deepLink.value) return;
+    await navigator.clipboard.writeText(deepLink.value);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+};
+
+const unlinkTelegram = () => {
+    if (!confirm('Telegram bog\'lanishini uzishga ishonchingiz komilmi?')) return;
+    router.post(route('clients.telegram-unlink', props.client.id), {}, { preserveScroll: true });
+};
+
+const regenerateLink = () => {
+    router.post(route('clients.telegram-regenerate-link', props.client.id), {}, { preserveScroll: true });
+};
 </script>
 
 <template>
@@ -63,6 +97,39 @@ defineProps({
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ client.notes }}</dd>
                                     </div>
                                 </dl>
+                            </div>
+                        </div>
+
+                        <!-- Telegram bog'lanishi -->
+                        <div class="mt-6 overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                            <div class="border-b border-gray-200 bg-white px-4 py-5 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                                    Telegram
+                                </h3>
+                            </div>
+                            <div class="p-6">
+                                <div v-if="client.telegram_id" class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800 dark:bg-green-800 dark:text-green-100">
+                                        ✓ Ulangan
+                                    </span>
+                                    <button
+                                        @click="unlinkTelegram"
+                                        class="text-sm font-medium text-red-600 hover:text-red-500 dark:text-red-400"
+                                    >
+                                        Uzish
+                                    </button>
+                                </div>
+                                <div v-else>
+                                    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
+                                        Mijoz botga ulanmagan — eslatma va kvitansiya yubora olmaysiz.
+                                    </p>
+                                    <button
+                                        @click="showConnectModal = true"
+                                        class="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                                    >
+                                        📱 Botga ulash
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -126,6 +193,57 @@ defineProps({
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Botga ulash modali -->
+        <div
+            v-if="showConnectModal"
+            @click.self="showConnectModal = false"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+            <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Botga ulash</h3>
+                    <button @click="showConnectModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">✕</button>
+                </div>
+
+                <template v-if="!telegramBotUsername">
+                    <p class="text-sm text-red-600 dark:text-red-400">
+                        Bot username sozlanmagan (TELEGRAM_BOT_USERNAME). Administratorga murojaat qiling.
+                    </p>
+                </template>
+                <template v-else>
+                    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                        Mijozning telefonini oling va QR'ni skanerlating — yoki havolani nusxalab yuboring.
+                    </p>
+
+                    <div class="mb-4 flex justify-center">
+                        <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR" class="rounded-lg border border-gray-200 dark:border-gray-700" />
+                        <div v-else class="flex h-60 w-60 items-center justify-center text-sm text-gray-400">Yuklanmoqda...</div>
+                    </div>
+
+                    <div class="mb-3 flex items-center gap-2">
+                        <input
+                            :value="deepLink"
+                            readonly
+                            class="block w-full truncate rounded-md border-gray-300 bg-gray-50 text-xs shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                        />
+                        <button
+                            @click="copyLink"
+                            class="shrink-0 rounded-md bg-gray-700 px-3 py-2 text-xs font-semibold text-white hover:bg-gray-600"
+                        >
+                            {{ copied ? 'Nusxalandi ✓' : 'Nusxalash' }}
+                        </button>
+                    </div>
+
+                    <button
+                        @click="regenerateLink"
+                        class="text-xs text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                        Havolani yangilash (eskisi ishlamay qoladi)
+                    </button>
+                </template>
             </div>
         </div>
     </AuthenticatedLayout>

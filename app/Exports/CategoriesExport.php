@@ -26,7 +26,7 @@ class CategoriesExport implements FromCollection, WithHeadings, WithMapping, Sho
 
     public function headings(): array
     {
-        return ['№', 'Nomi', 'Tavsifi', 'Mahsulotlar soni', 'Holati', 'Yaratilgan sana'];
+        return trans('export.categories.headings');
     }
 
     /**
@@ -41,7 +41,7 @@ class CategoriesExport implements FromCollection, WithHeadings, WithMapping, Sho
             $category->name,
             $category->description ?: '-',
             $category->products_count ?? $category->products()->count(),
-            $category->is_active ? 'Faol' : 'Nofaol',
+            $category->is_active ? trans('export.active') : trans('export.inactive'),
             $category->created_at?->format('d.m.Y H:i'),
         ];
     }

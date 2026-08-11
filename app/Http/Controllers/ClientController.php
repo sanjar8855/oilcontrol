@@ -32,8 +32,21 @@ class ClientController extends Controller
             ->latest()
             ->paginate(10);
 
+        // Botga ulangan mijozlar foizi — usta ustalarni ulashga undash uchun (docs 5-bo'lim)
+        $statsQuery = $workshop->clients();
+        if (!$user->canAccessAllBranches()) {
+            $statsQuery->where('branch_id', $user->branch_id);
+        }
+        $totalClients = (clone $statsQuery)->count();
+        $linkedClients = (clone $statsQuery)->whereNotNull('telegram_id')->count();
+
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
+            'telegramStats' => [
+                'total' => $totalClients,
+                'linked' => $linkedClients,
+                'percent' => $totalClients > 0 ? round($linkedClients / $totalClients * 100) : 0,
+            ],
         ]);
     }
 
@@ -139,9 +152,50 @@ class ClientController extends Controller
 
         $client->load('vehicles.serviceLogs');
 
+        if (!$client->telegram_id) {
+            $client->getOrCreateTelegramLinkToken();
+        }
+
         return Inertia::render('Clients/Show', [
             'client' => $client,
+            'telegramBotUsername' => config('services.telegram.bot_username'),
         ]);
+    }
+
+    /**
+     * Mijozning Telegram bog'lanishini uzish (masalan, xato ulangan bo'lsa).
+     */
+    public function telegramUnlink(Request $request, Client $client): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
+            abort(403);
+        }
+
+        $client->update(['telegram_id' => null, 'telegram_linked_at' => null]);
+        $client->getOrCreateTelegramLinkToken();
+
+        return redirect()->route('clients.show', $client)
+            ->with('success', 'Telegram bog\'lanishi uzildi.');
+    }
+
+    /**
+     * Botga ulash havolasini yangilash (eski havola ishlamay qoladi).
+     */
+    public function telegramRegenerateLink(Request $request, Client $client): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($client->workshop_id !== $user->currentWorkshop()->id) {
+            abort(403);
+        }
+
+        $client->update(['telegram_link_token' => null]);
+        $client->getOrCreateTelegramLinkToken();
+
+        return redirect()->route('clients.show', $client)
+            ->with('success', 'Yangi havola yaratildi.');
     }
 
     /**

@@ -21,6 +21,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "@vueform/multiselect": "^2.6.11"
+        "@vueform/multiselect": "^2.6.11",
+        "qrcode": "^1.5.4"
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ReminderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -149,6 +150,129 @@ class ReportController extends Controller
             'topProducts' => $topProducts,
             'salesByMake' => $salesByMake,
             'inventory' => $inventory,
+        ]);
+    }
+
+    /**
+     * Eslatma effektivligi hisoboti. Asosiy ko'rsatkichlar barcha tariflarda,
+     * filial kesimi (byBranch) faqat Pro/Maxsus tarifda ko'rsatiladi.
+     */
+    public function reminders(Request $request, ReminderService $reminderService): Response
+    {
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+
+        $dateFrom = $request->filled('date_from')
+            ? Carbon::parse($request->date('date_from'))->startOfDay()
+            : now()->subDays(90)->startOfDay();
+        $dateTo = $request->filled('date_to')
+            ? Carbon::parse($request->date('date_to'))->endOfDay()
+            : now()->endOfDay();
+
+        if ($dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+        }
+
+        $restrictToBranch = !$user->canAccessAllBranches() ? $user->branch_id : null;
+
+        $report = $reminderService->effectivenessReport($workshop->id, $dateFrom, $dateTo, $restrictToBranch);
+
+        $canSeeBranchBreakdown = in_array($workshop->subscription_plan, ['pro', 'maxsus'], true);
+
+        return Inertia::render('Reports/ReminderEffectiveness', [
+            'filters' => [
+                'date_from' => $dateFrom->toDateString(),
+                'date_to' => $dateTo->toDateString(),
+            ],
+            'report' => [
+                'sent_total' => $report['sent_total'],
+                'with_reminder' => $report['with_reminder'],
+                'without_reminder' => $report['without_reminder'],
+                'by_branch' => $canSeeBranchBreakdown ? $report['by_branch'] : null,
+            ],
+            'canSeeBranchBreakdown' => $canSeeBranchBreakdown,
+        ]);
+    }
+
+    /**
+     * Filiallarni solishtirish hisoboti — faqat Pro/Maxsus tarifda.
+     * Docs: docs/strategiya_va_yol_xaritasi.md — Bosqich 5.
+     */
+    public function branches(Request $request): Response
+    {
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+
+        abort_unless(in_array($workshop->subscription_plan, ['pro', 'maxsus'], true), 403, 'Bu hisobot Pro va Maxsus tariflarda mavjud.');
+        abort_unless($user->canAccessAllBranches(), 403);
+
+        $dateFrom = $request->filled('date_from')
+            ? Carbon::parse($request->date('date_from'))->startOfDay()
+            : now()->startOfMonth();
+        $dateTo = $request->filled('date_to')
+            ? Carbon::parse($request->date('date_to'))->endOfDay()
+            : now()->endOfDay();
+
+        if ($dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+        }
+
+        $branches = $workshop->branches()->orderBy('name')->get(['id', 'name']);
+
+        $salesByBranch = DB::table('service_logs')
+            ->join('vehicles', 'vehicles.id', '=', 'service_logs.vehicle_id')
+            ->join('clients', 'clients.id', '=', 'vehicles.client_id')
+            ->where('clients.workshop_id', $workshop->id)
+            ->whereBetween('service_logs.service_date', [$dateFrom, $dateTo])
+            ->select('service_logs.branch_id')
+            ->selectRaw('COUNT(*) as sales_count')
+            ->selectRaw('SUM(service_logs.total_amount) as revenue')
+            ->selectRaw('AVG(service_logs.total_amount) as avg_ticket')
+            ->selectRaw('SUM(service_logs.remaining_amount) as credit_extended')
+            ->groupBy('service_logs.branch_id')
+            ->get()
+            ->keyBy('branch_id');
+
+        $expensesByBranch = DB::table('expenses')
+            ->where('workshop_id', $workshop->id)
+            ->whereBetween('expense_date', [$dateFrom, $dateTo])
+            ->select('branch_id')
+            ->selectRaw('SUM(amount) as total')
+            ->groupBy('branch_id')
+            ->pluck('total', 'branch_id');
+
+        $newClientsByBranch = DB::table('clients')
+            ->where('workshop_id', $workshop->id)
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->select('branch_id')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('branch_id')
+            ->pluck('total', 'branch_id');
+
+        $rows = $branches->map(function ($branch) use ($salesByBranch, $expensesByBranch, $newClientsByBranch) {
+            $sales = $salesByBranch->get($branch->id);
+            $revenue = (float) ($sales->revenue ?? 0);
+            $expenses = (float) ($expensesByBranch[$branch->id] ?? 0);
+
+            return [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'sales_count' => (int) ($sales->sales_count ?? 0),
+                'revenue' => $revenue,
+                'avg_ticket' => round((float) ($sales->avg_ticket ?? 0), 2),
+                'expenses' => $expenses,
+                'net_profit' => $revenue - $expenses,
+                'credit_extended' => (float) ($sales->credit_extended ?? 0),
+                'new_clients' => (int) ($newClientsByBranch[$branch->id] ?? 0),
+            ];
+        });
+
+        return Inertia::render('Reports/BranchComparison', [
+            'filters' => [
+                'date_from' => $dateFrom->toDateString(),
+                'date_to' => $dateTo->toDateString(),
+            ],
+            'branches' => $rows,
         ]);
     }
 }

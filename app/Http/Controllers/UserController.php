@@ -88,6 +88,14 @@ class UserController extends Controller
     {
         $currentUser = $request->user();
 
+        $workshop = $currentUser->currentWorkshop();
+        if ($workshop) {
+            $userLimit = $workshop->userLimit();
+            if ($userLimit !== null && $workshop->activeUsersCount() >= $userLimit) {
+                return back()->with('error', "Tarifingizda foydalanuvchilar soni {$userLimit} tagacha cheklangan. Ko'proq xodim uchun tarifni yangilang.");
+            }
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:users',

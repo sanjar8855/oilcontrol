@@ -5,8 +5,16 @@ use App\Http\Controllers\API\ClientController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\ServiceLogController;
 use App\Http\Controllers\API\VehicleController;
+use App\Http\Controllers\MiniApp\GarageController;
+use App\Http\Middleware\VerifyTelegramInitData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Telegram Mini App (mijozga qaratilgan, initData orqali autentifikatsiya qilinadi)
+Route::prefix('miniapp')->middleware(VerifyTelegramInitData::class)->group(function () {
+    Route::get('/garage', [GarageController::class, 'index']);
+    Route::get('/vehicles/{vehicle}', [GarageController::class, 'vehicle']);
+});
 
 // Public routes (No authentication required)
 Route::post('/register', [AuthController::class, 'register']);

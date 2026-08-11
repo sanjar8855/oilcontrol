@@ -37,18 +37,30 @@ class TelegramWebhookController extends Controller
             // Foydalanuvchi "Telefon raqamni yuborish" tugmasi orqali kontakt yuborsa
             if (isset($message['contact'])) {
                 $this->telegramBot->handleContactShared($chatId, $message['contact'], $fromUserId, $firstName);
-            } elseif ($text === '/start') {
-                $this->telegramBot->handleStartCommand($chatId, $firstName);
+            } elseif ($text === '/start' || str_starts_with($text, '/start ')) {
+                // Deep-link: "/start <token>" — usta ekranidan chiqqan QR/havola shu payloadni yuboradi
+                $token = trim(substr($text, 6)) ?: null;
+                $this->telegramBot->handleStartCommand($chatId, $firstName, $token);
             } elseif ($text === '/help') {
                 $this->telegramBot->handleHelpCommand($chatId);
             } elseif ($text === '/myid') {
                 $this->telegramBot->handleMyIdCommand($chatId);
-            } elseif ($text !== '' && $this->telegramBot->looksLikePhoneNumber($text)) {
-                // Foydalanuvchi telefon raqamni qo'lda matn sifatida yozgan bo'lsa
-                $this->telegramBot->handlePhoneNumber($chatId, $text, $firstName);
             } else {
-                // Har qanday boshqa xabar uchun
+                // Matn orqali telefon raqam qabul qilinmaydi (xavfsizlik, docs 5.1-bo'lim) —
+                // faqat deep-link token va contact-share orqali bog'lanish mumkin.
                 $this->telegramBot->handleDefaultMessage($chatId, $firstName);
+            }
+        }
+
+        // Inline tugma bosilganda (masalan, til tanlash) kelgan callback_query
+        if (isset($update['callback_query'])) {
+            $callback = $update['callback_query'];
+            $chatId = $callback['message']['chat']['id'] ?? null;
+            $data = $callback['data'] ?? '';
+
+            if ($chatId && str_starts_with($data, 'lang:')) {
+                $locale = substr($data, 5);
+                $this->telegramBot->handleLanguageSelection($chatId, $locale, $callback['id']);
             }
         }
 
@@ -95,5 +107,15 @@ class TelegramWebhookController extends Controller
         $info = $this->telegramBot->getMe();
 
         return response()->json($info);
+    }
+
+    /**
+     * Bot menyu tugmasini Mini App'ga sozlash (BotFather'dagi qo'lda sozlashning o'rnini bosadi)
+     */
+    public function setMenuButton(): JsonResponse
+    {
+        $result = $this->telegramBot->setMenuButton();
+
+        return response()->json($result);
     }
 }

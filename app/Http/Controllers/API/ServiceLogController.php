@@ -54,8 +54,8 @@ class ServiceLogController extends Controller
 
         $serviceLog = ServiceLog::create($validated);
 
-        // Create automatic reminders
-        $reminderService->createRemindersForServiceLog($serviceLog);
+        // Create/recalculate automatic reminders based on latest odometer reading
+        $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
 
         $serviceLog->load(['vehicle.client', 'reminders']);
 
@@ -85,7 +85,7 @@ class ServiceLogController extends Controller
     /**
      * Update the specified service log
      */
-    public function update(Request $request, ServiceLog $serviceLog): JsonResponse
+    public function update(Request $request, ServiceLog $serviceLog, ReminderService $reminderService): JsonResponse
     {
         // Authorization check
         if ($serviceLog->vehicle->client->workshop_id !== $request->user()->workshop->id) {
@@ -110,6 +110,10 @@ class ServiceLogController extends Controller
         }
 
         $serviceLog->update($validated);
+
+        // Probeg o'zgargan bo'lishi mumkin — eslatmalarni qayta hisoblaymiz
+        $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
+
         $serviceLog->load(['vehicle.client', 'reminders']);
 
         return response()->json([

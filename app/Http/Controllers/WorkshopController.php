@@ -63,7 +63,7 @@ class WorkshopController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
-            'subscription_plan' => 'required|in:free,start,pro,business',
+            'subscription_plan' => 'required|in:trial,start,pro,maxsus',
             'subscription_expires_at' => 'nullable|date',
             'is_active' => 'boolean',
             'director_name' => 'required|string|max:255',
@@ -99,10 +99,22 @@ class WorkshopController extends Controller
     public function show(Workshop $workshop): Response
     {
         $workshop->loadCount(['clients', 'products', 'categories', 'expenses', 'branches', 'inventories']);
-        $workshop->load(['user:id,name,phone,email', 'branches:id,workshop_id,name,code,is_active']);
+        $workshop->load([
+            'user:id,name,phone,email',
+            'branches:id,workshop_id,name,code,is_active',
+            'subscriptionPayments' => fn ($query) => $query->latest('paid_at')->with('confirmedBy:id,name'),
+        ]);
 
         return Inertia::render('Workshops/Show', [
             'workshop' => $workshop,
+            'subscriptionStatus' => [
+                'active' => $workshop->isSubscriptionActive(),
+                'onTrial' => $workshop->isOnTrial(),
+                'daysRemaining' => $workshop->daysUntilExpiry(),
+                'limits' => $workshop->planLimits(),
+                'usersCount' => $workshop->activeUsersCount(),
+            ],
+            'plans' => config('plans.plans'),
         ]);
     }
 
@@ -123,7 +135,7 @@ class WorkshopController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
-            'subscription_plan' => 'required|in:free,start,pro,business',
+            'subscription_plan' => 'required|in:trial,start,pro,maxsus',
             'subscription_expires_at' => 'nullable|date',
             'is_active' => 'boolean',
             'director_name' => 'required|string|max:255',

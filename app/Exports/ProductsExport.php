@@ -26,10 +26,7 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping, Shoul
 
     public function headings(): array
     {
-        return [
-            '№', 'Nomi', 'SKU', 'Kategoriya', 'Birlik', 'Qoldiq', 'Min. qoldiq',
-            'Tan narxi', 'Sotuv narxi', 'Valyuta', 'Ta\'minotchi', 'Holati', 'Yaratilgan sana',
-        ];
+        return trans('export.products.headings');
     }
 
     /**
@@ -51,7 +48,7 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping, Shoul
             number_format($product->getSellingPrice(), 2, '.', ' '),
             $product->currency,
             $product->supplier ?: '-',
-            $product->is_active ? 'Faol' : 'Nofaol',
+            $product->is_active ? trans('export.active') : trans('export.inactive'),
             $product->created_at?->format('d.m.Y H:i'),
         ];
     }

@@ -26,7 +26,7 @@ class InventoriesExport implements FromCollection, WithHeadings, WithMapping, Sh
 
     public function headings(): array
     {
-        return ['№', 'Boshlangan sana', 'Filial', 'Boshlagan xodim', 'Sanalgan soni', 'Jami soni', 'Holati', 'Yakunlangan sana'];
+        return trans('export.inventories.headings');
     }
 
     /**
@@ -39,11 +39,11 @@ class InventoriesExport implements FromCollection, WithHeadings, WithMapping, Sh
         return [
             $this->rowNumber,
             $inventory->started_at?->format('d.m.Y H:i'),
-            $inventory->branch?->name ?: 'Barcha filiallar',
+            $inventory->branch?->name ?: trans('export.inventories.all_branches'),
             $inventory->user?->name ?: '-',
             $inventory->counted_items_count ?? 0,
             $inventory->items_count ?? 0,
-            $inventory->status === 'completed' ? 'Yakunlangan' : 'Jarayonda',
+            $inventory->status === 'completed' ? trans('export.inventories.completed') : trans('export.inventories.in_progress'),
             $inventory->completed_at?->format('d.m.Y H:i') ?: '-',
         ];
     }

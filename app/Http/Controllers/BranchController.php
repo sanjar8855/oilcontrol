@@ -34,6 +34,11 @@ class BranchController extends Controller
     {
         $workshop = $request->user()->currentWorkshop();
 
+        $branchLimit = $workshop->branchLimit();
+        if ($branchLimit !== null && $workshop->branches()->count() >= $branchLimit) {
+            return back()->with('error', "Tarifingizda filiallar soni {$branchLimit} tagacha cheklangan. Ko'proq filial uchun tarifni yangilang.");
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => [

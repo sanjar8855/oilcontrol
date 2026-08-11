@@ -38,10 +38,10 @@ const resetFilters = () => {
 };
 
 const planLabels = {
-    free: 'Bepul',
+    trial: 'Sinov',
     start: 'Start',
     pro: 'Pro',
-    business: 'Biznes',
+    maxsus: 'Maxsus',
 };
 
 const switchTo = (workshop) => {
@@ -95,10 +95,10 @@ const deleteWorkshop = (workshop) => {
                                     class="mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                                 >
                                     <option value="">Barchasi</option>
-                                    <option value="free">Bepul</option>
+                                    <option value="trial">Sinov</option>
                                     <option value="start">Start</option>
                                     <option value="pro">Pro</option>
-                                    <option value="business">Biznes</option>
+                                    <option value="maxsus">Maxsus</option>
                                 </select>
                             </div>
                             <div>

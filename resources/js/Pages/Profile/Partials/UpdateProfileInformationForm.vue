@@ -21,6 +21,8 @@ const form = useForm({
     phone: user.phone || '',
     phone_secondary: user.phone_secondary || '',
     email: user.email || '',
+    telegram_chat_id: user.telegram_chat_id || '',
+    locale: user.locale || 'uz',
     salary: user.salary || '',
     hire_date: user.hire_date || '',
     position: user.position || '',
@@ -102,6 +104,39 @@ const form = useForm({
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div>
+                <InputLabel for="locale" value="Panel tili / Язык панели" />
+
+                <select
+                    id="locale"
+                    v-model="form.locale"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                    <option value="uz">O'zbekcha</option>
+                    <option value="ru">Русский</option>
+                </select>
+
+                <InputError class="mt-2" :message="form.errors.locale" />
+            </div>
+
+            <div v-if="$page.props.auth.user.role === 'director'">
+                <InputLabel for="telegram_chat_id" value="Telegram Chat ID (obuna ogohlantirishlari uchun)" />
+
+                <TextInput
+                    id="telegram_chat_id"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.telegram_chat_id"
+                    placeholder="123456789"
+                />
+
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Botga <span class="font-mono">/start</span>, keyin <span class="font-mono">/myid</span> yuboring — chiqqan raqamni shu yerga kiriting. Obuna tugashiga 7/3/1 kun qolganda shu ID'ga ogohlantirish keladi.
+                </p>
+
+                <InputError class="mt-2" :message="form.errors.telegram_chat_id" />
             </div>
 
             <!-- Divider -->

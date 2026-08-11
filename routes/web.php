@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ServiceLogController;
+use App\Http\Controllers\SubscriptionPaymentController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
@@ -24,14 +25,25 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+$renderWelcome = function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+};
+
+Route::get('/', $renderWelcome)->name('home');
+
+// Rus tilidagi landing — docs: Bosqich 4 "Landing /ru + hreflang"
+Route::get('/ru', function () use ($renderWelcome) {
+    app()->setLocale('ru');
+    return $renderWelcome();
+})->name('home.ru');
+
+// Telegram Mini App — mijoz Telegram ichida ochadigan, alohida (Inertia'siz) SPA qobig'i
+Route::get('/miniapp', fn () => view('miniapp'))->name('miniapp');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -46,6 +58,7 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
     Route::get('/webhook-info', [TelegramWebhookController::class, 'getWebhookInfo'])->name('telegram.webhook-info');
     Route::get('/delete-webhook', [TelegramWebhookController::class, 'deleteWebhook'])->name('telegram.delete-webhook');
     Route::get('/bot-info', [TelegramWebhookController::class, 'getBotInfo'])->name('telegram.bot-info');
+    Route::get('/set-menu-button', [TelegramWebhookController::class, 'setMenuButton'])->name('telegram.set-menu-button');
 });
 
 Route::middleware('auth')->group(function () {
@@ -56,6 +69,11 @@ Route::middleware('auth')->group(function () {
 
     // Kompaniyalar (Workshops) CRUD - Faqat superadmin
     Route::resource('workshops', WorkshopController::class)->middleware('can:workshops.manage');
+
+    // Obuna to'lovlari - Faqat superadmin
+    Route::post('/workshops/{workshop}/subscription-payments', [SubscriptionPaymentController::class, 'store'])
+        ->name('subscription-payments.store')
+        ->middleware('can:subscription-payments.manage');
 
     // Global mahsulotlar katalogi (barcha kompaniyalar uchun umumiy namuna) - Faqat superadmin
     Route::middleware('can:global-products.manage')->group(function () {
@@ -84,6 +102,8 @@ Route::middleware('auth')->group(function () {
     // Mijozlar (Clients) CRUD - savdo jarayoni, xodim ham kira oladi
     Route::middleware('can:clients.manage')->group(function () {
         Route::post('/clients/store-with-vehicle', [ClientController::class, 'storeWithVehicle'])->name('clients.store-with-vehicle');
+        Route::post('/clients/{client}/telegram-unlink', [ClientController::class, 'telegramUnlink'])->name('clients.telegram-unlink');
+        Route::post('/clients/{client}/telegram-regenerate-link', [ClientController::class, 'telegramRegenerateLink'])->name('clients.telegram-regenerate-link');
         Route::resource('clients', ClientController::class);
     });
 
@@ -143,6 +163,8 @@ Route::middleware('auth')->group(function () {
 
     // Hisobotlar - faqat superadmin/director/menejer
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index')->middleware('can:reports.view');
+    Route::get('/reports/reminders', [ReportController::class, 'reminders'])->name('reports.reminders')->middleware('can:reports.view');
+    Route::get('/reports/branches', [ReportController::class, 'branches'])->name('reports.branches')->middleware('can:reports.view');
 
     // Profil boshqaruvi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

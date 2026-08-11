@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
@@ -44,7 +44,7 @@
 <body>
     <h1>{{ $title }}</h1>
     <div class="meta">
-        {{ $workshopName }} &middot; {{ $generatedAt }} &middot; Jami: {{ count($rows) }} ta
+        {{ $workshopName }} &middot; {{ $generatedAt }} &middot; {{ count($rows) }} {{ trans('export.total_suffix') }}
     </div>
 
     <table>
@@ -64,7 +64,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ count($headers) }}">Ma'lumot topilmadi</td>
+                    <td colspan="{{ count($headers) }}">{{ trans('export.no_data') }}</td>
                 </tr>
             @endforelse
         </tbody>

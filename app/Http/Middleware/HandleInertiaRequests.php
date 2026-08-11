@@ -30,6 +30,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $workshop = $user?->currentWorkshop();
 
         return [
             ...parent::share($request),
@@ -38,8 +39,22 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user?->getAllPermissions()->pluck('name') ?? [],
             ],
             'activeWorkshop' => $user && $user->isSuperAdmin()
-                ? $user->currentWorkshop()?->only(['id', 'name'])
+                ? $workshop?->only(['id', 'name'])
                 : null,
+            'subscription' => $workshop ? [
+                'active' => $workshop->isSubscriptionActive(),
+                'onTrial' => $workshop->isOnTrial(),
+                'daysRemaining' => $workshop->daysUntilExpiry(),
+                'plan' => $workshop->subscription_plan,
+            ] : null,
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
+            // Closure sifatida — Inertia javobni tayyorlashda (route handler ichida
+            // App::setLocale() chaqirilgandan KEYIN, masalan /ru landing marshrutida) hisoblanadi.
+            'locale' => fn () => app()->getLocale(),
+            'translations' => fn () => array_merge(trans('app'), ['landing' => trans('landing')]),
         ];
     }
 }
