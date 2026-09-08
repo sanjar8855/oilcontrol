@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarModel;
 use App\Models\GlobalCategory;
 use App\Models\GlobalProduct;
 use Illuminate\Http\RedirectResponse;
@@ -157,5 +158,47 @@ class GlobalProductController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    /**
+     * Ushbu global mahsulotni bir avtomobil turiga (kerakli miqdor bilan)
+     * bog'laydi — mavjud bo'lsa miqdorni yangilaydi.
+     */
+    public function attachCarModel(Request $request, GlobalProduct $globalProduct): RedirectResponse
+    {
+        $validated = $request->validate([
+            'car_model_id' => 'required|exists:car_models,id',
+            'quantity' => 'required|numeric|min:0.01|max:9999.99',
+        ]);
+
+        $globalProduct->carModels()->syncWithoutDetaching([
+            $validated['car_model_id'] => ['quantity' => $validated['quantity']],
+        ]);
+
+        return back()->with('success', 'Avtomobil turi bog\'landi!');
+    }
+
+    /**
+     * Bog'langan avtomobil turi uchun kerakli miqdorni yangilaydi.
+     */
+    public function updateCarModelQuantity(Request $request, GlobalProduct $globalProduct, CarModel $carModel): RedirectResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:0.01|max:9999.99',
+        ]);
+
+        $globalProduct->carModels()->updateExistingPivot($carModel->id, ['quantity' => $validated['quantity']]);
+
+        return back()->with('success', 'Miqdor yangilandi!');
+    }
+
+    /**
+     * Avtomobil turi bilan bog'lanishni uzadi.
+     */
+    public function detachCarModel(GlobalProduct $globalProduct, CarModel $carModel): RedirectResponse
+    {
+        $globalProduct->carModels()->detach($carModel->id);
+
+        return back()->with('success', 'Bog\'lanish o\'chirildi!');
     }
 }

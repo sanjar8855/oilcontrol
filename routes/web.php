@@ -79,6 +79,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:global-products.manage')->group(function () {
         Route::get('/global-products/bulk-create', [GlobalProductController::class, 'bulkCreate'])->name('global-products.bulk-create');
         Route::post('/global-products/bulk-store', [GlobalProductController::class, 'bulkStore'])->name('global-products.bulk-store');
+        Route::post('/global-products/{globalProduct}/car-models', [GlobalProductController::class, 'attachCarModel'])->name('global-products.car-models.attach');
+        Route::put('/global-products/{globalProduct}/car-models/{carModel}', [GlobalProductController::class, 'updateCarModelQuantity'])->name('global-products.car-models.update');
+        Route::delete('/global-products/{globalProduct}/car-models/{carModel}', [GlobalProductController::class, 'detachCarModel'])->name('global-products.car-models.destroy');
         Route::resource('global-products', GlobalProductController::class)->except(['show']);
     });
 
