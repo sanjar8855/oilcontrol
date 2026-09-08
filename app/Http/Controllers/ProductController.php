@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\InventoryTransaction;
 use App\Models\User;
 use App\Models\Workshop;
+use App\Services\GlobalProductMatcher;
 use App\Services\StockMovementService;
 use App\Services\SupplierLedgerService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -166,9 +167,6 @@ class ProductController extends Controller
             // Eski maydonlar (backward compatibility)
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
-            // Bog'langan avtomobil turlari
-            'car_models' => 'nullable|array',
-            'car_models.*' => 'integer|exists:car_models,id',
         ];
     }
 
@@ -178,17 +176,12 @@ class ProductController extends Controller
      * ta'minotchiga qarz yoziladi (SupplierLedgerService orqali), tanlanmagan
      * bo'lsa eski xatti-harakat (naqd xarid, Xarajat yozuvi) saqlanadi.
      */
-    private function createProductWithInitialStock(Workshop $workshop, User $user, array $validated, array $carModelIds = []): Product
+    private function createProductWithInitialStock(Workshop $workshop, User $user, array $validated): Product
     {
-        unset($validated['car_models']);
-
         $product = $workshop->products()->create($validated);
 
-        if (!empty($carModelIds)) {
-            // Miqdor keyinchalik "Avto markalari" sahifasida aniqlashtiriladi, hozircha 1
-            $product->carModels()->sync(collect($carModelIds)->mapWithKeys(
-                fn ($carModelId) => [$carModelId => ['quantity' => 1]]
-            ));
+        if (is_null($product->global_product_id)) {
+            $this->linkToGlobalCatalog($product, $workshop);
         }
 
         // StockMovementService orqali boshlang'ich qoldiqni qo'shish
@@ -252,6 +245,37 @@ class ProductController extends Controller
         return $product;
     }
 
+    /**
+     * Yangi mahsulotni global katalog bilan moslashtiradi (yoki katalogga
+     * qo'shadi) va bog'laydi. `products` jadvalidagi
+     * unique(workshop_id, global_product_id) cheklovi tufayli, agar shu
+     * workshopda allaqachon shu global mahsulotga bog'langan boshqa
+     * mahsulot bo'lsa, bog'lanmay qoladi (product.global_product_id null
+     * bo'lib qoladi, "Avto markalari" bo'limida lokal fallback ishlaydi).
+     */
+    private function linkToGlobalCatalog(Product $product, Workshop $workshop): void
+    {
+        $globalProduct = app(GlobalProductMatcher::class)->findOrCreateFor([
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'barcode' => $product->barcode,
+            'unit' => $product->unit,
+            'description' => $product->description,
+            'category_name' => $product->category?->name,
+        ]);
+
+        $alreadyLinkedInWorkshop = $workshop->products()
+            ->where('id', '!=', $product->id)
+            ->where('global_product_id', $globalProduct->id)
+            ->exists();
+
+        if ($alreadyLinkedInWorkshop) {
+            return;
+        }
+
+        $product->update(['global_product_id' => $globalProduct->id]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate($this->productValidationRules());
@@ -275,11 +299,9 @@ class ProductController extends Controller
             ? ($request->input('branch_id') ?? $user->branch_id)
             : $user->branch_id;
 
-        $carModelIds = $validated['car_models'] ?? [];
-
         DB::beginTransaction();
         try {
-            $this->createProductWithInitialStock($workshop, $user, $validated, $carModelIds);
+            $this->createProductWithInitialStock($workshop, $user, $validated);
 
             DB::commit();
 
