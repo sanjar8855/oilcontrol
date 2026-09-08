@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarMake;
 use App\Models\CarModel;
 use App\Models\GlobalCategory;
 use App\Models\GlobalProduct;
@@ -90,8 +91,12 @@ class GlobalProductController extends Controller
     public function edit(GlobalProduct $globalProduct): Response
     {
         return Inertia::render('GlobalProducts/Edit', [
-            'product' => $globalProduct->load('globalCategory'),
+            'product' => $globalProduct->load(['globalCategory', 'carModels']),
             'categoryNames' => GlobalCategory::orderBy('name')->pluck('name'),
+            'carMakes' => CarMake::with(['carModels' => fn ($query) => $query->orderBy('name')])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
