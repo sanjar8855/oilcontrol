@@ -541,14 +541,17 @@ class ProductController extends Controller
         $product->load([
             'category',
             'supplier',
-            'carModels',
+            'localCarModels',
+            'globalProduct.carModels',
             'inventoryTransactions' => function($query) {
                 $query->latest()->limit(20);
             }
         ]);
 
         return Inertia::render('Products/Show', [
-            'product' => $product,
+            'product' => array_merge($product->toArray(), [
+                'car_models' => $product->effectiveCarModels(),
+            ]),
             'carMakes' => CarMake::with(['carModels' => fn ($query) => $query->orderBy('name')])
                 ->orderBy('name')
                 ->get(),

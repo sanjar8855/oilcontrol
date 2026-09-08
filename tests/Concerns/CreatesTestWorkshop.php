@@ -22,6 +22,7 @@ trait CreatesTestWorkshop
             'user_id' => $user->id,
             'name' => 'Test Workshop',
             'phone' => '+998901234567',
+            'trial_ends_at' => now()->addDays(30),
         ]);
 
         return [$user, $workshop];
