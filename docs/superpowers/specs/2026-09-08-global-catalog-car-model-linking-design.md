@@ -111,6 +111,17 @@ xizmati", "Moyka xizmati"). Xizmat turlari global katalogga tushadi, lekin
 ularga moshina modeli biriktirilishi shart emas (4-bo'limga qarang) — bu
 ixtiyoriy, faqat moshinaga bog'liq ehtiyot qismlar uchun to'ldiriladi.
 
+**Muhim texnik cheklov:** `products` jadvalida `unique(workshop_id,
+global_product_id)` mavjud (bitta workshop bitta global mahsulotga faqat bir
+marta bog'lanishi mumkin). Shu sababli, matcher orqali topilgan/yaratilgan
+`GlobalProduct`ni yangi mahsulotga bog'lashdan oldin, shu workshopda allaqachon
+shu `global_product_id`ga bog'langan boshqa mahsulot bor-yo'qligi tekshiriladi
+— bor bo'lsa, yangi mahsulotning `global_product_id`i `null` qoldiriladi (u
+holda 4-bo'limdagi lokal fallback vidjeti orqali qo'lda moshina biriktirish
+mumkin bo'lib qoladi). Bu — bitta workshop ichida tasodifan bir xil nomli
+ikkita mahsulot alohida-alohida qo'shilgan kamdan-kam holatni xavfsiz
+qoldiradi, DB xatosiga olib kelmaydi.
+
 ## 3. Mavjud ma'lumotlarni ko'chirish (backfill migratsiyasi)
 
 Bir martalik migratsiya, bitta DB tranzaksiya ichida:
