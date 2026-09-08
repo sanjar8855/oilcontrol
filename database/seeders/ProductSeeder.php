@@ -188,7 +188,7 @@ class ProductSeeder extends Seeder
                 );
 
                 if ($carModel) {
-                    $product->carModels()->sync([$carModel->id => ['quantity' => 1]]);
+                    $product->localCarModels()->sync([$carModel->id => ['quantity' => 1]]);
                 }
             }
         }
@@ -223,7 +223,7 @@ class ProductSeeder extends Seeder
             }
 
             if (!empty($pivotData)) {
-                $product->carModels()->sync($pivotData);
+                $product->localCarModels()->sync($pivotData);
             }
         }
 

@@ -34,6 +34,13 @@ class CarModel extends Model
             ->withTimestamps();
     }
 
+    public function globalProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(GlobalProduct::class, 'car_model_global_products')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
     /**
      * Multiselect uchun guruhlangan options, ID qiymati bilan
      * ({label, options: [{value: id, label}]}) — mahsulotni bog'lash uchun.

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GlobalProduct extends Model
@@ -30,5 +31,12 @@ class GlobalProduct extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function carModels(): BelongsToMany
+    {
+        return $this->belongsToMany(CarModel::class, 'car_model_global_products')
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 }

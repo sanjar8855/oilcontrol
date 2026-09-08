@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -111,11 +112,25 @@ class Product extends Model
             ->withTimestamps();
     }
 
-    public function carModels(): BelongsToMany
+    public function localCarModels(): BelongsToMany
     {
         return $this->belongsToMany(CarModel::class, 'car_model_products')
             ->withPivot('quantity')
             ->withTimestamps();
+    }
+
+    /**
+     * Global katalogga bog'langan bo'lsa moshina mosligi global mahsulotdan
+     * meros olinadi; aks holda eski lokal bog'lanish ishlatiladi (fallback,
+     * hozircha faqat backfill qilinmagan mahsulotlar uchun qoladi).
+     */
+    public function effectiveCarModels(): Collection
+    {
+        if ($this->global_product_id) {
+            return $this->globalProduct?->carModels ?? new Collection();
+        }
+
+        return $this->localCarModels;
     }
 
     public function stockMovements(): HasMany
