@@ -1,5 +1,5 @@
 <?php
-// app/Http/Middleware/EnsureOnboardingComplete.php
+
 namespace App\Http\Middleware;
 
 use App\Models\Vehicle;
@@ -31,7 +31,7 @@ class EnsureOnboardingComplete
             return $next($request);
         }
 
-        if ($request->routeIs('logout') || $request->routeIs('onboarding.skip')) {
+        if ($request->routeIs('logout') || $request->routeIs('onboarding.skip') || $request->routeIs('workshops.switch*')) {
             return $next($request);
         }
 
@@ -40,7 +40,7 @@ class EnsureOnboardingComplete
                 return $next($request);
             }
 
-            $vehicle = Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))->first();
+            $vehicle = Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))->orderBy('id')->first();
 
             if ($vehicle) {
                 return redirect()->route('vehicles.show', $vehicle);

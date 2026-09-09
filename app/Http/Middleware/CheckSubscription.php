@@ -25,6 +25,7 @@ class CheckSubscription
         'workshops.*',
         'subscription-payments.*',
         'global-products.*',
+        'onboarding.*',
     ];
 
     /**
