@@ -189,7 +189,10 @@ class VehicleController extends Controller
             'vehicle' => $vehicle,
             'products' => $products,
             'carModelInfo' => $this->buildCarModelInfo($vehicle, $workshop, $user),
-            'isOnboardingHighlight' => $workshop->onboarding_step === 'sale',
+            'isOnboardingHighlight' => $workshop->onboarding_step === 'sale'
+                && $vehicle->id === Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))
+                    ->orderBy('id')
+                    ->value('id'),
         ]);
     }
 

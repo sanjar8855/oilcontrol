@@ -1,5 +1,5 @@
 <?php
-// tests/Feature/OnboardingSaleStepTest.php
+
 namespace Tests\Feature;
 
 use App\Models\Vehicle;
@@ -38,6 +38,32 @@ class OnboardingSaleStepTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('vehicles.show', $vehicle));
 
+        $response->assertInertia(fn ($page) => $page->where('isOnboardingHighlight', false));
+    }
+
+    /**
+     * The 'products' and 'vehicle' onboarding steps normally never reach
+     * VehicleController::show at all — EnsureOnboardingComplete redirects every
+     * request back into the wizard until the workshop reaches the 'sale' step.
+     * We bypass that middleware here so we can test the isOnboardingHighlight
+     * computation in VehicleController::show directly: it must only ever be true
+     * on the 'sale' step, never on an earlier step, even if this method were
+     * ever reached with the workshop mid-onboarding on an earlier step.
+     */
+    public function test_vehicle_show_page_is_not_highlighted_when_onboarding_is_on_an_earlier_step(): void
+    {
+        [$user, $workshop] = $this->createDirectorWithWorkshop();
+        $workshop->update(['onboarding_step' => 'products']);
+        $vehicle = $this->createOnboardingVehicle($workshop);
+
+        $response = $this->withoutMiddleware(\App\Http\Middleware\EnsureOnboardingComplete::class)
+            ->actingAs($user)->get(route('vehicles.show', $vehicle));
+        $response->assertInertia(fn ($page) => $page->where('isOnboardingHighlight', false));
+
+        $workshop->update(['onboarding_step' => 'vehicle']);
+
+        $response = $this->withoutMiddleware(\App\Http\Middleware\EnsureOnboardingComplete::class)
+            ->actingAs($user)->get(route('vehicles.show', $vehicle));
         $response->assertInertia(fn ($page) => $page->where('isOnboardingHighlight', false));
     }
 
