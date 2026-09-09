@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\GlobalCategory;
 use App\Models\GlobalProduct;
+use Illuminate\Database\Eloquent\Builder;
 
 class GlobalProductMatcher
 {
@@ -63,5 +64,28 @@ class GlobalProductMatcher
         }
 
         return GlobalCategory::firstOrCreate(['name' => $categoryName])->id;
+    }
+
+    /**
+     * Umumiy katalogdagi aktiv mahsulotlar bo'yicha (nomi/SKU) qidiruv
+     * so'rovini quradi. `ProductController::catalog()` va
+     * `OnboardingController::products()` ikkalasi ham shundan foydalanadi.
+     */
+    public function catalogQuery(?string $search, ?int $categoryId = null): Builder
+    {
+        $query = GlobalProduct::with('globalCategory')->where('is_active', true);
+
+        if ($categoryId) {
+            $query->where('global_category_id', $categoryId);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy('name');
     }
 }

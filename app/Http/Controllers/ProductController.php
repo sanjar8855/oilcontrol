@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Exports\ProductsExport;
 use App\Models\CarMake;
 use App\Models\GlobalCategory;
-use App\Models\GlobalProduct;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
-use App\Models\User;
-use App\Models\Workshop;
 use App\Services\GlobalProductMatcher;
+use App\Services\ProductCreationService;
 use App\Services\StockMovementService;
 use App\Services\SupplierLedgerService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -170,113 +167,7 @@ class ProductController extends Controller
         ];
     }
 
-    /**
-     * Mahsulotni (kerak bo'lsa boshlang'ich qoldiq bilan) yaratadi. Boshlang'ich
-     * qoldiq uchun ta'minotchi tanlangan bo'lsa — Xarajat o'rniga o'sha
-     * ta'minotchiga qarz yoziladi (SupplierLedgerService orqali), tanlanmagan
-     * bo'lsa eski xatti-harakat (naqd xarid, Xarajat yozuvi) saqlanadi.
-     */
-    private function createProductWithInitialStock(Workshop $workshop, User $user, array $validated): Product
-    {
-        $product = $workshop->products()->create($validated);
-
-        if (is_null($product->global_product_id)) {
-            $this->linkToGlobalCatalog($product, $workshop);
-        }
-
-        // StockMovementService orqali boshlang'ich qoldiqni qo'shish
-        if ($product->stock_quantity > 0 && $product->track_inventory) {
-            $stockService = new StockMovementService();
-
-            $stockService->recordIncoming(
-                productId: $product->id,
-                quantity: $product->stock_quantity,
-                unitCostUsd: $product->purchase_price_usd,
-                unitCostUzs: $product->purchase_price_uzs,
-                currency: $product->currency,
-                referenceType: 'InitialStock',
-                referenceId: null,
-                notes: "Boshlang'ich qoldiq"
-            );
-
-            // Eski InventoryTransaction (backward compatibility)
-            InventoryTransaction::create([
-                'workshop_id' => $workshop->id,
-                'branch_id' => $product->branch_id,
-                'product_id' => $product->id,
-                'type' => 'in',
-                'quantity' => $product->stock_quantity,
-                'quantity_before' => 0,
-                'quantity_after' => $product->stock_quantity,
-                'unit_price' => $product->getPurchasePrice(),
-                'total_price' => $product->stock_quantity * $product->getPurchasePrice(),
-                'reason' => 'Boshlang\'ich qoldiq',
-                'transaction_date' => now(),
-            ]);
-
-            $totalCost = $product->stock_quantity * $product->getPurchasePrice();
-
-            if ($product->supplier_id) {
-                // Ta'minotchidan qarzga olingan — Xarajat emas, qarz sifatida yoziladi
-                (new SupplierLedgerService())->recordPurchase(
-                    workshopId: $workshop->id,
-                    supplierId: $product->supplier_id,
-                    amount: $totalCost,
-                    currency: $product->currency,
-                    description: "Mahsulot sotib olish: {$product->name} ({$product->stock_quantity} {$product->unit})",
-                    referenceType: 'Product',
-                    referenceId: $product->id,
-                    userId: $user->id,
-                );
-            } else {
-                // Xarajat yaratish
-                $workshop->expenses()->create([
-                    'branch_id' => $product->branch_id,
-                    'category' => 'Boshqa',
-                    'title' => "Mahsulot sotib olish: {$product->name}",
-                    'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
-                    'amount' => $totalCost,
-                    'expense_date' => now(),
-                    'payment_method' => null,
-                ]);
-            }
-        }
-
-        return $product;
-    }
-
-    /**
-     * Yangi mahsulotni global katalog bilan moslashtiradi (yoki katalogga
-     * qo'shadi) va bog'laydi. `products` jadvalidagi
-     * unique(workshop_id, global_product_id) cheklovi tufayli, agar shu
-     * workshopda allaqachon shu global mahsulotga bog'langan boshqa
-     * mahsulot bo'lsa, bog'lanmay qoladi (product.global_product_id null
-     * bo'lib qoladi, "Avto markalari" bo'limida lokal fallback ishlaydi).
-     */
-    private function linkToGlobalCatalog(Product $product, Workshop $workshop): void
-    {
-        $globalProduct = app(GlobalProductMatcher::class)->findOrCreateFor([
-            'name' => $product->name,
-            'sku' => $product->sku,
-            'barcode' => $product->barcode,
-            'unit' => $product->unit,
-            'description' => $product->description,
-            'category_name' => $product->category?->name,
-        ]);
-
-        $alreadyLinkedInWorkshop = $workshop->products()
-            ->where('id', '!=', $product->id)
-            ->where('global_product_id', $globalProduct->id)
-            ->exists();
-
-        if ($alreadyLinkedInWorkshop) {
-            return;
-        }
-
-        $product->update(['global_product_id' => $globalProduct->id]);
-    }
-
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ProductCreationService $productCreationService): RedirectResponse
     {
         $validated = $request->validate($this->productValidationRules());
 
@@ -301,7 +192,7 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
-            $this->createProductWithInitialStock($workshop, $user, $validated);
+            $productCreationService->createWithInitialStock($workshop, $user, $validated);
 
             DB::commit();
 
@@ -325,7 +216,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function bulkStore(Request $request): RedirectResponse
+    public function bulkStore(Request $request, ProductCreationService $productCreationService): RedirectResponse
     {
         $validated = $request->validate([
             'items' => 'required|array|min:1',
@@ -378,7 +269,7 @@ class ProductController extends Controller
                     'branch_id' => $branchId,
                 ];
 
-                $this->createProductWithInitialStock($workshop, $user, $productData);
+                $productCreationService->createWithInitialStock($workshop, $user, $productData);
                 $created++;
             }
 
@@ -397,25 +288,17 @@ class ProductController extends Controller
      * ro'yxat: qaysi katalog mahsulotlari allaqachon nusxa olinganini ham
      * belgilab beradi.
      */
-    public function catalog(Request $request): Response
+    public function catalog(Request $request, GlobalProductMatcher $matcher): Response
     {
         $workshop = $request->user()->currentWorkshop();
 
-        $query = GlobalProduct::with('globalCategory')->where('is_active', true);
-
-        if ($request->filled('category_id')) {
-            $query->where('global_category_id', $request->category_id);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            });
-        }
-
-        $products = $query->orderBy('name')->paginate(30)->withQueryString();
+        $products = $matcher
+            ->catalogQuery(
+                $request->filled('search') ? $request->string('search')->toString() : null,
+                $request->filled('category_id') ? $request->integer('category_id') : null
+            )
+            ->paginate(30)
+            ->withQueryString();
 
         $copiedGlobalProductIds = $workshop->products()
             ->whereNotNull('global_product_id')
@@ -435,7 +318,7 @@ class ProductController extends Controller
      * kiritadi, kategoriya esa katalogdagi kategoriya nomi bo'yicha
      * avtomatik topiladi yoki yaratiladi.
      */
-    public function copyFromCatalog(Request $request): RedirectResponse
+    public function copyFromCatalog(Request $request, ProductCreationService $productCreationService): RedirectResponse
     {
         $validated = $request->validate([
             'items' => 'required|array|min:1',
@@ -450,71 +333,15 @@ class ProductController extends Controller
         $workshop = $user->currentWorkshop();
         $branchId = $user->canAccessAllBranches() ? ($request->input('branch_id') ?? $user->branch_id) : $user->branch_id;
 
-        $alreadyCopied = $workshop->products()
-            ->whereNotNull('global_product_id')
-            ->pluck('global_product_id')
-            ->all();
-
         DB::beginTransaction();
         try {
-            $created = 0;
-            $skipped = 0;
-
-            $globalProducts = GlobalProduct::with('globalCategory')
-                ->whereIn('id', collect($validated['items'])->pluck('global_product_id'))
-                ->get()
-                ->keyBy('id');
-
-            foreach ($validated['items'] as $item) {
-                if (in_array($item['global_product_id'], $alreadyCopied, true)) {
-                    $skipped++;
-                    continue;
-                }
-
-                $globalProduct = $globalProducts->get($item['global_product_id']);
-                if (!$globalProduct) {
-                    continue;
-                }
-
-                $categoryId = null;
-                if ($globalProduct->globalCategory) {
-                    $categoryName = $globalProduct->globalCategory->name;
-                    $categoryId = $workshop->categories()->firstOrCreate(
-                        ['name' => $categoryName],
-                        ['slug' => Str::slug($categoryName), 'is_active' => true]
-                    )->id;
-                }
-
-                $productData = [
-                    'global_product_id' => $globalProduct->id,
-                    'category_id' => $categoryId,
-                    'name' => $globalProduct->name,
-                    'sku' => $globalProduct->sku,
-                    'description' => $globalProduct->description,
-                    'unit' => $globalProduct->unit,
-                    'barcode' => $globalProduct->barcode,
-                    'currency' => 'UZS',
-                    'purchase_price_uzs' => $item['purchase_price'],
-                    'selling_price_uzs' => $item['selling_price'],
-                    'purchase_price' => $item['purchase_price'],
-                    'selling_price' => $item['selling_price'],
-                    'stock_quantity' => $item['stock_quantity'] ?? 0,
-                    'min_stock_level' => $item['min_stock_level'] ?? 0,
-                    'is_active' => true,
-                    'track_inventory' => true,
-                    'branch_id' => $branchId,
-                ];
-
-                $this->createProductWithInitialStock($workshop, $user, $productData);
-                $alreadyCopied[] = $globalProduct->id;
-                $created++;
-            }
+            $result = $productCreationService->copySelectionToWorkshop($workshop, $user, $validated['items'], $branchId);
 
             DB::commit();
 
-            $message = "{$created} ta mahsulot qo'shildi!";
-            if ($skipped > 0) {
-                $message .= " ({$skipped} tasi allaqachon qo'shilgan edi)";
+            $message = "{$result['created']} ta mahsulot qo'shildi!";
+            if ($result['skipped'] > 0) {
+                $message .= " ({$result['skipped']} tasi allaqachon qo'shilgan edi)";
             }
 
             return redirect()->route('products.index')->with('success', $message);
