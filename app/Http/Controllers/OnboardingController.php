@@ -31,6 +31,8 @@ class OnboardingController extends Controller
         $user = $request->user();
         $workshop = $user->currentWorkshop();
 
+        abort_unless($workshop, 403);
+
         $items = collect($validated['global_product_ids'])->map(fn ($id) => [
             'global_product_id' => $id,
             'purchase_price' => 0,

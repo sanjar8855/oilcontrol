@@ -66,4 +66,20 @@ class OnboardingProductsStepTest extends TestCase
         $this->assertNull($fresh->onboarding_step);
         $this->assertNotNull($fresh->onboarding_completed_at);
     }
+
+    public function test_storing_products_without_a_current_workshop_returns_403_not_500(): void
+    {
+        // An employee with no branch_id has currentWorkshop() === null (data-inconsistency edge case,
+        // but reachable: this route group carries no role/permission middleware).
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $user = \App\Models\User::factory()->create(['branch_id' => null]);
+        $user->assignRole('employee');
+        $globalProduct = GlobalProduct::create(['name' => 'Motor moyi 5W-30', 'unit' => 'litr', 'is_active' => true]);
+
+        $response = $this->actingAs($user)->post(route('onboarding.products.store'), [
+            'global_product_ids' => [$globalProduct->id],
+        ]);
+
+        $response->assertForbidden();
+    }
 }
