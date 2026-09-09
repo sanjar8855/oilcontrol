@@ -139,6 +139,9 @@ class ServiceLogController extends Controller
 
         $user = $request->user();
 
+        $workshop = $user->currentWorkshop();
+        $wasOnboarding = $workshop->onboarding_step === 'sale';
+
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
         if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
@@ -243,6 +246,10 @@ class ServiceLogController extends Controller
             // Avtomatik eslatmalarni probeg asosida (qayta) hisoblash
             $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
 
+            if ($wasOnboarding) {
+                $workshop->advanceOnboarding(null);
+            }
+
             DB::commit();
 
             // Mijozga avtomatik elektron kvitansiya (agar Telegram ulangan bo'lsa)
@@ -258,6 +265,11 @@ class ServiceLogController extends Controller
                     'next_service_km' => number_format($serviceLog->odometer_reading + $serviceLog->next_service_km),
                     'locale' => $vehicle->client->locale ?? 'uz',
                 ]);
+            }
+
+            if ($wasOnboarding) {
+                return redirect()->route('dashboard')
+                    ->with('success', "Tabriklaymiz! Birinchi savdongiz muvaffaqiyatli yakunlandi.");
             }
 
             return redirect()->route('vehicles.show', $vehicle->id)

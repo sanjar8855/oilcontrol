@@ -189,6 +189,7 @@ class VehicleController extends Controller
             'vehicle' => $vehicle,
             'products' => $products,
             'carModelInfo' => $this->buildCarModelInfo($vehicle, $workshop, $user),
+            'isOnboardingHighlight' => $workshop->onboarding_step === 'sale',
         ]);
     }
 

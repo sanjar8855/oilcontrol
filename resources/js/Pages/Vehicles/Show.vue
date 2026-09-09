@@ -4,11 +4,13 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
+import OnboardingExitLink from '@/Components/OnboardingExitLink.vue';
 
 const props = defineProps({
     vehicle: Object,
     products: Array,
     carModelInfo: Object,
+    isOnboardingHighlight: Boolean,
 });
 
 const showSaleForm = ref(false);
@@ -233,11 +235,22 @@ const toggleSaleForm = () => {
         <div class="py-4 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
 
+                <!-- Onboarding: 3/3 ko'rsatma -->
+                <div v-if="isOnboardingHighlight" class="mb-3 flex items-center justify-between rounded-md bg-indigo-50 p-3 dark:bg-indigo-900/20">
+                    <p class="text-sm text-indigo-800 dark:text-indigo-200">
+                        3/3: Endi quyidagi tugmani bosib birinchi savdoingizni amalga oshiring.
+                    </p>
+                    <OnboardingExitLink />
+                </div>
+
                 <!-- Savdo tugmasi -->
                 <div class="mb-6">
                     <button
                         @click="toggleSaleForm"
-                        class="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-green-500"
+                        :class="[
+                            'w-full rounded-md bg-green-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-green-500',
+                            isOnboardingHighlight && !showSaleForm ? 'animate-pulse ring-4 ring-green-300 ring-offset-2' : '',
+                        ]"
                     >
                         {{ showSaleForm ? '✕ Yopish' : '🛒 Savdo qilish' }}
                     </button>
