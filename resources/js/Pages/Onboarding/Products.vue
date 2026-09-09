@@ -1,12 +1,26 @@
-<!-- resources/js/Pages/Onboarding/Products.vue -->
 <script setup>
 import OnboardingLayout from '@/Layouts/OnboardingLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { computed, reactive } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, reactive, ref } from 'vue';
 
 const props = defineProps({
     products: Array,
+    search: String,
 });
+
+const search = ref(props.search ?? '');
+
+let searchTimeout = null;
+const onSearchInput = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        router.get(route('onboarding.products'), { search: search.value }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    }, 400);
+};
 
 const selected = reactive(new Set());
 
@@ -38,6 +52,14 @@ const submit = () => {
         <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
             Umumiy katalogdan kamida 1 ta mahsulot tanlang — narx va qoldiqni keyinroq to'ldirasiz.
         </p>
+
+        <input
+            v-model="search"
+            type="text"
+            placeholder="Mahsulot qidirish..."
+            @input="onSearchInput"
+            class="mb-4 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        />
 
         <div v-if="form.errors.error" class="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
             {{ form.errors.error }}

@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/OnboardingController.php
+
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
@@ -15,10 +15,15 @@ class OnboardingController extends Controller
 {
     public function products(Request $request, GlobalProductMatcher $matcher): Response
     {
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop && $workshop->onboarding_step === 'products', 403);
+
         $search = $request->filled('search') ? $request->string('search')->toString() : null;
 
         return Inertia::render('Onboarding/Products', [
-            'products' => $matcher->catalogQuery($search)->get(['id', 'name', 'unit']),
+            'products' => $matcher->catalogQuery($search)->limit(200)->get(['id', 'name', 'unit']),
+            'search' => $search,
         ]);
     }
 
@@ -32,7 +37,7 @@ class OnboardingController extends Controller
         $user = $request->user();
         $workshop = $user->currentWorkshop();
 
-        abort_unless($workshop, 403);
+        abort_unless($workshop && $workshop->onboarding_step === 'products', 403);
 
         $items = collect($validated['global_product_ids'])->map(fn ($id) => [
             'global_product_id' => $id,
@@ -60,7 +65,7 @@ class OnboardingController extends Controller
     {
         $workshop = $request->user()->currentWorkshop();
 
-        abort_unless($workshop, 403);
+        abort_unless($workshop && $workshop->onboarding_step === 'vehicle', 403);
 
         return Inertia::render('Onboarding/Vehicle');
     }
@@ -77,21 +82,29 @@ class OnboardingController extends Controller
         $user = $request->user();
         $workshop = $user->currentWorkshop();
 
-        abort_unless($workshop, 403);
+        abort_unless($workshop && $workshop->onboarding_step === 'vehicle', 403);
 
-        $client = $workshop->clients()->create([
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'branch_id' => $user->branch_id,
-        ]);
+        try {
+            $vehicle = DB::transaction(function () use ($workshop, $user, $validated) {
+                $client = $workshop->clients()->create([
+                    'name' => $validated['name'],
+                    'phone' => $validated['phone'],
+                    'branch_id' => $user->branch_id,
+                ]);
 
-        $vehicle = Vehicle::create([
-            'client_id' => $client->id,
-            'plate_number' => $validated['plate_number'],
-            'make' => $validated['make'],
-        ]);
+                $vehicle = Vehicle::create([
+                    'client_id' => $client->id,
+                    'plate_number' => $validated['plate_number'],
+                    'make' => $validated['make'],
+                ]);
 
-        $workshop->advanceOnboarding('sale');
+                $workshop->advanceOnboarding('sale');
+
+                return $vehicle;
+            });
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()]);
+        }
 
         return redirect()->route('vehicles.show', $vehicle);
     }
@@ -100,7 +113,7 @@ class OnboardingController extends Controller
     {
         $workshop = $request->user()->currentWorkshop();
 
-        abort_unless($workshop, 403);
+        abort_unless($workshop && $workshop->isOnboarding(), 403);
 
         $workshop->advanceOnboarding(null);
 
