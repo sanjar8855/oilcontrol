@@ -2,6 +2,7 @@
 // app/Http/Controllers/OnboardingController.php
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
 use App\Services\GlobalProductMatcher;
 use App\Services\ProductCreationService;
 use Illuminate\Http\RedirectResponse;
@@ -53,6 +54,46 @@ class OnboardingController extends Controller
         }
 
         return redirect()->route('onboarding.vehicle');
+    }
+
+    public function vehicle(Request $request): Response
+    {
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop, 403);
+
+        return Inertia::render('Onboarding/Vehicle');
+    }
+
+    public function storeVehicle(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'plate_number' => 'required|string|max:20|unique:vehicles,plate_number',
+            'make' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $workshop = $user->currentWorkshop();
+
+        abort_unless($workshop, 403);
+
+        $client = $workshop->clients()->create([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'branch_id' => $user->branch_id,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'client_id' => $client->id,
+            'plate_number' => $validated['plate_number'],
+            'make' => $validated['make'],
+        ]);
+
+        $workshop->advanceOnboarding('sale');
+
+        return redirect()->route('vehicles.show', $vehicle);
     }
 
     public function skip(Request $request): RedirectResponse
