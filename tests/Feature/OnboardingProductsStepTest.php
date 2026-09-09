@@ -82,4 +82,17 @@ class OnboardingProductsStepTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_skip_without_a_current_workshop_returns_403_not_500(): void
+    {
+        // Same null-currentWorkshop() edge case as storeProducts(), but for skip(): calling
+        // advanceOnboarding() directly on a null return value would be an uncaught Error.
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $user = \App\Models\User::factory()->create(['branch_id' => null]);
+        $user->assignRole('employee');
+
+        $response = $this->actingAs($user)->post(route('onboarding.skip'));
+
+        $response->assertForbidden();
+    }
 }

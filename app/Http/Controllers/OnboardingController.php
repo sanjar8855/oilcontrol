@@ -57,7 +57,11 @@ class OnboardingController extends Controller
 
     public function skip(Request $request): RedirectResponse
     {
-        $request->user()->currentWorkshop()->advanceOnboarding(null);
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop, 403);
+
+        $workshop->advanceOnboarding(null);
 
         return redirect()->route('dashboard');
     }
