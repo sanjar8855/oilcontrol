@@ -1,4 +1,3 @@
-<!-- resources/js/Pages/Onboarding/Vehicle.vue -->
 <script setup>
 import OnboardingLayout from '@/Layouts/OnboardingLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';

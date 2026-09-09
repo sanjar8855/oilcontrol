@@ -1,5 +1,5 @@
 <?php
-// tests/Feature/OnboardingGateTest.php
+
 namespace Tests\Feature;
 
 use App\Models\Vehicle;

@@ -144,7 +144,7 @@ class ServiceLogController extends Controller
 
         // Tekshirish: Vehicle shu ustaxonaga tegishli ekanligini
         $vehicle = Vehicle::with('client')->findOrFail($validated['vehicle_id']);
-        if ($vehicle->client->workshop_id !== $user->currentWorkshop()->id) {
+        if ($vehicle->client->workshop_id !== $workshop->id) {
             abort(403);
         }
 

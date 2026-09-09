@@ -1,4 +1,3 @@
-<!-- resources/js/Components/OnboardingExitLink.vue -->
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 

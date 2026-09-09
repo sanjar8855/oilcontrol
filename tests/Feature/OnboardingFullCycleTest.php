@@ -1,5 +1,5 @@
 <?php
-// tests/Feature/OnboardingFullCycleTest.php
+
 namespace Tests\Feature;
 
 use App\Models\GlobalProduct;

@@ -1,4 +1,3 @@
-<!-- resources/js/Layouts/OnboardingLayout.vue -->
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import OnboardingExitLink from '@/Components/OnboardingExitLink.vue';
