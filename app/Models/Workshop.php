@@ -21,6 +21,8 @@ class Workshop extends Model
         'trial_ends_at',
         'limits_override',
         'is_active',
+        'onboarding_step',
+        'onboarding_completed_at',
     ];
 
     protected $casts = [
@@ -28,6 +30,7 @@ class Workshop extends Model
         'trial_ends_at' => 'datetime',
         'limits_override' => 'array',
         'is_active' => 'boolean',
+        'onboarding_completed_at' => 'datetime',
     ];
 
     // Relationships
@@ -74,6 +77,27 @@ class Workshop extends Model
     public function subscriptionPayments(): HasMany
     {
         return $this->hasMany(SubscriptionPayment::class);
+    }
+
+    /**
+     * Workshop hali majburiy o'qitish siklini (mahsulot -> moshina -> savdo)
+     * tugatmagan bo'lsa true.
+     */
+    public function isOnboarding(): bool
+    {
+        return $this->onboarding_step !== null;
+    }
+
+    /**
+     * Onboarding siklini keyingi qadamga o'tkazadi. $nextStep null bo'lsa,
+     * sikl yakunlangan deb belgilanadi (tabiiy yakun yoki "chiqish").
+     */
+    public function advanceOnboarding(?string $nextStep): void
+    {
+        $this->update([
+            'onboarding_step' => $nextStep,
+            'onboarding_completed_at' => $nextStep === null ? now() : null,
+        ]);
     }
 
     /**
