@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GlobalProductController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -62,6 +63,15 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Yangi workshop uchun majburiy o'qitish sikli
+    Route::prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('/products', [OnboardingController::class, 'products'])->name('products');
+        Route::post('/products', [OnboardingController::class, 'storeProducts'])->name('products.store');
+        Route::get('/vehicle', [OnboardingController::class, 'vehicle'])->name('vehicle');
+        Route::post('/vehicle', [OnboardingController::class, 'storeVehicle'])->name('vehicle.store');
+        Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
+    });
+
     // Superadmin uchun workshop tanlash (nomidan ishlash)
     Route::get('/workshops/switch', [WorkshopSwitchController::class, 'index'])->name('workshops.switch.index');
     Route::post('/workshops/switch/{workshop}', [WorkshopSwitchController::class, 'switch'])->name('workshops.switch');
