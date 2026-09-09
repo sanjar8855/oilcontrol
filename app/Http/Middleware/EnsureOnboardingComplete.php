@@ -42,9 +42,13 @@ class EnsureOnboardingComplete
 
             $vehicle = Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))->first();
 
-            return $vehicle
-                ? redirect()->route('vehicles.show', $vehicle)
-                : redirect()->route('onboarding.vehicle');
+            if ($vehicle) {
+                return redirect()->route('vehicles.show', $vehicle);
+            }
+
+            $workshop->advanceOnboarding('vehicle');
+
+            return redirect()->route('onboarding.vehicle');
         }
 
         $currentStepPattern = $workshop->onboarding_step === 'vehicle' ? 'onboarding.vehicle*' : 'onboarding.products*';

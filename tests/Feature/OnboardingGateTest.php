@@ -76,4 +76,36 @@ class OnboardingGateTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertOk();
     }
+
+    public function test_sale_step_with_no_vehicle_self_heals_instead_of_looping(): void
+    {
+        [$user, $workshop] = $this->createDirectorWithWorkshop();
+        $workshop->update(['onboarding_step' => 'sale']);
+
+        $this->actingAs($user)->get('/dashboard')->assertRedirect(route('onboarding.vehicle'));
+
+        $this->assertSame('vehicle', $workshop->fresh()->onboarding_step);
+
+        $this->actingAs($user)->get(route('onboarding.vehicle'))->assertOk();
+    }
+
+    public function test_vehicles_show_and_service_logs_store_are_directly_reachable_on_the_sale_step(): void
+    {
+        [$user, $workshop] = $this->createDirectorWithWorkshop();
+        $workshop->update(['onboarding_step' => 'sale']);
+        $client = $workshop->clients()->create(['name' => 'Test', 'phone' => '+998900000000']);
+        $vehicle = Vehicle::create(['client_id' => $client->id, 'plate_number' => '01A123AA', 'make' => 'Chevrolet']);
+
+        $this->actingAs($user)->get(route('vehicles.show', $vehicle))->assertOk();
+
+        $this->actingAs($user)->post(route('service-logs.store'), [])->assertSessionHasErrors();
+    }
+
+    public function test_logout_is_reachable_and_does_not_redirect_back_into_onboarding(): void
+    {
+        [$user, $workshop] = $this->createDirectorWithWorkshop();
+        $workshop->update(['onboarding_step' => 'products']);
+
+        $this->actingAs($user)->post(route('logout'))->assertRedirect('/');
+    }
 }
