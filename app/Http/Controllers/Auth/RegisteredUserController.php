@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
             'subscription_plan' => 'free',
             'subscription_expires_at' => now()->addDays(30), // 30 kunlik bepul sinov
             'is_active' => true,
+            'onboarding_step' => 'products',
         ]);
 
         event(new Registered($user));

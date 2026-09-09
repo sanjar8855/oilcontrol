@@ -28,4 +28,19 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
     }
+
+    public function test_a_new_workshop_starts_the_onboarding_cycle(): void
+    {
+        $this->post('/register', [
+            'name' => 'Onboarding Test',
+            'phone' => '+998901112244',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $workshop = \App\Models\Workshop::where('owner_name', 'Onboarding Test')->firstOrFail();
+
+        $this->assertSame('products', $workshop->onboarding_step);
+        $this->assertTrue($workshop->isOnboarding());
+    }
 }
