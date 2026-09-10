@@ -71,12 +71,16 @@ class GlobalProductMatcher
      * so'rovini quradi. `ProductController::catalog()` va
      * `OnboardingController::products()` ikkalasi ham shundan foydalanadi.
      */
-    public function catalogQuery(?string $search, ?int $categoryId = null): Builder
+    public function catalogQuery(?string $search, ?int $categoryId = null, ?int $brandId = null): Builder
     {
-        $query = GlobalProduct::with('globalCategory')->where('is_active', true);
+        $query = GlobalProduct::with(['globalCategory', 'brand'])->where('is_active', true);
 
         if ($categoryId) {
             $query->where('global_category_id', $categoryId);
+        }
+
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
         }
 
         if ($search) {

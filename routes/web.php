@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CarMakeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
@@ -93,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/global-products/{globalProduct}/car-models/{carModel}', [GlobalProductController::class, 'updateCarModelQuantity'])->name('global-products.car-models.update');
         Route::delete('/global-products/{globalProduct}/car-models/{carModel}', [GlobalProductController::class, 'detachCarModel'])->name('global-products.car-models.destroy');
         Route::resource('global-products', GlobalProductController::class)->except(['show']);
+        Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
     });
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director

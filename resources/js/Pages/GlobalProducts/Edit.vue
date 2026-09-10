@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BrandSelect from '@/Components/BrandSelect.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -12,11 +13,13 @@ import '@vueform/multiselect/themes/default.css';
 const props = defineProps({
     product: Object,
     categoryNames: Array,
+    brands: Array,
     carMakes: Array,
 });
 
 const form = useForm({
     category_name: props.product.global_category?.name || '',
+    brand_id: props.product.brand_id,
     name: props.product.name,
     sku: props.product.sku || '',
     description: props.product.description || '',
@@ -119,6 +122,15 @@ const submitQty = (model) => {
                                     <InputError :message="form.errors.category_name" class="mt-2" />
                                 </div>
 
+                                <!-- Brand -->
+                                <div>
+                                    <InputLabel for="brand_id" value="Brend" />
+                                    <BrandSelect id="brand_id" v-model="form.brand_id" :brands="brands" />
+                                    <InputError :message="form.errors.brand_id" class="mt-2" />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <!-- SKU -->
                                 <div>
                                     <InputLabel for="sku" value="SKU/Artikul" />

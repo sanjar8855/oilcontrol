@@ -11,6 +11,7 @@ class GlobalProduct extends Model
 {
     protected $fillable = [
         'global_category_id',
+        'brand_id',
         'name',
         'sku',
         'description',
@@ -26,6 +27,11 @@ class GlobalProduct extends Model
     public function globalCategory(): BelongsTo
     {
         return $this->belongsTo(GlobalCategory::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function products(): HasMany

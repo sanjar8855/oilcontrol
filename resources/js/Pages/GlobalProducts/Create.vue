@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BrandSelect from '@/Components/BrandSelect.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -8,10 +9,12 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     categoryNames: Array,
+    brands: Array,
 });
 
 const form = useForm({
     category_name: '',
+    brand_id: null,
     name: '',
     sku: '',
     description: '',
@@ -75,6 +78,15 @@ const submit = () => {
                                     <InputError :message="form.errors.category_name" class="mt-2" />
                                 </div>
 
+                                <!-- Brand -->
+                                <div>
+                                    <InputLabel for="brand_id" value="Brend" />
+                                    <BrandSelect id="brand_id" v-model="form.brand_id" :brands="brands" />
+                                    <InputError :message="form.errors.brand_id" class="mt-2" />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <!-- SKU -->
                                 <div>
                                     <InputLabel for="sku" value="SKU/Artikul" />

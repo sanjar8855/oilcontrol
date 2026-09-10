@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Models\Brand;
 use App\Models\GlobalCategory;
 use App\Models\GlobalProduct;
 use App\Services\GlobalProductMatcher;
@@ -113,5 +114,18 @@ class GlobalProductMatcherTest extends TestCase
         ]);
 
         $this->assertNull($result->global_category_id);
+    }
+
+    public function test_catalog_query_filters_by_brand(): void
+    {
+        $lukoil = Brand::create(['name' => 'Lukoil', 'is_active' => true]);
+        $shell = Brand::create(['name' => 'Shell', 'is_active' => true]);
+        GlobalProduct::create(['name' => 'Lukoil moyi', 'unit' => 'litr', 'is_active' => true, 'brand_id' => $lukoil->id]);
+        GlobalProduct::create(['name' => 'Shell moyi', 'unit' => 'litr', 'is_active' => true, 'brand_id' => $shell->id]);
+
+        $results = $this->matcher->catalogQuery(null, null, $lukoil->id)->get();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Lukoil moyi', $results->first()->name);
     }
 }

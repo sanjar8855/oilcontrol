@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('global_products', function (Blueprint $table) {
+            $table->foreignId('brand_id')->nullable()->after('global_category_id')
+                ->constrained()->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('global_products', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('brand_id');
+        });
+    }
+};

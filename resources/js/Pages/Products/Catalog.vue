@@ -6,6 +6,7 @@ import { computed, reactive, watch } from 'vue';
 const props = defineProps({
     products: Object,
     categories: Array,
+    brands: Array,
     copiedGlobalProductIds: Array,
     filters: Object,
 });
@@ -13,6 +14,7 @@ const props = defineProps({
 const filters = reactive({
     search: props.filters.search || '',
     category_id: props.filters.category_id || '',
+    brand_id: props.filters.brand_id || '',
 });
 
 const reload = () => {
@@ -29,10 +31,12 @@ watch(() => filters.search, () => {
     searchTimeout = setTimeout(reload, 400);
 });
 watch(() => filters.category_id, reload);
+watch(() => filters.brand_id, reload);
 
 const resetFilters = () => {
     filters.search = '';
     filters.category_id = '';
+    filters.brand_id = '';
     reload();
 };
 
@@ -128,6 +132,18 @@ const submit = () => {
                                     </option>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400">Brend</label>
+                                <select
+                                    v-model="filters.brand_id"
+                                    class="mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                >
+                                    <option value="">Barcha brendlar</option>
+                                    <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                                        {{ brand.name }}
+                                    </option>
+                                </select>
+                            </div>
                             <button
                                 type="button"
                                 @click="resetFilters"
@@ -174,7 +190,10 @@ const submit = () => {
                                                 <span v-if="product.global_category" class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                                     {{ product.global_category.name }}
                                                 </span>
-                                                <span v-else class="text-sm text-gray-500 dark:text-gray-400">-</span>
+                                                <span v-if="product.brand" class="ml-1 inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                                    {{ product.brand.name }}
+                                                </span>
+                                                <span v-if="!product.global_category && !product.brand" class="text-sm text-gray-500 dark:text-gray-400">-</span>
                                             </td>
                                             <td class="px-2 py-2">
                                                 <input

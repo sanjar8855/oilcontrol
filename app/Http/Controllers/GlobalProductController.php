@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\CarMake;
 use App\Models\CarModel;
 use App\Models\GlobalCategory;
@@ -31,10 +32,14 @@ class GlobalProductController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = GlobalProduct::with('globalCategory');
+        $query = GlobalProduct::with(['globalCategory', 'brand']);
 
         if ($request->filled('category_id')) {
             $query->where('global_category_id', $request->category_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
         }
 
         if ($request->filled('search')) {
@@ -47,11 +52,13 @@ class GlobalProductController extends Controller
 
         $products = $query->orderBy('name')->paginate(30)->withQueryString();
         $categories = GlobalCategory::orderBy('name')->get(['id', 'name']);
+        $brands = Brand::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('GlobalProducts/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['category_id', 'search']),
+            'brands' => $brands,
+            'filters' => $request->only(['category_id', 'brand_id', 'search']),
         ]);
     }
 
@@ -59,6 +66,7 @@ class GlobalProductController extends Controller
     {
         return Inertia::render('GlobalProducts/Create', [
             'categoryNames' => GlobalCategory::orderBy('name')->pluck('name'),
+            'brands' => Brand::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -66,6 +74,7 @@ class GlobalProductController extends Controller
     {
         return [
             'category_name' => 'nullable|string|max:255',
+            'brand_id' => 'nullable|exists:brands,id',
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -91,8 +100,9 @@ class GlobalProductController extends Controller
     public function edit(GlobalProduct $globalProduct): Response
     {
         return Inertia::render('GlobalProducts/Edit', [
-            'product' => $globalProduct->load(['globalCategory', 'carModels']),
+            'product' => $globalProduct->load(['globalCategory', 'brand', 'carModels']),
             'categoryNames' => GlobalCategory::orderBy('name')->pluck('name'),
+            'brands' => Brand::orderBy('name')->get(['id', 'name']),
             'carMakes' => CarMake::with(['carModels' => fn ($query) => $query->orderBy('name')])
                 ->orderBy('sort_order')
                 ->orderBy('name')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductsExport;
+use App\Models\Brand;
 use App\Models\CarMake;
 use App\Models\GlobalCategory;
 use App\Models\Product;
@@ -295,7 +296,8 @@ class ProductController extends Controller
         $products = $matcher
             ->catalogQuery(
                 $request->filled('search') ? $request->string('search')->toString() : null,
-                $request->filled('category_id') ? $request->integer('category_id') : null
+                $request->filled('category_id') ? $request->integer('category_id') : null,
+                $request->filled('brand_id') ? $request->integer('brand_id') : null
             )
             ->paginate(30)
             ->withQueryString();
@@ -307,8 +309,9 @@ class ProductController extends Controller
         return Inertia::render('Products/Catalog', [
             'products' => $products,
             'categories' => GlobalCategory::orderBy('name')->get(['id', 'name']),
+            'brands' => Brand::orderBy('name')->get(['id', 'name']),
             'copiedGlobalProductIds' => $copiedGlobalProductIds,
-            'filters' => $request->only(['category_id', 'search']),
+            'filters' => $request->only(['category_id', 'brand_id', 'search']),
         ]);
     }
 
