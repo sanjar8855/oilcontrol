@@ -18,6 +18,7 @@ return [
         'branches' => 'Филиалы',
         'car_makes' => 'Марки авто',
         'global_products' => 'Общий каталог',
+        'global_categories' => 'Общие категории',
         'workshops' => 'Компании',
         'profile' => 'Профиль',
         'logout' => 'Выход',

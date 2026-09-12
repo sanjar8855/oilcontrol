@@ -45,6 +45,7 @@ const navItems = computed(() => {
         { labelKey: 'nav.branches', route: 'branches.index', active: 'branches.*', permission: 'branches.manage' },
         { labelKey: 'nav.car_makes', route: 'car-makes.index', active: 'car-makes.*', permission: 'car-makes.manage' },
         { labelKey: 'nav.global_products', route: 'global-products.index', active: 'global-products.*', permission: 'global-products.manage' },
+        { labelKey: 'nav.global_categories', route: 'global-categories.index', active: 'global-categories.*', permission: 'global-products.manage' },
         { labelKey: 'nav.workshops', route: 'workshops.index', active: 'workshops.*', permission: 'workshops.manage' },
     ].filter((item) => !item.hidden && (!item.permission || permissions.includes(item.permission)));
 });

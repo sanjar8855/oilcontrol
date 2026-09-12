@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\GlobalCategoryController;
 use App\Http\Controllers\GlobalProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OnboardingController;
@@ -95,6 +96,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/global-products/{globalProduct}/car-models/{carModel}', [GlobalProductController::class, 'detachCarModel'])->name('global-products.car-models.destroy');
         Route::resource('global-products', GlobalProductController::class)->except(['show']);
         Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+        Route::resource('global-categories', GlobalCategoryController::class)->except(['show', 'create', 'edit']);
     });
 
     // Foydalanuvchilar (Users) CRUD - Faqat superadmin va director

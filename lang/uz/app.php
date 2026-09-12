@@ -24,6 +24,7 @@ return [
         'branches' => 'Filiallar',
         'car_makes' => 'Avto markalari',
         'global_products' => 'Global katalog',
+        'global_categories' => 'Global kategoriyalar',
         'workshops' => 'Kompaniyalar',
         'profile' => 'Profil',
         'logout' => 'Chiqish',
