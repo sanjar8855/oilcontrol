@@ -247,7 +247,7 @@ class ServiceLogController extends Controller
             $reminderService->recalculateForVehicle($serviceLog->vehicle_id);
 
             if ($wasOnboarding) {
-                $workshop->advanceOnboarding(null);
+                $workshop->advanceOnboarding('result');
             }
 
             DB::commit();
@@ -268,8 +268,7 @@ class ServiceLogController extends Controller
             }
 
             if ($wasOnboarding) {
-                return redirect()->route('dashboard')
-                    ->with('success', "Tabriklaymiz! Birinchi savdongiz muvaffaqiyatli yakunlandi.");
+                return redirect()->route('onboarding.result');
             }
 
             return redirect()->route('vehicles.show', $vehicle->id)

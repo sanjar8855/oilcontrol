@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GlobalProduct;
+use App\Models\ServiceLog;
 use App\Models\Vehicle;
-use App\Services\GlobalProductMatcher;
+use App\Services\OnboardingCleanupService;
 use App\Services\ProductCreationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,18 @@ use Inertia\Response;
 
 class OnboardingController extends Controller
 {
-    public function products(Request $request, GlobalProductMatcher $matcher): Response
+    /**
+     * Onboarding'da tanlash uchun ko'rsatiladigan mahsulotlar — ataylab
+     * qo'lda saqlanadigan qisqa ro'yxat (butun umumiy katalogdan emas),
+     * chunki katalog boshqa ustaxonalar tomonidan avtomatik to'ldiriladi
+     * va yangi ro'yxatdan o'tuvchi uchun mos emas. GlobalProductTestSeeder
+     * shu nomlar bilan mos yozuvlarni yaratadi.
+     */
+    private const STARTER_PRODUCT_NAMES = [
+        'Motor moyi (Cobalt)', 'Havo filtri (Cobalt)', 'Moy filtri (Cobalt)',
+    ];
+
+    public function products(Request $request): Response
     {
         $workshop = $request->user()->currentWorkshop();
 
@@ -21,8 +34,15 @@ class OnboardingController extends Controller
 
         $search = $request->filled('search') ? $request->string('search')->toString() : null;
 
+        $query = GlobalProduct::where('is_active', true)
+            ->whereIn('name', self::STARTER_PRODUCT_NAMES);
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
         return Inertia::render('Onboarding/Products', [
-            'products' => $matcher->catalogQuery($search)->limit(200)->get(['id', 'name', 'unit']),
+            'products' => $query->orderBy('name')->get(['id', 'name', 'unit']),
             'search' => $search,
         ]);
     }
@@ -30,8 +50,11 @@ class OnboardingController extends Controller
     public function storeProducts(Request $request, ProductCreationService $productCreationService): RedirectResponse
     {
         $validated = $request->validate([
-            'global_product_ids' => 'required|array|min:1',
-            'global_product_ids.*' => 'integer|exists:global_products,id',
+            'items' => 'required|array|min:1',
+            'items.*.global_product_id' => 'required|integer|exists:global_products,id',
+            'items.*.stock_quantity' => 'required|integer|min:0',
+            'items.*.purchase_price' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
         ]);
 
         $user = $request->user();
@@ -39,11 +62,11 @@ class OnboardingController extends Controller
 
         abort_unless($workshop && $workshop->onboarding_step === 'products', 403);
 
-        $items = collect($validated['global_product_ids'])->map(fn ($id) => [
-            'global_product_id' => $id,
-            'purchase_price' => 0,
-            'selling_price' => 0,
-            'stock_quantity' => 0,
+        $items = collect($validated['items'])->map(fn ($item) => [
+            'global_product_id' => $item['global_product_id'],
+            'purchase_price' => $item['purchase_price'],
+            'selling_price' => $item['selling_price'],
+            'stock_quantity' => $item['stock_quantity'],
             'min_stock_level' => 0,
         ])->all();
 
@@ -106,15 +129,86 @@ class OnboardingController extends Controller
             return back()->withErrors(['error' => 'Xatolik yuz berdi: ' . $e->getMessage()]);
         }
 
-        return redirect()->route('vehicles.show', $vehicle);
+        return redirect()->route('onboarding.sale');
     }
 
-    public function skip(Request $request): RedirectResponse
+    public function sale(Request $request): Response|RedirectResponse
+    {
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop && $workshop->onboarding_step === 'sale', 403);
+
+        $vehicle = Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))
+            ->with('client')
+            ->orderBy('id')
+            ->first();
+
+        if (!$vehicle) {
+            $workshop->advanceOnboarding('vehicle');
+
+            return redirect()->route('onboarding.vehicle');
+        }
+
+        $products = $workshop->products()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'unit', 'selling_price', 'selling_price_uzs', 'selling_price_usd', 'currency', 'stock_quantity']);
+        $products->each(fn ($product) => $product->selling_price = $product->getSellingPrice());
+
+        return Inertia::render('Onboarding/Sale', [
+            'vehicle' => $vehicle,
+            'products' => $products,
+        ]);
+    }
+
+    public function result(Request $request): Response
+    {
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop && $workshop->onboarding_step === 'result', 403);
+
+        $products = $workshop->products()
+            ->orderBy('name')
+            ->get(['id', 'name', 'unit', 'stock_quantity']);
+
+        $serviceLog = ServiceLog::whereHas('vehicle.client', fn ($q) => $q->where('workshop_id', $workshop->id))
+            ->with(['products', 'reminders'])
+            ->latest('id')
+            ->first();
+
+        $profit = 0;
+        foreach ($serviceLog?->products ?? [] as $product) {
+            $profit += ($product->pivot->unit_price - $product->purchase_price) * $product->pivot->quantity;
+        }
+
+        return Inertia::render('Onboarding/Result', [
+            'products' => $products,
+            'saleTotal' => (float) ($serviceLog->total_amount ?? 0),
+            'profit' => $profit,
+            'reminders' => $serviceLog?->reminders->pluck('scheduled_date')->map(fn ($date) => $date->toDateString())->sort()->values() ?? [],
+        ]);
+    }
+
+    public function finish(Request $request, OnboardingCleanupService $cleanup): RedirectResponse
+    {
+        $workshop = $request->user()->currentWorkshop();
+
+        abort_unless($workshop && $workshop->onboarding_step === 'result', 403);
+
+        $cleanup->purge($workshop);
+        $workshop->advanceOnboarding(null);
+
+        return redirect()->route('dashboard')
+            ->with('success', "Tabriklaymiz! Tizimdan foydalanishni o'rganish yakunlandi.");
+    }
+
+    public function skip(Request $request, OnboardingCleanupService $cleanup): RedirectResponse
     {
         $workshop = $request->user()->currentWorkshop();
 
         abort_unless($workshop && $workshop->isOnboarding(), 403);
 
+        $cleanup->purge($workshop);
         $workshop->advanceOnboarding(null);
 
         return redirect()->route('dashboard');

@@ -365,5 +365,10 @@ class DatabaseSeeder extends Seeder
         //    va avtomobil turlariga bog'lanishlari bilan)
         // ============================================
         $this->call(ProductSeeder::class);
+
+        // ============================================
+        // 10. Onboarding uchun umumiy katalog test mahsulotlari
+        // ============================================
+        $this->call(GlobalProductTestSeeder::class);
     }
 }

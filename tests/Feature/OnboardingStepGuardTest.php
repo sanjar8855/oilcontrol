@@ -31,7 +31,9 @@ class OnboardingStepGuardTest extends TestCase
         $this->actingAs($user)->get(route('onboarding.products'))->assertForbidden();
 
         $this->actingAs($user)->post(route('onboarding.products.store'), [
-            'global_product_ids' => [$globalProduct->id],
+            'items' => [
+                ['global_product_id' => $globalProduct->id, 'stock_quantity' => 10, 'purchase_price' => 15000, 'selling_price' => 20000],
+            ],
         ])->assertForbidden();
 
         $this->actingAs($user)->get(route('onboarding.vehicle'))->assertForbidden();
@@ -66,7 +68,9 @@ class OnboardingStepGuardTest extends TestCase
 
         $this->withoutMiddleware(\App\Http\Middleware\EnsureOnboardingComplete::class)
             ->actingAs($user)->post(route('onboarding.products.store'), [
-                'global_product_ids' => [$globalProduct->id],
+                'items' => [
+                    ['global_product_id' => $globalProduct->id, 'stock_quantity' => 10, 'purchase_price' => 15000, 'selling_price' => 20000],
+                ],
             ])->assertForbidden();
     }
 

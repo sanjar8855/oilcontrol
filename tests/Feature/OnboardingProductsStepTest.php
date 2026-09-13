@@ -30,7 +30,9 @@ class OnboardingProductsStepTest extends TestCase
         $globalProduct = GlobalProduct::create(['name' => 'Motor moyi 5W-30', 'unit' => 'litr', 'is_active' => true]);
 
         $response = $this->actingAs($user)->post(route('onboarding.products.store'), [
-            'global_product_ids' => [$globalProduct->id],
+            'items' => [
+                ['global_product_id' => $globalProduct->id, 'stock_quantity' => 10, 'purchase_price' => 15000, 'selling_price' => 20000],
+            ],
         ]);
 
         $response->assertRedirect(route('onboarding.vehicle'));
@@ -38,6 +40,9 @@ class OnboardingProductsStepTest extends TestCase
         $this->assertDatabaseHas('products', [
             'workshop_id' => $workshop->id,
             'global_product_id' => $globalProduct->id,
+            'stock_quantity' => 10,
+            'purchase_price' => 15000,
+            'selling_price' => 20000,
         ]);
     }
 
@@ -47,10 +52,10 @@ class OnboardingProductsStepTest extends TestCase
         $workshop->update(['onboarding_step' => 'products']);
 
         $response = $this->actingAs($user)->post(route('onboarding.products.store'), [
-            'global_product_ids' => [],
+            'items' => [],
         ]);
 
-        $response->assertSessionHasErrors('global_product_ids');
+        $response->assertSessionHasErrors('items');
         $this->assertSame('products', $workshop->fresh()->onboarding_step);
     }
 
@@ -77,7 +82,9 @@ class OnboardingProductsStepTest extends TestCase
         $globalProduct = GlobalProduct::create(['name' => 'Motor moyi 5W-30', 'unit' => 'litr', 'is_active' => true]);
 
         $response = $this->actingAs($user)->post(route('onboarding.products.store'), [
-            'global_product_ids' => [$globalProduct->id],
+            'items' => [
+                ['global_product_id' => $globalProduct->id, 'stock_quantity' => 10, 'purchase_price' => 15000, 'selling_price' => 20000],
+            ],
         ]);
 
         $response->assertForbidden();

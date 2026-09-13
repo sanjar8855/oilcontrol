@@ -2,11 +2,13 @@
 import OnboardingLayout from '@/Layouts/OnboardingLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
+const CAR_MODELS = ['Gentra', 'Cobalt', 'Tracker'];
+
 const form = useForm({
     name: '',
     phone: '',
     plate_number: '',
-    make: '',
+    make: 'Cobalt',
 });
 
 const submit = () => {
@@ -43,7 +45,9 @@ const submit = () => {
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Moshina modeli</label>
-                <input v-model="form.make" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300" />
+                <select v-model="form.make" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                    <option v-for="model in CAR_MODELS" :key="model" :value="model">{{ model }}</option>
+                </select>
                 <p v-if="form.errors.make" class="mt-1 text-sm text-red-600">{{ form.errors.make }}</p>
             </div>
 

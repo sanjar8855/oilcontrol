@@ -36,19 +36,27 @@ class EnsureOnboardingComplete
         }
 
         if ($workshop->onboarding_step === 'sale') {
-            if ($request->routeIs('vehicles.show') || $request->routeIs('service-logs.store')) {
+            if ($request->routeIs('onboarding.sale*') || $request->routeIs('service-logs.store')) {
                 return $next($request);
             }
 
             $vehicle = Vehicle::whereHas('client', fn ($q) => $q->where('workshop_id', $workshop->id))->orderBy('id')->first();
 
             if ($vehicle) {
-                return redirect()->route('vehicles.show', $vehicle);
+                return redirect()->route('onboarding.sale');
             }
 
             $workshop->advanceOnboarding('vehicle');
 
             return redirect()->route('onboarding.vehicle');
+        }
+
+        if ($workshop->onboarding_step === 'result') {
+            if ($request->routeIs('onboarding.result*') || $request->routeIs('onboarding.finish')) {
+                return $next($request);
+            }
+
+            return redirect()->route('onboarding.result');
         }
 
         $currentStepPattern = $workshop->onboarding_step === 'vehicle' ? 'onboarding.vehicle*' : 'onboarding.products*';

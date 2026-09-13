@@ -28,14 +28,14 @@ class OnboardingGateTest extends TestCase
         $this->actingAs($user)->get('/dashboard')->assertRedirect(route('onboarding.vehicle'));
     }
 
-    public function test_dashboard_redirects_to_the_onboarding_vehicles_show_page_on_the_sale_step(): void
+    public function test_dashboard_redirects_to_the_onboarding_sale_page_on_the_sale_step(): void
     {
         [$user, $workshop] = $this->createDirectorWithWorkshop();
         $workshop->update(['onboarding_step' => 'sale']);
         $client = $workshop->clients()->create(['name' => 'Test', 'phone' => '+998900000000']);
-        $vehicle = Vehicle::create(['client_id' => $client->id, 'plate_number' => '01A123AA', 'make' => 'Chevrolet']);
+        Vehicle::create(['client_id' => $client->id, 'plate_number' => '01A123AA', 'make' => 'Chevrolet']);
 
-        $this->actingAs($user)->get('/dashboard')->assertRedirect(route('vehicles.show', $vehicle));
+        $this->actingAs($user)->get('/dashboard')->assertRedirect(route('onboarding.sale'));
     }
 
     public function test_the_current_step_route_stays_reachable(): void
@@ -89,14 +89,14 @@ class OnboardingGateTest extends TestCase
         $this->actingAs($user)->get(route('onboarding.vehicle'))->assertOk();
     }
 
-    public function test_vehicles_show_and_service_logs_store_are_directly_reachable_on_the_sale_step(): void
+    public function test_onboarding_sale_and_service_logs_store_are_directly_reachable_on_the_sale_step(): void
     {
         [$user, $workshop] = $this->createDirectorWithWorkshop();
         $workshop->update(['onboarding_step' => 'sale']);
         $client = $workshop->clients()->create(['name' => 'Test', 'phone' => '+998900000000']);
-        $vehicle = Vehicle::create(['client_id' => $client->id, 'plate_number' => '01A123AA', 'make' => 'Chevrolet']);
+        Vehicle::create(['client_id' => $client->id, 'plate_number' => '01A123AA', 'make' => 'Chevrolet']);
 
-        $this->actingAs($user)->get(route('vehicles.show', $vehicle))->assertOk();
+        $this->actingAs($user)->get(route('onboarding.sale'))->assertOk();
 
         $this->actingAs($user)->post(route('service-logs.store'), [])->assertSessionHasErrors();
     }

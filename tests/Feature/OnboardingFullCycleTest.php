@@ -28,8 +28,11 @@ class OnboardingFullCycleTest extends TestCase
         $this->get('/dashboard')->assertRedirect(route('onboarding.products'));
 
         $globalProduct = GlobalProduct::create(['name' => 'Motor moyi 5W-30', 'unit' => 'litr', 'is_active' => true]);
-        $this->post(route('onboarding.products.store'), ['global_product_ids' => [$globalProduct->id]])
-            ->assertRedirect(route('onboarding.vehicle'));
+        $this->post(route('onboarding.products.store'), [
+            'items' => [
+                ['global_product_id' => $globalProduct->id, 'stock_quantity' => 10, 'purchase_price' => 15000, 'selling_price' => 20000],
+            ],
+        ])->assertRedirect(route('onboarding.vehicle'));
 
         $this->get('/dashboard')->assertRedirect(route('onboarding.vehicle'));
 
@@ -40,12 +43,12 @@ class OnboardingFullCycleTest extends TestCase
             'make' => 'Nexia',
         ]);
         $vehicle = Vehicle::where('plate_number', '01A777AA')->firstOrFail();
-        $vehicleResponse->assertRedirect(route('vehicles.show', $vehicle));
+        $vehicleResponse->assertRedirect(route('onboarding.sale'));
 
-        $this->get('/dashboard')->assertRedirect(route('vehicles.show', $vehicle));
+        $this->get('/dashboard')->assertRedirect(route('onboarding.sale'));
 
-        $this->get(route('vehicles.show', $vehicle))
-            ->assertInertia(fn ($page) => $page->where('isOnboardingHighlight', true));
+        $this->get(route('onboarding.sale'))
+            ->assertInertia(fn ($page) => $page->component('Onboarding/Sale'));
 
         $saleResponse = $this->post(route('service-logs.store'), [
             'vehicle_id' => $vehicle->id,
@@ -57,10 +60,25 @@ class OnboardingFullCycleTest extends TestCase
                 ['name' => 'Ish haqi', 'quantity' => 1, 'unit_price' => 50000],
             ],
         ]);
-        $saleResponse->assertRedirect(route('dashboard'));
+        $saleResponse->assertRedirect(route('onboarding.result'));
+        $this->assertSame('result', $workshop->fresh()->onboarding_step);
+
+        $this->get('/dashboard')->assertRedirect(route('onboarding.result'));
+
+        $this->get(route('onboarding.result'))
+            ->assertInertia(fn ($page) => $page->component('Onboarding/Result'));
+
+        $finishResponse = $this->post(route('onboarding.finish'));
+        $finishResponse->assertRedirect(route('dashboard'));
 
         $this->assertNull($workshop->fresh()->onboarding_step);
         $this->assertNotNull($workshop->fresh()->onboarding_completed_at);
+
+        // Onboarding'da yaratilgan sinov ma'lumotlari tozalangan bo'lishi kerak.
+        $this->assertSame(0, $workshop->fresh()->clients()->count());
+        $this->assertSame(0, $workshop->fresh()->products()->count());
+        $this->assertSame(0, $workshop->fresh()->expenses()->count());
+
         $this->get('/dashboard')->assertOk();
     }
 

@@ -71,6 +71,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/products', [OnboardingController::class, 'storeProducts'])->name('products.store');
         Route::get('/vehicle', [OnboardingController::class, 'vehicle'])->name('vehicle');
         Route::post('/vehicle', [OnboardingController::class, 'storeVehicle'])->name('vehicle.store');
+        Route::get('/sale', [OnboardingController::class, 'sale'])->name('sale');
+        Route::get('/result', [OnboardingController::class, 'result'])->name('result');
+        Route::post('/finish', [OnboardingController::class, 'finish'])->name('finish');
         Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
     });
 

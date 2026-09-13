@@ -36,7 +36,7 @@ class OnboardingVehicleStepTest extends TestCase
         ]);
 
         $vehicle = Vehicle::where('plate_number', '01A777AA')->firstOrFail();
-        $response->assertRedirect(route('vehicles.show', $vehicle));
+        $response->assertRedirect(route('onboarding.sale'));
         $this->assertSame('sale', $workshop->fresh()->onboarding_step);
         $this->assertSame('Aziz Karimov', $vehicle->client->name);
     }

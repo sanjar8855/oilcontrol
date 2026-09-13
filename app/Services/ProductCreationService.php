@@ -25,18 +25,22 @@ class ProductCreationService
 
     public function createWithInitialStock(Workshop $workshop, User $user, array $validated): Product
     {
+        $initialStock = $validated['stock_quantity'] ?? 0;
+        $validated['stock_quantity'] = 0;
+
         $product = $workshop->products()->create($validated);
 
         if (is_null($product->global_product_id)) {
             $this->linkToGlobalCatalog($product, $workshop);
         }
 
-        if ($product->stock_quantity > 0 && $product->track_inventory) {
+        if ($initialStock > 0 && $product->track_inventory) {
             $stockService = new StockMovementService();
 
+            // recordIncoming increments $product->stock_quantity by $initialStock (0 -> $initialStock).
             $stockService->recordIncoming(
                 productId: $product->id,
-                quantity: $product->stock_quantity,
+                quantity: $initialStock,
                 unitCostUsd: $product->purchase_price_usd,
                 unitCostUzs: $product->purchase_price_uzs,
                 currency: $product->currency,
@@ -44,22 +48,23 @@ class ProductCreationService
                 referenceId: null,
                 notes: "Boshlang'ich qoldiq"
             );
+            $product->stock_quantity = $initialStock;
 
             InventoryTransaction::create([
                 'workshop_id' => $workshop->id,
                 'branch_id' => $product->branch_id,
                 'product_id' => $product->id,
                 'type' => 'in',
-                'quantity' => $product->stock_quantity,
+                'quantity' => $initialStock,
                 'quantity_before' => 0,
-                'quantity_after' => $product->stock_quantity,
+                'quantity_after' => $initialStock,
                 'unit_price' => $product->getPurchasePrice(),
-                'total_price' => $product->stock_quantity * $product->getPurchasePrice(),
+                'total_price' => $initialStock * $product->getPurchasePrice(),
                 'reason' => 'Boshlang\'ich qoldiq',
                 'transaction_date' => now(),
             ]);
 
-            $totalCost = $product->stock_quantity * $product->getPurchasePrice();
+            $totalCost = $initialStock * $product->getPurchasePrice();
 
             if ($product->supplier_id) {
                 (new SupplierLedgerService())->recordPurchase(
@@ -67,7 +72,7 @@ class ProductCreationService
                     supplierId: $product->supplier_id,
                     amount: $totalCost,
                     currency: $product->currency,
-                    description: "Mahsulot sotib olish: {$product->name} ({$product->stock_quantity} {$product->unit})",
+                    description: "Mahsulot sotib olish: {$product->name} ({$initialStock} {$product->unit})",
                     referenceType: 'Product',
                     referenceId: $product->id,
                     userId: $user->id,
@@ -77,7 +82,7 @@ class ProductCreationService
                     'branch_id' => $product->branch_id,
                     'category' => 'Boshqa',
                     'title' => "Mahsulot sotib olish: {$product->name}",
-                    'description' => "Boshlang'ich qoldiq: {$product->stock_quantity} {$product->unit}",
+                    'description' => "Boshlang'ich qoldiq: {$initialStock} {$product->unit}",
                     'amount' => $totalCost,
                     'expense_date' => now(),
                     'payment_method' => null,
