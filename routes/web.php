@@ -19,6 +19,7 @@ use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ServiceLogController;
 use App\Http\Controllers\SubscriptionPaymentController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\TelegramVerificationController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
@@ -62,6 +63,12 @@ Route::middleware('auth')->prefix('telegram')->group(function () {
     Route::get('/delete-webhook', [TelegramWebhookController::class, 'deleteWebhook'])->name('telegram.delete-webhook');
     Route::get('/bot-info', [TelegramWebhookController::class, 'getBotInfo'])->name('telegram.bot-info');
     Route::get('/set-menu-button', [TelegramWebhookController::class, 'setMenuButton'])->name('telegram.set-menu-button');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/telegram/verify', [TelegramVerificationController::class, 'show'])->name('telegram.verify');
+    Route::post('/telegram/verify', [TelegramVerificationController::class, 'store'])->name('telegram.verify.code');
+    Route::post('/telegram/verify/resend', [TelegramVerificationController::class, 'resend'])->name('telegram.verify.resend');
 });
 
 Route::middleware('auth')->group(function () {
