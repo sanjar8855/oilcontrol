@@ -26,6 +26,7 @@ class CheckSubscription
         'subscription-payments.*',
         'global-products.*',
         'onboarding.*',
+        'telegram.verify*',
     ];
 
     /**
