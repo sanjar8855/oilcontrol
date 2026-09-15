@@ -23,6 +23,11 @@ class OnboardingFullCycleTest extends TestCase
         ]);
 
         $user = \App\Models\User::where('phone', '+998907778899')->firstOrFail();
+        $user->update(['telegram_verified_at' => now()]);
+        // Auth::login() during /register cached the pre-update $user instance on the
+        // session guard; refresh it so the guard's in-memory user reflects the update
+        // instead of the guard silently serving the stale (unverified) copy.
+        \Illuminate\Support\Facades\Auth::setUser($user->fresh());
         $workshop = \App\Models\Workshop::where('user_id', $user->id)->firstOrFail();
 
         $this->get('/dashboard')->assertRedirect(route('onboarding.products'));
