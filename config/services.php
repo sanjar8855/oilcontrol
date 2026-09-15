@@ -40,6 +40,9 @@ return [
         'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
         'mini_app_url' => env('TELEGRAM_MINI_APP_URL'),
+        'users_bot_token' => env('TELEGRAM_USERS_BOT_TOKEN'),
+        'users_bot_username' => env('TELEGRAM_USERS_BOT_USERNAME'),
+        'users_bot_webhook_secret' => env('TELEGRAM_USERS_BOT_WEBHOOK_SECRET'),
     ],
 
 ];
