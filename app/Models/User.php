@@ -62,6 +62,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'telegram_verified_at' => 'datetime',
             'password' => 'hashed',
             'salary' => 'decimal:2',
             'hire_date' => 'date',
@@ -72,6 +73,11 @@ class User extends Authenticatable
     public function workshop(): HasOne
     {
         return $this->hasOne(Workshop::class);
+    }
+
+    public function telegramVerification(): HasOne
+    {
+        return $this->hasOne(TelegramVerification::class);
     }
 
     /**
