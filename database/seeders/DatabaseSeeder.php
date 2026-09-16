@@ -367,7 +367,14 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
 
         // ============================================
-        // 10. Onboarding uchun umumiy katalog test mahsulotlari
+        // 10. Global katalog — yetkazib beruvchilar narx-ro'yxatlari
+        //     (ENOC, EPSENT, Aveno, Hyundai Xteer, Zitron, Korelux,
+        //      Everest, Mobil, Shell, Fosser, Basinol, Liqui Moly ...)
+        // ============================================
+        $this->call(GlobalCatalogSeeder::class);
+
+        // ============================================
+        // 11. Onboarding uchun umumiy katalog test mahsulotlari
         // ============================================
         $this->call(GlobalProductTestSeeder::class);
     }

@@ -18,10 +18,25 @@ class GlobalProduct extends Model
         'unit',
         'barcode',
         'is_active',
+        'product_type',
+        'viscosity',
+        'oil_base',
+        'api_spec',
+        'volume_liters',
+        'pack_qty',
+        'supplier_code',
+        'source',
+        'image_url',
+        'recommended_price',
+        'currency',
+        'price_updated_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'volume_liters' => 'decimal:3',
+        'recommended_price' => 'decimal:2',
+        'price_updated_at' => 'datetime',
     ];
 
     public function globalCategory(): BelongsTo
