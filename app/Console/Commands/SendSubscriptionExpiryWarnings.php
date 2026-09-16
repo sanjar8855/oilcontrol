@@ -3,31 +3,21 @@
 namespace App\Console\Commands;
 
 use App\Models\Workshop;
-use App\Services\TelegramBotService;
+use App\Services\UserTelegramBotService;
 use Illuminate\Console\Command;
 
 /**
  * Obuna (yoki sinov muddati) 7/3/1 kun ichida tugaydigan kompaniyalar
- * direktoriga Telegram orqali ogohlantirish yuboradi.
+ * direktoriga Telegram (users bot) orqali ogohlantirish yuboradi.
  * Docs: docs/strategiya_va_yol_xaritasi.md — Bosqich 1.
  */
 class SendSubscriptionExpiryWarnings extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'subscriptions:notify-expiring';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Obuna muddati 7/3/1 kunda tugaydigan kompaniyalar direktoriga Telegram orqali ogohlantirish yuborish';
 
-    public function handle(TelegramBotService $telegram)
+    public function handle(UserTelegramBotService $telegram)
     {
         $warningDays = config('plans.warning_days', [7, 3, 1]);
 
@@ -36,7 +26,7 @@ class SendSubscriptionExpiryWarnings extends Command
             ->where(function ($query) {
                 $query->whereNotNull('subscription_expires_at')->orWhereNotNull('trial_ends_at');
             })
-            ->with('user:id,name,telegram_chat_id')
+            ->with('user:id,name,telegram_chat_id,telegram_verified_at')
             ->get();
 
         $sent = 0;
@@ -49,9 +39,9 @@ class SendSubscriptionExpiryWarnings extends Command
                 continue;
             }
 
-            $chatId = $workshop->user?->telegram_chat_id;
+            $user = $workshop->user;
 
-            if (!$chatId) {
+            if (!$user || !$user->telegram_chat_id || !$user->telegram_verified_at) {
                 $skipped++;
                 $this->line("O'tkazib yuborildi (Telegram ulanmagan): {$workshop->name}");
                 continue;
@@ -60,7 +50,7 @@ class SendSubscriptionExpiryWarnings extends Command
             $label = $workshop->isOnTrial() ? 'Sinov muddati' : 'Obuna';
             $message = "⚠️ <b>{$workshop->name}</b>\n\n{$label} <b>{$daysRemaining} kundan</b> so'ng tugaydi.\n\nUzaytirish uchun tizim administratori bilan bog'laning.";
 
-            if ($telegram->sendMessage($chatId, $message)) {
+            if ($telegram->sendMessage($user->telegram_chat_id, $message)) {
                 $sent++;
                 $this->info("Yuborildi: {$workshop->name} ({$daysRemaining} kun qoldi)");
             } else {
