@@ -26,7 +26,8 @@ class EnsureTelegramIsVerified
             return $next($request);
         }
 
-        if ($request->routeIs('telegram.verify*') || $request->routeIs('logout')) {
+        if ($request->routeIs('telegram.verify*') || $request->routeIs('logout')
+            || $request->routeIs('telegram.webhook') || $request->routeIs('telegram.users-webhook')) {
             return $next($request);
         }
 

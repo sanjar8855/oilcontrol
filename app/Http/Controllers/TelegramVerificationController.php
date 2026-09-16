@@ -44,7 +44,9 @@ class TelegramVerificationController extends Controller
 
     public function resend(Request $request, UserTelegramBotService $telegramBot): RedirectResponse
     {
-        $result = $telegramBot->resendCode($request->user());
+        // Fetched fresh: the webhook binds telegram_chat_id via a separate request,
+        // and the guard's cached user instance won't reflect that write otherwise.
+        $result = $telegramBot->resendCode($request->user()->fresh());
 
         return back()->with('status', $result['message']);
     }

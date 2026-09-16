@@ -22,6 +22,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TelegramVerificationController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserTelegramWebhookController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\WorkshopController;
 use App\Http\Controllers\WorkshopSwitchController;
@@ -55,6 +56,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 // Telegram Bot Webhook (Auth siz - Telegram serveri chaqiradi)
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])->name('telegram.webhook');
+
+// Telegram Users Bot Webhook (Auth siz - Telegram serveri chaqiradi)
+Route::post('/telegram/users-webhook', [UserTelegramWebhookController::class, 'handle'])->name('telegram.users-webhook');
 
 // Telegram Bot boshqaruvi (Admin uchun)
 Route::middleware('auth')->prefix('telegram')->group(function () {
