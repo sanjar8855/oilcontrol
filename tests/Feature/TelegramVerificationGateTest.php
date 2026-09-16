@@ -11,12 +11,12 @@ class TelegramVerificationGateTest extends TestCase
     use RefreshDatabase;
     use CreatesTestWorkshop;
 
-    public function test_an_unverified_user_is_redirected_to_the_telegram_verify_page(): void
+    public function test_an_unverified_user_can_still_reach_the_dashboard(): void
     {
         [$user] = $this->createDirectorWithWorkshop();
         $user->update(['telegram_verified_at' => null]);
 
-        $this->actingAs($user)->get('/dashboard')->assertRedirect('/telegram/verify');
+        $this->actingAs($user)->get('/dashboard')->assertOk();
     }
 
     public function test_logout_stays_reachable_while_unverified(): void

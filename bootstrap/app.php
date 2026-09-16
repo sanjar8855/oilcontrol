@@ -18,7 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\EnsureActiveWorkshop::class,
-            \App\Http\Middleware\EnsureTelegramIsVerified::class,
             \App\Http\Middleware\CheckSubscription::class,
             \App\Http\Middleware\EnsureOnboardingComplete::class,
         ]);
