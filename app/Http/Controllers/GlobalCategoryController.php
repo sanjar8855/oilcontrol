@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\GlobalCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,8 @@ use Inertia\Response;
 class GlobalCategoryController extends Controller
 {
     /**
-     * Display a listing of global categories.
+     * Display a listing of global categories, alongside brands for the
+     * same browse-by-brand-or-category entry point into /global-products.
      */
     public function index(): Response
     {
@@ -19,8 +21,13 @@ class GlobalCategoryController extends Controller
             ->orderBy('name')
             ->get();
 
+        $brands = Brand::withCount(['globalProducts as products_count'])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('GlobalCategories/Index', [
             'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 

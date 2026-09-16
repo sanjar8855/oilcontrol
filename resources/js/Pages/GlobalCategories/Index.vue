@@ -1,11 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     categories: Array,
+    brands: Array,
 });
 
 const showModal = ref(false);
@@ -75,7 +76,29 @@ const deleteCategory = (category) => {
         </template>
 
         <div class="py-4 sm:py-6">
-            <div class="mx-auto max-w-3xl px-3 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-5xl px-3 sm:px-6 lg:px-8">
+                <div class="mb-4 rounded-md bg-blue-50 p-4 dark:bg-blue-900/20">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                        Brend yoki kategoriyani bosing — Global mahsulotlar sahifasida o'shanga oid mahsulotlar filtrlangan holda ochiladi.
+                    </p>
+                </div>
+
+                <div v-if="brands.length > 0" class="mb-6">
+                    <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Brend bo'yicha</h3>
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                        <Link
+                            v-for="brand in brands"
+                            :key="brand.id"
+                            :href="route('global-products.index', { brand_id: brand.id })"
+                            class="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-4 text-center shadow-sm transition hover:border-indigo-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                        >
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ brand.name }}</span>
+                            <span class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ brand.products_count }} ta mahsulot</span>
+                        </Link>
+                    </div>
+                </div>
+
+                <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Kategoriya bo'yicha</h3>
                 <div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
                     <div v-if="categories.length === 0" class="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
                         Hali kategoriyalar yo'q. Yuqoridagi tugma orqali birinchi kategoriyani qo'shing.
@@ -86,7 +109,10 @@ const deleteCategory = (category) => {
                             :key="category.id"
                             class="flex items-center justify-between gap-3 p-4"
                         >
-                            <div class="flex min-w-0 items-center gap-2">
+                            <Link
+                                :href="route('global-products.index', { category_id: category.id })"
+                                class="flex min-w-0 items-center gap-2 hover:underline"
+                            >
                                 <span class="truncate font-medium text-gray-900 dark:text-white">{{ category.name }}</span>
                                 <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                                     {{ category.global_products_count }} ta mahsulot
@@ -97,7 +123,7 @@ const deleteCategory = (category) => {
                                 >
                                     Nofaol
                                 </span>
-                            </div>
+                            </Link>
                             <div class="flex shrink-0 gap-3 text-sm font-medium">
                                 <button
                                     @click="openEditModal(category)"

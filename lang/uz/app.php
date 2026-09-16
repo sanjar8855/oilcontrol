@@ -23,7 +23,7 @@ return [
         'users' => 'Xodimlar',
         'branches' => 'Filiallar',
         'car_makes' => 'Avto markalari',
-        'global_products' => 'Global katalog',
+        'global_products' => 'Global mahsulotlar',
         'global_categories' => 'Global kategoriyalar',
         'workshops' => 'Kompaniyalar',
         'profile' => 'Profil',

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
 use App\Models\GlobalCategory;
 use App\Models\GlobalProduct;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +25,23 @@ class GlobalCategoryManagementTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->has('categories', 1)
             ->where('categories.0.name', 'Yog\'')
+        );
+    }
+
+    public function test_the_index_page_also_lists_brands_with_product_counts(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $lukoil = Brand::create(['name' => 'Lukoil', 'is_active' => true]);
+        $shell = Brand::create(['name' => 'Shell', 'is_active' => true]);
+        GlobalProduct::create(['name' => 'Lukoil 5W-30', 'unit' => 'litr', 'is_active' => true, 'brand_id' => $lukoil->id]);
+        GlobalProduct::create(['name' => 'Lukoil 10W-40', 'unit' => 'litr', 'is_active' => true, 'brand_id' => $lukoil->id]);
+
+        $response = $this->actingAs($admin)->get(route('global-categories.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('brands', fn ($brands) => collect($brands)->firstWhere('id', $lukoil->id)['products_count'] === 2
+                && collect($brands)->firstWhere('id', $shell->id)['products_count'] === 0)
         );
     }
 
