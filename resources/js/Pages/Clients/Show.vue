@@ -31,6 +31,14 @@ const copyLink = async () => {
     setTimeout(() => (copied.value = false), 2000);
 };
 
+const vehicleDebt = (vehicle) => {
+    return (vehicle.service_logs || []).reduce((sum, log) => sum + Number(log.remaining_amount || 0), 0);
+};
+
+const totalDebt = computed(() => {
+    return (props.client.vehicles || []).reduce((sum, vehicle) => sum + vehicleDebt(vehicle), 0);
+});
+
 const unlinkTelegram = () => {
     if (!confirm('Telegram bog\'lanishini uzishga ishonchingiz komilmi?')) return;
     router.post(route('clients.telegram-unlink', props.client.id), {}, { preserveScroll: true });
@@ -47,9 +55,17 @@ const regenerateLink = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {{ client.name }}
-                </h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                        {{ client.name }}
+                    </h2>
+                    <span
+                        v-if="totalDebt > 0"
+                        class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800 dark:bg-red-900 dark:text-red-200"
+                    >
+                        Qarzdor: {{ totalDebt.toLocaleString() }} so'm
+                    </span>
+                </div>
                 <div class="flex gap-2">
                     <Link
                         :href="route('clients.edit', client.id)"
@@ -168,6 +184,12 @@ const regenerateLink = () => {
                                                 <p v-if="vehicle.service_logs && vehicle.service_logs.length > 0" class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                                     Oxirgi servis: {{ new Date(vehicle.service_logs[0].service_date).toLocaleDateString('uz-UZ') }}
                                                 </p>
+                                                <span
+                                                    v-if="vehicleDebt(vehicle) > 0"
+                                                    class="mt-2 inline-flex items-center rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900 dark:text-red-300"
+                                                >
+                                                    Qarzdor: {{ vehicleDebt(vehicle).toLocaleString() }} so'm
+                                                </span>
                                             </div>
                                             <Link
                                                 :href="route('vehicles.show', vehicle.id)"

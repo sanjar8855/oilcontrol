@@ -39,6 +39,10 @@ const serviceForm = useForm({
     due_date: '',
 });
 
+const totalDebt = computed(() => {
+    return (props.vehicle.service_logs || []).reduce((sum, log) => sum + Number(log.remaining_amount || 0), 0);
+});
+
 const productOptions = computed(() => {
     return props.products.map(p => ({
         value: p.id,
@@ -664,6 +668,12 @@ const toggleSaleForm = () => {
                                     <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                                         Servis Tarixi
                                     </h3>
+                                    <span
+                                        v-if="totalDebt > 0"
+                                        class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    >
+                                        Qarzdor: {{ totalDebt.toLocaleString() }} so'm
+                                    </span>
                                 </div>
                             </div>
                             <div class="p-6">
@@ -690,6 +700,12 @@ const toggleSaleForm = () => {
                                                 </span>
                                                 <span v-if="log.total_amount" class="font-semibold text-indigo-600 dark:text-indigo-400">
                                                     {{ Number(log.total_amount).toLocaleString() }} so'm
+                                                </span>
+                                                <span
+                                                    v-if="Number(log.remaining_amount) > 0"
+                                                    class="inline-flex items-center rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900 dark:text-red-300"
+                                                >
+                                                    Qarzdor: {{ Number(log.remaining_amount).toLocaleString() }} so'm
                                                 </span>
                                             </div>
 
