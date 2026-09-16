@@ -308,8 +308,8 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Catalog', [
             'products' => $products,
-            'categories' => GlobalCategory::orderBy('name')->get(['id', 'name']),
-            'brands' => Brand::orderBy('name')->get(['id', 'name']),
+            'categories' => GlobalCategory::withCount(['globalProducts as products_count'])->orderBy('name')->get(),
+            'brands' => Brand::withCount(['globalProducts as products_count'])->orderBy('name')->get(),
             'copiedGlobalProductIds' => $copiedGlobalProductIds,
             'filters' => $request->only(['category_id', 'brand_id', 'search']),
         ]);

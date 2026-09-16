@@ -51,8 +51,8 @@ class GlobalProductController extends Controller
         }
 
         $products = $query->orderBy('name')->paginate(30)->withQueryString();
-        $categories = GlobalCategory::orderBy('name')->get(['id', 'name']);
-        $brands = Brand::orderBy('name')->get(['id', 'name']);
+        $categories = GlobalCategory::withCount(['globalProducts as products_count'])->orderBy('name')->get();
+        $brands = Brand::withCount(['globalProducts as products_count'])->orderBy('name')->get();
 
         return Inertia::render('GlobalProducts/Index', [
             'products' => $products,

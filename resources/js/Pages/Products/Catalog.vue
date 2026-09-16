@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import CatalogBrowse from '@/Components/CatalogBrowse.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, reactive, watch } from 'vue';
 
@@ -38,6 +39,16 @@ const resetFilters = () => {
     filters.category_id = '';
     filters.brand_id = '';
     reload();
+};
+
+const isBrowsing = computed(() => !filters.search && !filters.category_id && !filters.brand_id);
+
+const selectBrand = (brandId) => {
+    filters.brand_id = brandId;
+};
+
+const selectCategory = (categoryId) => {
+    filters.category_id = categoryId;
 };
 
 const isCopied = (product) => props.copiedGlobalProductIds.includes(product.id);
@@ -155,9 +166,29 @@ const submit = () => {
                     </div>
                 </div>
 
-                <form @submit.prevent="submit">
+                <div v-if="isBrowsing" class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="p-4">
+                        <CatalogBrowse
+                            :brands="brands"
+                            :categories="categories"
+                            @select-brand="selectBrand"
+                            @select-category="selectCategory"
+                        />
+                    </div>
+                </div>
+
+                <form v-else @submit.prevent="submit">
                     <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div class="p-4">
+                            <div class="mb-4">
+                                <button
+                                    type="button"
+                                    @click="resetFilters"
+                                    class="text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                >
+                                    &larr; Barchasini ko'rish
+                                </button>
+                            </div>
                             <div v-if="products.data.length > 0" class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead class="bg-gray-50 dark:bg-gray-900">
