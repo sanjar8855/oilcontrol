@@ -424,6 +424,26 @@ crontab -e
 
 ---
 
+## 🔐 Ikkinchi Bot: Ro'yxatdan O'tish Tasdiqlash (@oilcontrol_customers_bot)
+
+Bu qo'llanmadagi hamma narsa yuqorida — mijozlarga eslatma yuboradigan **eski bot** (`TELEGRAM_BOT_TOKEN`) haqida. Loyihada shundan mustaqil, **ikkinchi bot** ham bor: `@oilcontrol_customers_bot` — ustaxona egalarini (ustaxona ro'yxatdan o'tganda) Telegram orqali tasdiqlaydi va keyinchalik obuna tugash ogohlantirishlari/onboarding hisobotlarini shu bot orqali yuboradi (`UserTelegramBotService`, `services.telegram.users_bot_token`).
+
+Bu bot uchun `.env`dagi token/username/webhook-secret allaqachon sozlangan. **Deploy qilingandan keyin, faqat bir marta**, production serverda quyidagini ishga tushiring:
+
+```bash
+php artisan telegram:set-users-webhook
+```
+
+Keyin webhook to'g'ri o'rnatilganini tekshiring:
+
+```bash
+curl -s "https://api.telegram.org/bot<TELEGRAM_USERS_BOT_TOKEN>/getWebhookInfo"
+```
+
+Javobda `"url"` maydoni `https://oilcontrol.uz/telegram/users-webhook`ga teng bo'lishi va `"last_error_message"` bo'lmasligi kerak.
+
+---
+
 ## 🆘 Yordam Kerakmi?
 
 Muammo yuzaga kelsa:
