@@ -80,13 +80,15 @@ const submit = () => {
             </div>
 
             <div class="mt-4 flex items-center justify-end">
-                <Link
+                <a
                     v-if="canResetPassword"
-                    :href="route('password.request')"
+                    href="https://t.me/sanjar_asrorov"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
                 >
-                    Parolni unutdingizmi?
-                </Link>
+                    Parolni unutdingizmi? Telegram orqali yozing
+                </a>
 
                 <PrimaryButton
                     class="ms-4"
