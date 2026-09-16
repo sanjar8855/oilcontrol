@@ -98,4 +98,20 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->fresh());
     }
+
+    public function test_telegram_chat_id_cannot_be_set_manually_via_profile_update(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'telegram_chat_id' => '999999999',
+            ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertNull($user->fresh()->telegram_chat_id);
+    }
 }

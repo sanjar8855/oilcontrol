@@ -21,7 +21,6 @@ const form = useForm({
     phone: user.phone || '',
     phone_secondary: user.phone_secondary || '',
     email: user.email || '',
-    telegram_chat_id: user.telegram_chat_id || '',
     locale: user.locale || 'uz',
     salary: user.salary || '',
     hire_date: user.hire_date || '',
@@ -122,21 +121,20 @@ const form = useForm({
             </div>
 
             <div v-if="$page.props.auth.user.role === 'director'">
-                <InputLabel for="telegram_chat_id" value="Telegram Chat ID (obuna ogohlantirishlari uchun)" />
+                <InputLabel value="Telegram" />
 
-                <TextInput
-                    id="telegram_chat_id"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.telegram_chat_id"
-                    placeholder="123456789"
-                />
-
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Botga <span class="font-mono">/start</span>, keyin <span class="font-mono">/myid</span> yuboring — chiqqan raqamni shu yerga kiriting. Obuna tugashiga 7/3/1 kun qolganda shu ID'ga ogohlantirish keladi.
+                <p v-if="user.telegram_verified_at" class="mt-1 text-sm text-green-600 dark:text-green-400">
+                    ✅ Telegram ulangan — obuna ogohlantirishlari va hisobotlar shu yerga keladi.
                 </p>
-
-                <InputError class="mt-2" :message="form.errors.telegram_chat_id" />
+                <p v-else class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Ulanmagan.
+                    <Link
+                        :href="route('telegram.verify')"
+                        class="font-medium text-indigo-600 underline hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-100"
+                    >
+                        Ulash
+                    </Link>
+                </p>
             </div>
 
             <!-- Divider -->
