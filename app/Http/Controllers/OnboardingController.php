@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\GlobalProduct;
 use App\Models\ServiceLog;
 use App\Models\Vehicle;
+use App\Models\Workshop;
 use App\Services\OnboardingCleanupService;
 use App\Services\ProductCreationService;
+use App\Services\UserTelegramBotService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -167,6 +169,14 @@ class OnboardingController extends Controller
 
         abort_unless($workshop && $workshop->onboarding_step === 'result', 403);
 
+        return Inertia::render('Onboarding/Result', $this->resultSummary($workshop));
+    }
+
+    /**
+     * @return array{products: \Illuminate\Support\Collection, saleTotal: float, profit: float, reminders: \Illuminate\Support\Collection}
+     */
+    private function resultSummary(Workshop $workshop): array
+    {
         $products = $workshop->products()
             ->orderBy('name')
             ->get(['id', 'name', 'unit', 'stock_quantity']);
@@ -181,19 +191,29 @@ class OnboardingController extends Controller
             $profit += ($product->pivot->unit_price - $product->purchase_price) * $product->pivot->quantity;
         }
 
-        return Inertia::render('Onboarding/Result', [
+        return [
             'products' => $products,
             'saleTotal' => (float) ($serviceLog->total_amount ?? 0),
             'profit' => $profit,
-            'reminders' => $serviceLog?->reminders->pluck('scheduled_date')->map(fn ($date) => $date->toDateString())->sort()->values() ?? [],
-        ]);
+            'reminders' => $serviceLog?->reminders->pluck('scheduled_date')->map(fn ($date) => $date->toDateString())->sort()->values() ?? collect(),
+        ];
     }
 
-    public function finish(Request $request, OnboardingCleanupService $cleanup): RedirectResponse
+    public function finish(Request $request, OnboardingCleanupService $cleanup, UserTelegramBotService $telegramBot): RedirectResponse
     {
         $workshop = $request->user()->currentWorkshop();
 
         abort_unless($workshop && $workshop->onboarding_step === 'result', 403);
+
+        $user = $request->user();
+
+        if ($user->telegram_verified_at) {
+            try {
+                $telegramBot->sendOnboardingResult($user, $this->resultSummary($workshop));
+            } catch (\Exception $e) {
+                report($e);
+            }
+        }
 
         $cleanup->purge($workshop);
         $workshop->advanceOnboarding(null);
