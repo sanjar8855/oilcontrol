@@ -193,6 +193,9 @@ const exportUrl = (type) => {
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-gray-900">
                                     <tr>
+                                        <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                            Kategoriya
+                                        </th>
                                         <th
                                             v-for="col in sortColumns"
                                             :key="col.key"
@@ -206,9 +209,6 @@ const exportUrl = (type) => {
                                             </span>
                                         </th>
                                         <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            Kategoriya
-                                        </th>
-                                        <th scope="col" class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                             Ta'minotchi
                                         </th>
                                         <th scope="col" class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -218,6 +218,12 @@ const exportUrl = (type) => {
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                     <tr v-for="product in products.data" :key="product.id" :class="{'bg-red-50 dark:bg-red-900/20': product.stock_quantity <= product.min_stock_level}">
+                                        <td class="whitespace-nowrap px-4 py-1.5">
+                                            <span v-if="product.category" class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                                {{ product.category.name }}
+                                            </span>
+                                            <span v-else class="text-sm text-gray-500 dark:text-gray-400">-</span>
+                                        </td>
                                         <td class="px-4 py-1.5">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">
                                                 {{ product.name }}
@@ -239,12 +245,6 @@ const exportUrl = (type) => {
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-1.5 text-sm text-gray-900 dark:text-gray-300">
                                             {{ formatMoney(product.selling_price) }}
-                                        </td>
-                                        <td class="whitespace-nowrap px-4 py-1.5">
-                                            <span v-if="product.category" class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-                                                {{ product.category.name }}
-                                            </span>
-                                            <span v-else class="text-sm text-gray-500 dark:text-gray-400">-</span>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-1.5 text-sm text-gray-900 dark:text-gray-300">
                                             {{ product.supplier?.name || '-' }}
