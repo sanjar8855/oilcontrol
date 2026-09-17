@@ -79,6 +79,30 @@ class CarModelSeeder extends Seeder
             'Niva' => [3.8, 9.8, 10.5],
             'XRAY' => [3.5, 7.5, 8.0],
         ],
+        'Toyota' => [
+            'Camry' => [4.5, 7.0, 7.5],
+            'Corolla' => [4.2, 6.0, 6.5],
+            'RAV4' => [4.8, 7.0, 7.5],
+            'Highlander' => [5.7, 8.0, 9.0],
+            'Land Cruiser Prado' => [6.5, 9.0, 10.0],
+            'Land Cruiser' => [7.9, 13.0, 14.0],
+        ],
+        'Jetour' => [
+            'X70' => [4.5, 7.0, 7.5],
+            'X70 Plus' => [4.5, 7.0, 7.5],
+            'X90' => [4.7, 7.5, 8.0],
+            'X90 Plus' => [4.7, 7.5, 8.0],
+            'X95' => [4.7, 7.5, 8.0],
+            'Dashing' => [4.5, 7.0, 7.5],
+        ],
+        // Yuk transporti — moy va antifriz hajmi yengil avtodan ancha katta
+        'Isuzu' => [
+            'ELF (2.5T)' => [7.0, 10.0, 11.0],
+            'NPR (5T)' => [11.0, 15.0, 17.0],
+            'NQR (5T)' => [11.0, 15.0, 17.0],
+            'FVR (10T)' => [24.0, 25.0, 30.0],
+            'Avtobus' => [11.0, 15.0, 17.0],
+        ],
     ];
 
     /**
