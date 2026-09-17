@@ -373,6 +373,9 @@ class DatabaseSeeder extends Seeder
         // ============================================
         $this->call(GlobalCatalogSeeder::class);
 
+        // Filtrlarni avtomobil modellariga bog'lash
+        $this->call(CarModelFilterLinkSeeder::class);
+
         // ============================================
         // 11. Onboarding uchun umumiy katalog test mahsulotlari
         // ============================================

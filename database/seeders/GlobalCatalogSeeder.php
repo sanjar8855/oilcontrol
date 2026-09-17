@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\DB;
  *   oilux.json       — Oilux Price All 21.08.2026    (Aveno, Hyundai Xteer, Korelux, Zitron + filtrlar)
  *   oil_hub.json     — OIL HUB price list 01.04.2026 (Everest, Mobil, Shell, Castrol)
  *   qoqon_1c.json    — 1C QO'QON 07.09.2026          (Fosser, Basinol, Liqui Moly, Fuchs, SRS, Speedmate)
+ *   uz_market.json   — O'zbekiston bozori 09.2026     (Kixx, ZIC, Lukoil, Rosneft, WIX, NGK, Bosch ...)
+ *
+ * DIQQAT: uz_market.json narxlari SO'MDA va onlayn e'lonlardan olingan —
+ * ular taxminiy. Qolgan fayllar narxi USD'da, yetkazib beruvchi prays-listidan.
+ * Shuning uchun har bir yozuvda `currency` majburiy tekshiriladi.
  *
  * IDEMPOTENT: kalit — global_products.sku. Qayta ishga tushirsa dublikat
  * yaratmaydi, mavjud yozuvni yangilaydi. Shuning uchun narx yangilanganda
@@ -73,6 +78,8 @@ class GlobalCatalogSeeder extends Seeder
                             'volume_liters' => $row['volume_liters'] ?? null,
                             'pack_qty' => $row['pack_qty'] ?? null,
                             'supplier_code' => $row['supplier_code'] ?? null,
+                            'oem_code' => $row['oem_code'] ?? null,
+                            'fits_models' => $row['fits_models'] ?? null,
                             'source' => $row['source'] ?? null,
                             'recommended_price' => $row['recommended_price'] ?? null,
                             'currency' => $row['currency'] ?? 'USD',

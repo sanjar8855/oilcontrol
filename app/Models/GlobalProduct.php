@@ -25,6 +25,8 @@ class GlobalProduct extends Model
         'volume_liters',
         'pack_qty',
         'supplier_code',
+        'oem_code',
+        'fits_models',
         'source',
         'image_url',
         'recommended_price',
